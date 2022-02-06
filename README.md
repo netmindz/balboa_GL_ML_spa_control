@@ -4,6 +4,8 @@ While there is the excellent https://github.com/ccutrer/balboa_worldwide_app pro
 
 At the moment this protect is just to pull together the information that has been established.
 
+![gl2000](GL2000_pcb_2.jpg)
+
 # Source Info
 
 * 8-pin Molex https://github.com/ccutrer/balboa_worldwide_app/issues/14
