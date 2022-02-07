@@ -4,11 +4,10 @@ $data = array();
 
 $msgCount = array();
 
-if($_SERVER['argc'] == 2) {
-	$fp = fopen($_SERVER['argv'][1], "r");
-}
-else {
-	$fp = fsockopen("hottub", 7777, $errno, $errstr, 30);
+if ($_SERVER['argc'] == 2) {
+    $fp = fopen($_SERVER['argv'][1], "r");
+} else {
+    $fp = fsockopen("hottub", 7777, $errno, $errstr, 30);
 }
 $fh = fopen("dump", "w");
 $i = 0;
@@ -29,13 +28,12 @@ if (!$fp) {
             } else {
                 print "length = " . $length . "\thex= " . bin2hex($buffer) . "\n";
                 var_dump($buffer);
-		print "\n";
-
+                print "\n";
             }
-	    if(!isset($msgCount[$buffer])) {
-		    $msgCount[$buffer] = 0;
-	    }
-	    $msgCount[$buffer]++;
+            if (!isset($msgCount[$buffer])) {
+                $msgCount[$buffer] = 0;
+            }
+            $msgCount[$buffer]++;
 
             fputs($fh, $buffer . "\n");
 
@@ -61,7 +59,7 @@ arsort($msgCount);
 print_r($data);
 
 $fh2 = fopen("msg-count", "w");
-foreach($msgCount as $k=>$v) {
-	fputs($fh2, "$v  = $k\n");
+foreach ($msgCount as $k => $v) {
+    fputs($fh2, "$v  = $k\n");
 }
 fclose($fh2);
