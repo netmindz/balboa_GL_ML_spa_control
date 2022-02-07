@@ -17,16 +17,13 @@ if (!$fp) {
         if ($d == hex2bin('FA') || $d == hex2bin('AE')) {
             $length = strlen($buffer);
 
-
-            if ($length == 64) {
-                $data['temp'] = substr($buffer, 8, 4);
-            } elseif ($length == 72) {
-                $data['temp_target'] = substr($buffer, 2, 4);
+            if ($length == 23) {
+                $data['temp'] = substr($buffer, 2, 4);
             } else {
-                print "length = " . $length . "\n\n";
+                print "length = " . $length . "\thex= " . bin2hex($buffer) . "\n";
                 var_dump($buffer);
+                print "\n";
             }
-            #		    print "temp: " . substr($buffer,8,4) . "\n";
 
             fputs($fh, $buffer . "\n");
 
