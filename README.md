@@ -7,7 +7,7 @@ At the moment this protect is just to pull together the information that has bee
 ![gl2000](GL2000_pcb_2.jpg)
 
 # Source Info
-
+Original discssion regarding support for spa controllers with 8 pin rather than 4 pin main panels
 * 8-pin Molex https://github.com/ccutrer/balboa_worldwide_app/issues/14
 
 
