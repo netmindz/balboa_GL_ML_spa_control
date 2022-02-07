@@ -23,13 +23,6 @@ if (!$fp) {
         if ($d == hex2bin('FA') || $d == hex2bin('AE')) {
             $length = strlen($buffer);
 
-            if ($length == 23) {
-                $data['temp'] = substr($buffer, 2, 4);
-            } else {
-#                print "length = " . $length . "\thex= " . bin2hex($buffer) . "\n";
-##                var_dump($buffer);
-#                print "\n";
-            }
             if (!isset($msgCount[$buffer])) {
                 $msgCount[$buffer] = 0;
             }
@@ -38,10 +31,11 @@ if (!$fp) {
             fputs($fh, $buffer . "\n");
 
 	    $hex = bin2hex($buffer);
-
-	    if(preg_match("/fa1433333043(.+)/", $hex, $matches)) {
-		    $hex = $matches[1];
-		  //  print "hex = $hex\n";
+	    // fa1433343043 = header + 340C = 34.0 deg C
+	    if(preg_match("/fa14(.{6})43(.+)/", $hex, $matches)) {
+		    $hex = $matches[2];
+#		    print "hex = $hex\n";
+                    $data['temp'] = substr($buffer, 2, 3)/10;
 		    $light = substr($hex, 10, 2);
 		    if($light == "08") {
 			    $data['light'] = "on";
