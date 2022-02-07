@@ -26,9 +26,9 @@ if (!$fp) {
             if ($length == 23) {
                 $data['temp'] = substr($buffer, 2, 4);
             } else {
-                print "length = " . $length . "\thex= " . bin2hex($buffer) . "\n";
-                var_dump($buffer);
-                print "\n";
+#                print "length = " . $length . "\thex= " . bin2hex($buffer) . "\n";
+##                var_dump($buffer);
+#                print "\n";
             }
             if (!isset($msgCount[$buffer])) {
                 $msgCount[$buffer] = 0;
@@ -37,6 +37,49 @@ if (!$fp) {
 
             fputs($fh, $buffer . "\n");
 
+	    $hex = bin2hex($buffer);
+
+	    if(preg_match("/fa1433333043(.+)/", $hex, $matches)) {
+		    $hex = $matches[1];
+		  //  print "hex = $hex\n";
+		    $light = substr($hex, 10, 2);
+		    if($light == "08") {
+			    $data['light'] = "on";
+		    }
+       		     elseif($light == "00") {
+			    $data['light'] = "off";
+		     }
+       		     elseif($light == "80") {
+			    $data['light'] = "on"; // but when pump 1 and pump 2 both on
+		     }
+		     else {
+			    $data['light'] = "unknown";
+			     print "light unknown = $light\n";
+		     }
+
+		    $pump = substr($hex, 0, 2);
+		    if($pump == "00") {
+			    $data['pump1'] = "off";
+			    $data['pump2'] = "off";
+		    }
+		    elseif($pump == "02") {
+			    $data['pump1'] = "on";
+			    $data['pump2'] = "off";
+		    }
+		    elseif($pump == "03") {
+			    $data['pump1'] = "on";
+			    $data['pump2'] = "on";
+		    }
+		    elseif($pump == "08") {
+			    $data['pump1'] = "off";
+			    $data['pump2'] = "on";
+		    }
+		     else {
+			    $data['pump1'] = "unknown";
+			    $data['pump2'] = "unknown";
+			     print "pump unknown = $pump\n";
+		     }
+	}
 
             $buffer = "";
             $append = true;
