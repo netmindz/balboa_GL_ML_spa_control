@@ -2,7 +2,12 @@
 
 $data = array();
 
-$fp = fsockopen("hottub", 7777, $errno, $errstr, 30);
+if($_SERVER['argc'] == 2) {
+	$fp = fopen($_SERVER['argv'][1], "r");
+}
+else {
+	$fp = fsockopen("hottub", 7777, $errno, $errstr, 30);
+}
 $fh = fopen("dump", "w");
 $i = 0;
 if (!$fp) {
@@ -36,9 +41,10 @@ if (!$fp) {
                 print_r($data);
             }
         }
-        if ($append) {
+        if ($append && $d != "\n") {
             $buffer .= $d;
         }
     }
     fclose($fp);
 }
+print_r($data);
