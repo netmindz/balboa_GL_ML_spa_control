@@ -31,13 +31,14 @@ if (!$fp) {
             fputs($fh, $buffer . "\n");
 
 	    $hex = bin2hex($buffer);
+//print "hex = $hex\n";
 	    // fa1433343043 = header + 340C = 34.0 deg C
 	    if(preg_match("/fa14(.{8})(.+)/", $hex, $matches)) {
+		    print "status message\n";
 		    $hexTemp = $matches[1];
 		    $hex = $matches[2];
-		    #print "hex = $hex\n";
+		    print "status hex = $hex\n";
 		    
-		    #                    $data['temp'] = substr($buffer, 2, 3)/10;
 		    if($hexTemp == "2d2d2d") {
 			$data['temp'] = "----";
 		    }
@@ -87,23 +88,30 @@ if (!$fp) {
 		     }
 
 		    $light = substr($hex, 3, 1);
-		    if($light == "03") {
+		    if($light == "3") {
 			    $data['light'] = "on";
 		    }
-       		     elseif($light == "00") {
+       		     elseif($light == "0") {
 			    $data['light'] = "off";
 		     }
 		     else {
 			    $data['light'] = "unknown($light)";
 		     }
 
-
 		     $status = substr($hex, 10, 2);
-       		     if($status == "80") {
-			    $data['status'] = "p1=on, p2=on";
+		     if($status == "00") {
+			    $data['status'] = "";
 		     }
 		     elseif($status == "04") {
 			    $data['status'] = "blower on";
+		     }
+		     else {
+			    $data['status'] = "unknown ($status)";
+		     }
+		    // needs work, not sure any of this is right bar blower
+		    /*
+       		     if($status == "80") {
+			    $data['status'] = "p1=on, p2=on";
 		     }
 		     elseif($status == "08") {
 			    $data['status'] = "light on";
@@ -111,15 +119,17 @@ if (!$fp) {
 		     elseif($status == "80") {
 			    $data['status'] = "p1=on, p2=on";
 		     }
-		     elseif($status == "00") {
-			    $data['status'] = "";
-		     }
-		     else {
-			    $data['status'] = "unknown";
-			     print "status unknown = $status\n";
-		     }
+		     */
 
-	}
+	    }
+	    elseif(preg_match("/ae0d(.+)/", $hex, $matches)) {
+		    $hex = $matches[1];
+		    	print "U status? " . substr($hex, 0, 2) . "\n";
+		    	print "U " . $hex. "\n";
+	    }
+	    else {
+		    	print "unknown hex = $hex\n";
+		}
 
             $buffer = "";
             $append = true;
@@ -135,7 +145,7 @@ if (!$fp) {
     }
     fclose($fp);
 }
-print_r($msgCount);
+#print_r($msgCount);
 
 arsort($msgCount);
 
