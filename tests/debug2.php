@@ -150,7 +150,7 @@ if (!$fp) {
     }
     fclose($fp);
 }
-#print_r($msgCount);
+print_r($msgCount);
 
 arsort($msgCount);
 
