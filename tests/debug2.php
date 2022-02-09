@@ -23,21 +23,24 @@ if (!$fp) {
         if ($d == hex2bin('FA') || $d == hex2bin('AE')) {
             $length = strlen($buffer);
 
-            if (!isset($msgCount[$buffer])) {
-                $msgCount[$buffer] = 0;
-            }
-            $msgCount[$buffer]++;
-
             fputs($fh, $buffer . "\n");
 
 	    $hex = bin2hex($buffer);
+
+            if (!isset($msgCount[$hex])) {
+                $msgCount[$hex] = 0;
+            }
+            $msgCount[$hex]++;
+
 //print "hex = $hex\n";
 	    // fa1433343043 = header + 340C = 34.0 deg C
 	    if(preg_match("/fa14(.{8})(.+)/", $hex, $matches)) {
-		    print "status message\n";
+		    print "S ";
 		    $hexTemp = $matches[1];
 		    $hex = $matches[2];
-		    print "status hex = $hex\n";
+		    if(strlen($hex) > 35) {
+			    print "\nstatus hex = $hex\n";
+	    	}
 		    
 		    if($hexTemp == "2d2d2d") {
 			$data['temp'] = "----";
@@ -124,8 +127,10 @@ if (!$fp) {
 	    }
 	    elseif(preg_match("/ae0d(.+)/", $hex, $matches)) {
 		    $hex = $matches[1];
-		    	print "U status? " . substr($hex, 0, 2) . "\n";
-		    	print "U " . $hex. "\n";
+		    	print "U" . substr($hex, 0, 2) . " ";
+		    	if(strlen($hex) > 29) {
+		    		print "\nU " . $hex. "\n";
+			}
 	    }
 	    else {
 		    	print "unknown hex = $hex\n";
