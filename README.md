@@ -2,7 +2,9 @@
 
 While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, this is *NOT* compatible with the older GL/EL range such as the GL2000.
 
-At the moment this protect is just to pull together the information that has been established.
+The aim of this project is to achieve similar results
+
+Current state: PoC app for ESP32 that sends current temperature to Home Assistant
 
 ![gl2000](GL2000_pcb_2.jpg)
 
