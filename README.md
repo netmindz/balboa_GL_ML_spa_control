@@ -15,6 +15,7 @@ Original discssion regarding support for spa controllers with 8 pin rather than 
 
 # Connection
 * Pin 1+3 - RS485
-* Pin 2,4,5 - Unknown
-* Pin 6   - 9.7V - PSU?
+* Pin 2,4 - Unknown
+* Pin 5 - Clock?
+* Pin 6   - 9.7V - PSU? - limited current avail
 * Pin 7+8 - GND
