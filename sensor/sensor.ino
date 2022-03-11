@@ -1,10 +1,14 @@
 #ifdef ESP32
 #include <WiFi.h>
+#include <ESPmDNS.h>
 #else
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial tub(D6, D7); // RX, TX
 #endif
 #include <ArduinoHA.h>
-#include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
@@ -63,34 +67,71 @@ void setup() {
   Serial.print(F("Connected with IP: "));
   Serial.println(WiFi.localIP());
 
+#ifndef ESP32
+  tub.begin(115200);
+#endif
+
   ArduinoOTA.setHostname("hottub-sensor");
 
+#ifdef ESP32
   ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
+  .onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH)
+      type = "sketch";
+    else // U_SPIFFS
+      type = "filesystem";
 
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+    Serial.println("Start updating " + type);
+  })
+  .onEnd([]() {
+    Serial.println("\nEnd");
+  })
+  .onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  })
+  .onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+#else
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
 
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+#endif
   ArduinoOTA.begin();
 
 
@@ -109,11 +150,12 @@ void setup() {
 }
 
 String result = "";
-double tempValue;
+double tubTemp;
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
 
+#ifdef ESP32
   if (!isConnected) {
     Serial.print("Try to connect to hottub ... ");
     if (!client.connect("hottub", 7777)) {
@@ -127,38 +169,33 @@ void loop() {
       isConnected = true;
     }
   }
-
-
   if (isConnected && client.available() > 0) {
     size_t len = client.available();
-//        Serial.printf("bytes avail = %u\n", len);
+    //        Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     client.read(buf, len);
-    for (int i = 0; i < len; i++) {
-      if (String(buf[i], HEX) == "fa") {
-//        Serial.printf("HexString2ASCIIString message = %s\n", HexString2ASCIIString(result));
-        Serial.print("message = ");
-        Serial.println(result);
-
-        if(result.substring(0,4) == "fa14") {
-          tempValue = (HexString2ASCIIString(result.substring(4,10)).toDouble() / 10);
-          Serial.printf("temp = %f\n", tempValue);
-        }
-        
-        result = ""; // clear buffer
-//        Serial.println("\n");
-      }
-      if (buf[i] < 0x10) {
-        result += '0';
-      }
-      result += String(buf[i], HEX);
-    }
+    handleBytes(buf, len);
   }
+#else
+  if (tub.available() > 0) {
+    size_t len = tub.available();
+//    Serial.printf("bytes avail = %u\n", len);
+    uint8_t buf[len];
+    tub.read(buf, len);
+    handleBytes(buf, len);
+  }
+#endif
 
   if ((millis() - lastSentAt) >= 10000) {
-    Serial.printf("Send temp data %f\n", tempValue);
     lastSentAt = millis();
-    temp.setValue(tempValue);
+//    if(tubTemp > 0) {
+      Serial.printf("Send temp data %f\n", tubTemp);
+      lastSentAt = millis();
+      temp.setValue(tubTemp);
+//    }
+//    else {
+//      Serial.printf("No temp data yet\n");
+//    }
 
     // Supported data types:
     // uint32_t (uint16_t, uint8_t)
@@ -166,6 +203,32 @@ void loop() {
     // double
     // float
     // const char*
+  }
+}
+
+void handleBytes(uint8_t buf[], size_t len) {
+  for (int i = 0; i < len; i++) {
+    if (String(buf[i], HEX) == "fa") {
+      //        Serial.printf("HexString2ASCIIString message = %s\n", HexString2ASCIIString(result));
+      Serial.print("message = ");
+      Serial.println(result);
+
+      if (result.substring(0, 4) == "fa14") {
+        double tempValue;
+        tempValue = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+        Serial.printf("temp = %f\n", tempValue);
+        if(tempValue > 10) { // hack just to handle temp showing as 3.8 not 38
+          tubTemp = tempValue;
+        }
+      }
+
+      result = ""; // clear buffer
+      //        Serial.println("\n");
+    }
+    if (buf[i] < 0x10) {
+      result += '0';
+    }
+    result += String(buf[i], HEX);
   }
 }
 
