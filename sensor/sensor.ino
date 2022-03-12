@@ -205,7 +205,7 @@ void loop() {
   }
 #endif
 
-  if ((millis() - lastSentAt) >= 10000) {
+  if ((millis() - lastSentAt) >= 5000) {
     lastSentAt = millis();
     //    if(tubTemp > 0) {
     Serial.printf("Send temp data %f\n", tubTemp);
@@ -244,15 +244,12 @@ void handleBytes(uint8_t buf[], size_t len) {
       Serial.print("message = ");
       Serial.println(result);
 
-      if (result.substring(0, 4) == "fa14") {
-        double tempValue;
-        tempValue = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
-        Serial.printf("temp = %f\n", tempValue);
-        if (tempValue > 10) { // hack just to handle temp showing as 3.8 not 38
-          tubTemp = tempValue;
-        }
+      // fa1433343043 
+      if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") {
+        tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+        Serial.printf("temp = %f\n", tubTemp);
 
-        String pump = result.substring(10, 1);
+        String pump = result.substring(13, 14);
         if(pump == "0") {
           pump1State = false;
           pump2State = false;
@@ -270,7 +267,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           pump2State = true;
         }
 
-        String heater = result.substring(11, 1);
+        String heater = result.substring(14, 15);
         if(heater == "0") {
           heaterState = false;
         }
@@ -278,15 +275,15 @@ void handleBytes(uint8_t buf[], size_t len) {
           heaterState = true;
         }
 
-        String light = result.substring(12, 1);
+        String light = result.substring(15, 16);
         if(light == "0") {
           lightState = false;
         }
-        else if(light == "1") {
+        else if(light == "3") {
           lightState = true;
         }
 
-        lastRaw = result.substring(0, 13) + " pump=" + pump + " heater=" + heater  + "light=" + light;
+        lastRaw = result.substring(4, 17) + " pump=" + pump + " heater=" + heater  + " light=" + light;
 
       }
       else if (result.substring(0, 4) == "ae0d") {
