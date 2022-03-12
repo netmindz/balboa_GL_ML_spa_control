@@ -34,6 +34,16 @@ WiFiClient client = clients[1];
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp"); // "temp" is unique ID of the sensor. You should define your own ID.
+HASensor rawData("raw");
+HABinarySensor pump1("pump1", "moving", false);
+HABinarySensor pump2("pump2", "moving", false);
+HABinarySensor heater("heater", "heat", false);
+HABinarySensor light("light", "light", false);
+
+boolean pump1State = false;
+boolean pump2State = false;
+boolean heaterState = false;
+boolean lightState = false;
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
@@ -135,21 +145,30 @@ void setup() {
   ArduinoOTA.begin();
 
 
-  // set device's details (optional)
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.1");
+  device.setSoftwareVersion("0.0.3");
+  device.setManufacturer("Balboa");
+  device.setModel("GL2000");
 
   // configure sensor (optional)
   temp.setUnitOfMeasurement("°C");
   temp.setDeviceClass("temperature");
-  temp.setIcon("mdi:home");
+//  temp.setIcon("mdi:home");
   temp.setName("Tub temperature");
 
+  pump1.setName("Pump1");
+  pump2.setName("Pump2");
+  heater.setName("Heater");
+  light.setName("Light");
+
+  rawData.setName("Raw data");
+  
   mqtt.begin(BROKER_ADDR);
 
 }
 
 String result = "";
+String lastRaw = "";
 double tubTemp;
 void loop() {
   mqtt.loop();
@@ -179,7 +198,7 @@ void loop() {
 #else
   if (tub.available() > 0) {
     size_t len = tub.available();
-//    Serial.printf("bytes avail = %u\n", len);
+    //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     tub.read(buf, len);
     handleBytes(buf, len);
@@ -188,14 +207,23 @@ void loop() {
 
   if ((millis() - lastSentAt) >= 10000) {
     lastSentAt = millis();
-//    if(tubTemp > 0) {
-      Serial.printf("Send temp data %f\n", tubTemp);
-      lastSentAt = millis();
-      temp.setValue(tubTemp);
-//    }
-//    else {
-//      Serial.printf("No temp data yet\n");
-//    }
+    //    if(tubTemp > 0) {
+    Serial.printf("Send temp data %f\n", tubTemp);
+    lastSentAt = millis();
+    temp.setValue(tubTemp);
+
+    pump1.setState(pump1State);
+    pump2.setState(pump2State);
+    heater.setState(heaterState);
+    light.setState(lightState);
+
+   
+    rawData.setValue(lastRaw.c_str());
+
+    //    }
+    //    else {
+    //      Serial.printf("No temp data yet\n");
+    //    }
 
     // Supported data types:
     // uint32_t (uint16_t, uint8_t)
@@ -208,7 +236,10 @@ void loop() {
 
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa") {
+    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae") {
+      
+      // next byte is start of new message, so process what we have in result buffer
+      
       //        Serial.printf("HexString2ASCIIString message = %s\n", HexString2ASCIIString(result));
       Serial.print("message = ");
       Serial.println(result);
@@ -217,13 +248,54 @@ void handleBytes(uint8_t buf[], size_t len) {
         double tempValue;
         tempValue = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
         Serial.printf("temp = %f\n", tempValue);
-        if(tempValue > 10) { // hack just to handle temp showing as 3.8 not 38
+        if (tempValue > 10) { // hack just to handle temp showing as 3.8 not 38
           tubTemp = tempValue;
         }
+
+        String pump = result.substring(10, 1);
+        if(pump == "0") {
+          pump1State = false;
+          pump2State = false;
+        }
+        else if(pump == "2") {
+          pump1State = true;
+          pump2State = false;
+        }
+        else if(pump == "3") {
+          pump1State = true;
+          pump2State = true;
+        }
+        else if(pump == "8") {
+          pump1State = false;
+          pump2State = true;
+        }
+
+        String heater = result.substring(11, 1);
+        if(heater == "0") {
+          heaterState = false;
+        }
+        else if(heater == "1" && heater == "2") {
+          heaterState = true;
+        }
+
+        String light = result.substring(12, 1);
+        if(light == "0") {
+          lightState = false;
+        }
+        else if(light == "1") {
+          lightState = true;
+        }
+
+        lastRaw = result.substring(0, 13) + " pump=" + pump + " heater=" + heater  + "light=" + light;
+
+      }
+      else if (result.substring(0, 4) == "ae0d") {
+
       }
 
+      
       result = ""; // clear buffer
-      //        Serial.println("\n");
+
     }
     if (buf[i] < 0x10) {
       result += '0';
