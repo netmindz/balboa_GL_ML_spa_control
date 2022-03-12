@@ -24,7 +24,6 @@ const char passphrase[] = SECRET_PSK;   /* Replace with your WPA2 passphrase */
 
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
-unsigned long lastSentAt = millis();
 double lastValue = 0;
 
 WiFiClient clients[2];
@@ -37,6 +36,8 @@ HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp"); // "temp" is unique ID of the sensor. You should define your own ID.
 HASensor rawData("raw");
+HASensor rawData2("raw2");
+HASensor rawData3("raw3");
 HABinarySensor pump1("pump1", "moving", false);
 HABinarySensor pump2("pump2", "moving", false);
 HABinarySensor heater("heater", "heat", false);
@@ -164,6 +165,8 @@ void setup() {
   light.setName("Light");
 
   rawData.setName("Raw data");
+  rawData2.setName("Raw data2");
+  rawData3.setName("Raw data3");
   
   mqtt.begin(BROKER_ADDR);
 
@@ -171,7 +174,10 @@ void setup() {
 
 String result = "";
 String lastRaw = "";
+String lastRaw2 = "";
+String lastRaw3 = "";
 double tubTemp;
+boolean newData = false;
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
@@ -203,10 +209,9 @@ void loop() {
     handleBytes(buf, len);
   }
 
-  if ((millis() - lastSentAt) >= 5000) {
-    lastSentAt = millis();
+  if (newData) {
+    newData = false;
     Serial.printf("Send temp data %f\n", tubTemp);
-    lastSentAt = millis();
     temp.setValue(tubTemp);
 
     pump1.setState(pump1State);
@@ -215,13 +220,15 @@ void loop() {
     light.setState(lightState);
    
     rawData.setValue(lastRaw.c_str());
+    rawData2.setValue(lastRaw2.c_str());
+    rawData3.setValue(lastRaw3.c_str());
 
   }
 }
 
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae") {
+    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "fb") {
       
       // next byte is start of new message, so process what we have in result buffer
       
@@ -243,7 +250,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           pump1State = true;
           pump2State = false;
         }
-        else if(pump == "3") {
+        else if(pump == "a") {
           pump1State = true;
           pump2State = true;
         }
@@ -268,11 +275,24 @@ void handleBytes(uint8_t buf[], size_t len) {
           lightState = true;
         }
 
-        lastRaw = result.substring(4, 17) + " pump=" + pump + " heater=" + heater  + " light=" + light;
+        String newRaw = result.substring(4, 17) + " pump=" + pump + " heater=" + heater  + " light=" + light;
+        if(lastRaw != newRaw) {
+          newData = true;
+          lastRaw = newRaw;
+        }
 
       }
+      else if (result.substring(0, 2) == "fb") {
+        if(lastRaw2 != result) {
+          newData = true;
+          lastRaw2 = result;
+        }
+      }
       else if (result.substring(0, 4) == "ae0d") {
-
+        if(lastRaw3 != result) {
+          newData = true;
+          lastRaw3 = result;
+        }
       }
 
       
