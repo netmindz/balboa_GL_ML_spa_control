@@ -5,8 +5,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <SoftwareSerial.h>
-
-SoftwareSerial tub(D6, D7); // RX, TX
 #endif
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
@@ -30,7 +28,11 @@ unsigned long lastSentAt = millis();
 double lastValue = 0;
 
 WiFiClient clients[2];
-WiFiClient client = clients[1];
+#ifdef ESP32
+WiFiClient tub = clients[1];
+#else
+SoftwareSerial tub(D6, D7); // RX, TX
+#endif
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp"); // "temp" is unique ID of the sensor. You should define your own ID.
@@ -177,7 +179,7 @@ void loop() {
 #ifdef ESP32
   if (!isConnected) {
     Serial.print("Try to connect to hottub ... ");
-    if (!client.connect("hottub", 7777)) {
+    if (!tub.connect("hottub", 7777)) {
       Serial.println("Connection failed.");
       Serial.println("Waiting 5 seconds before retrying...");
       delay(5000);
@@ -188,14 +190,11 @@ void loop() {
       isConnected = true;
     }
   }
-  if (isConnected && client.available() > 0) {
-    size_t len = client.available();
-    //        Serial.printf("bytes avail = %u\n", len);
-    uint8_t buf[len];
-    client.read(buf, len);
-    handleBytes(buf, len);
+  if (!isConnected) {
+    return;
   }
-#else
+#endif
+
   if (tub.available() > 0) {
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
@@ -203,11 +202,9 @@ void loop() {
     tub.read(buf, len);
     handleBytes(buf, len);
   }
-#endif
 
   if ((millis() - lastSentAt) >= 5000) {
     lastSentAt = millis();
-    //    if(tubTemp > 0) {
     Serial.printf("Send temp data %f\n", tubTemp);
     lastSentAt = millis();
     temp.setValue(tubTemp);
@@ -216,21 +213,9 @@ void loop() {
     pump2.setState(pump2State);
     heater.setState(heaterState);
     light.setState(lightState);
-
    
     rawData.setValue(lastRaw.c_str());
 
-    //    }
-    //    else {
-    //      Serial.printf("No temp data yet\n");
-    //    }
-
-    // Supported data types:
-    // uint32_t (uint16_t, uint8_t)
-    // int32_t (int16_t, int8_t)
-    // double
-    // float
-    // const char*
   }
 }
 
@@ -240,12 +225,12 @@ void handleBytes(uint8_t buf[], size_t len) {
       
       // next byte is start of new message, so process what we have in result buffer
       
-      //        Serial.printf("HexString2ASCIIString message = %s\n", HexString2ASCIIString(result));
       Serial.print("message = ");
       Serial.println(result);
 
-      // fa1433343043 
-      if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") {
+      // fa1433343043 = header + 340C = 34.0C
+      if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") { // Change to 46 if fub in F not C
+        
         tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
         Serial.printf("temp = %f\n", tubTemp);
 
@@ -271,7 +256,7 @@ void handleBytes(uint8_t buf[], size_t len) {
         if(heater == "0") {
           heaterState = false;
         }
-        else if(heater == "1" && heater == "2") {
+        else if(heater == "1" || heater == "2") {
           heaterState = true;
         }
 
