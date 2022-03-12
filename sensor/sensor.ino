@@ -38,10 +38,18 @@ HASensor temp("temp"); // "temp" is unique ID of the sensor. You should define y
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
+HASensor rawData4("raw4");
+HASensor rawData5("raw5");
+HASensor rawData6("raw6");
+HASensor rawData7("raw7");
 HABinarySensor pump1("pump1", "moving", false);
 HABinarySensor pump2("pump2", "moving", false);
 HABinarySensor heater("heater", "heat", false);
 HABinarySensor light("light", "light", false);
+
+#define MAX_SRV_CLIENTS 2
+WiFiServer server(23);
+WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 boolean pump1State = false;
 boolean pump2State = false;
@@ -149,7 +157,7 @@ void setup() {
 
 
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.3");
+  device.setSoftwareVersion("0.0.4");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -165,10 +173,19 @@ void setup() {
   light.setName("Light");
 
   rawData.setName("Raw data");
-  rawData2.setName("Raw data2");
-  rawData3.setName("Raw data3");
+  rawData2.setName("FB: ");
+  rawData3.setName("D00: ");
+  rawData4.setName("D01: ");
+  rawData5.setName("D02: ");
+  rawData6.setName("D03: ");
+  rawData7.setName("CA82: ");
   
   mqtt.begin(BROKER_ADDR);
+
+  //start server
+  server.begin();
+  server.setNoDelay(true);
+
 
 }
 
@@ -176,6 +193,10 @@ String result = "";
 String lastRaw = "";
 String lastRaw2 = "";
 String lastRaw3 = "";
+String lastRaw4 = "";
+String lastRaw5 = "";
+String lastRaw6 = "";
+String lastRaw7 = "";
 double tubTemp;
 boolean newData = false;
 void loop() {
@@ -209,10 +230,12 @@ void loop() {
     handleBytes(buf, len);
   }
 
+  telnetLoop();
+
   if (newData) {
     newData = false;
     Serial.printf("Send temp data %f\n", tubTemp);
-    temp.setValue(tubTemp);
+      temp.setValue(tubTemp);
 
     pump1.setState(pump1State);
     pump2.setState(pump2State);
@@ -222,18 +245,25 @@ void loop() {
     rawData.setValue(lastRaw.c_str());
     rawData2.setValue(lastRaw2.c_str());
     rawData3.setValue(lastRaw3.c_str());
+    rawData4.setValue(lastRaw4.c_str());
+    rawData5.setValue(lastRaw5.c_str());
+    rawData6.setValue(lastRaw6.c_str());
+    rawData7.setValue(lastRaw7.c_str());
 
   }
+
 }
 
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "fb") {
+    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "fb" || String(buf[i], HEX) == "ca") {
       
       // next byte is start of new message, so process what we have in result buffer
       
       Serial.print("message = ");
       Serial.println(result);
+
+      telnetSend(result);
 
       // fa1433343043 = header + 340C = 34.0C
       if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") { // Change to 46 if fub in F not C
@@ -288,10 +318,34 @@ void handleBytes(uint8_t buf[], size_t len) {
           lastRaw2 = result;
         }
       }
-      else if (result.substring(0, 4) == "ae0d") {
+      else if (result.substring(0, 6) == "ae0d00") {
         if(lastRaw3 != result) {
           newData = true;
           lastRaw3 = result;
+        }
+      }
+      else if (result.substring(0, 6) == "ae0d01") {
+        if(lastRaw4 != result) {
+          newData = true;
+          lastRaw4 = result;
+        }
+      }
+      else if (result.substring(0, 6) == "ae0d02") {
+        if(lastRaw5 != result) {
+          newData = true;
+          lastRaw5 = result;
+        }
+      }
+      else if (result.substring(0, 6) == "ae0d03") {
+        if(lastRaw6 != result) {
+          newData = true;
+          lastRaw6 = result;
+        }
+      }
+      else if (result.substring(0, 4) == "ca82") {
+        if(lastRaw7 != result) {
+          newData = true;
+          lastRaw7 = result;
         }
       }
 
