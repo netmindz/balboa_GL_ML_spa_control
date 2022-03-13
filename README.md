@@ -4,7 +4,8 @@ While there is the excellent https://github.com/ccutrer/balboa_worldwide_app pro
 
 The aim of this project is to achieve similar results
 
-Current state: PoC app for ESP32 or ESP8266 that sends current status including temperature to Home Assistant
+## Current state
+App for ESP32 or ESP8266 that sends current status including temperature to Home Assistant and also simple web status page with live updates via WebSocket
 
 ![gl2000](GL2000_pcb_2.jpg)
 
