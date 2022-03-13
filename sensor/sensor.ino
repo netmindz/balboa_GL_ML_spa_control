@@ -264,7 +264,9 @@ void loop() {
   if (newData) {
     newData = false;
     Serial.printf("Send temp data %f\n", tubTemp);
-    temp.setValue(tubTemp);
+    if(tubTemp != -1) { // no data yet
+      temp.setValue(tubTemp);
+    }
 
     pump1.setState(pump1State);
     pump2.setState(pump2State);
