@@ -301,15 +301,10 @@ void handleBytes(uint8_t buf[], size_t len) {
       telnetSend(result);
 
       // fa1433343043 = header + 340C = 34.0C
-      if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") { // Change to 46 if fub in F not C
+      if (result.substring(0, 4) == "fa14") {
 
-        if (HexString2ASCIIString(result.substring(4, 10)) != "---") {
+        if (result.substring(11, 13) == "30") {
           tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
-
-          if (tubTemp < 5) {
-            Serial.println("Bad data, ignore"); // reall need checksum, but for now this helps avoid temp 3 or 0
-            return;
-          }
           Serial.printf("temp = %f\n", tubTemp);
         }
         else {
