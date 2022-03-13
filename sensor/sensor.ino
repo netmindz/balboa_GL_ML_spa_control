@@ -8,11 +8,11 @@
 #else
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <SoftwareSerial.h>
 #endif
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <SoftwareSerial.h>
 #include <WebSocketsServer.h>
 #include <WebServer.h>
 
@@ -38,7 +38,9 @@ WiFiClient clients[2];
 WiFiClient tub = clients[1];
 #else
 #ifdef ESP32
-SoftwareSerial tub(19, 23); // RX, TX
+#define tub Serial2
+#define RX_PIN 19
+#define TX_PIN 23
 #else
 SoftwareSerial tub(D6, D7); // RX, TX
 #endif
@@ -104,7 +106,12 @@ void setup() {
   Serial.println(WiFi.localIP());
 
 #ifndef SERIAL_OVER_IP_ADDR
+#ifdef ESP32
+  Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN); 
+  tub.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+#else
   tub.begin(115200);
+#endif
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -172,7 +179,7 @@ void setup() {
 
 
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.4");
+  device.setSoftwareVersion("0.0.5");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
