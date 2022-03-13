@@ -226,6 +226,7 @@ String lastRaw6 = "";
 String lastRaw7 = "";
 double tubTemp = -1;
 boolean newData = false;
+String lastJSON = "";
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
@@ -282,13 +283,16 @@ void loop() {
     rawData7.setValue(lastRaw7.c_str());
 
     String json = getStatusJSON();
-    webSocket.broadcastTXT(json);
+    if(json != lastJSON) {
+      webSocket.broadcastTXT(json);
+      lastJSON = json;
+    }
   }
 
 }
 
 String getStatusJSON() {
-  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\" } }";
+  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + " } }";
 }
 
 void handleBytes(uint8_t buf[], size_t len) {
