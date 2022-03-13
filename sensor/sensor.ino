@@ -1,14 +1,20 @@
+// If connect to serial port over TCP, define the following
+// #define SERIAL_OVER_IP_ADDR "192.168.178.131"
+
+
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #else
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
-#include <SoftwareSerial.h>
 #endif
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <SoftwareSerial.h>
+#include <WebSocketsServer.h>
+#include <WebServer.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -17,24 +23,30 @@
 // #define SECRET_PSK "";   /* Replace with your WPA2 passphrase */
 // *************************************************************************
 
-const char ssid[] = SECRET_SSID;         /* Replace with your SSID */
-const char passphrase[] = SECRET_PSK;   /* Replace with your WPA2 passphrase */
+const char ssid[] = SECRET_SSID;
+const char passphrase[] = SECRET_PSK;
 
 #define BROKER_ADDR IPAddress(192,168,178,42)
 
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
-double lastValue = 0;
+
 
 WiFiClient clients[2];
-#ifdef ESP32
+
+#ifdef SERIAL_OVER_IP_ADDR
 WiFiClient tub = clients[1];
+#else
+#ifdef ESP32
+SoftwareSerial tub(19, 23); // RX, TX
 #else
 SoftwareSerial tub(D6, D7); // RX, TX
 #endif
+#endif
+
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
-HASensor temp("temp"); // "temp" is unique ID of the sensor. You should define your own ID.
+HASensor temp("temp");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
@@ -50,6 +62,9 @@ HABinarySensor light("light", "light", false);
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
+
+WebSocketsServer webSocket = WebSocketsServer(81);
+WebServer webserver(80);
 
 boolean pump1State = false;
 boolean pump2State = false;
@@ -88,7 +103,7 @@ void setup() {
   Serial.print(F("Connected with IP: "));
   Serial.println(WiFi.localIP());
 
-#ifndef ESP32
+#ifndef SERIAL_OVER_IP_ADDR
   tub.begin(115200);
 #endif
 
@@ -164,7 +179,7 @@ void setup() {
   // configure sensor (optional)
   temp.setUnitOfMeasurement("°C");
   temp.setDeviceClass("temperature");
-//  temp.setIcon("mdi:home");
+  //  temp.setIcon("mdi:home");
   temp.setName("Tub temperature");
 
   pump1.setName("Pump1");
@@ -179,13 +194,18 @@ void setup() {
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
   rawData7.setName("CA82: ");
-  
+
   mqtt.begin(BROKER_ADDR);
 
-  //start server
+  // start telnet server
   server.begin();
   server.setNoDelay(true);
 
+  // start web
+  webserver.on("/", handleRoot);
+  webserver.begin();
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
 
 }
 
@@ -197,16 +217,16 @@ String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
-double tubTemp;
+double tubTemp = -1;
 boolean newData = false;
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
 
-#ifdef ESP32
+#ifdef SERIAL_OVER_IP_ADDR
   if (!isConnected) {
     Serial.print("Try to connect to hottub ... ");
-    if (!tub.connect("hottub", 7777)) {
+    if (!tub.connect(SERIAL_OVER_IP_ADDR, 7777)) {
       Serial.println("Connection failed.");
       Serial.println("Waiting 5 seconds before retrying...");
       delay(5000);
@@ -231,17 +251,19 @@ void loop() {
   }
 
   telnetLoop();
+  webserver.handleClient();
+  webSocket.loop();
 
   if (newData) {
     newData = false;
     Serial.printf("Send temp data %f\n", tubTemp);
-      temp.setValue(tubTemp);
+    temp.setValue(tubTemp);
 
     pump1.setState(pump1State);
     pump2.setState(pump2State);
     heater.setState(heaterState);
     light.setState(lightState);
-   
+
     rawData.setValue(lastRaw.c_str());
     rawData2.setValue(lastRaw2.c_str());
     rawData3.setValue(lastRaw3.c_str());
@@ -250,16 +272,22 @@ void loop() {
     rawData6.setValue(lastRaw6.c_str());
     rawData7.setValue(lastRaw7.c_str());
 
+    String json = getStatusJSON();
+    webSocket.broadcastTXT(json);
   }
 
+}
+
+String getStatusJSON() {
+  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\" } }";
 }
 
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
     if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "fb" || String(buf[i], HEX) == "ca") {
-      
+
       // next byte is start of new message, so process what we have in result buffer
-      
+
       Serial.print("message = ");
       Serial.println(result);
 
@@ -267,89 +295,99 @@ void handleBytes(uint8_t buf[], size_t len) {
 
       // fa1433343043 = header + 340C = 34.0C
       if (result.substring(0, 4) == "fa14" && result.substring(11, 13) == "30") { // Change to 46 if fub in F not C
-        
-        tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
-        Serial.printf("temp = %f\n", tubTemp);
+
+        if (HexString2ASCIIString(result.substring(4, 10)) != "---") {
+          tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+
+          if (tubTemp < 5) {
+            Serial.println("Bad data, ignore"); // reall need checksum, but for now this helps avoid temp 3 or 0
+            return;
+          }
+          Serial.printf("temp = %f\n", tubTemp);
+        }
+        else {
+          Serial.println("temp = unknown");
+        }
 
         String pump = result.substring(13, 14);
-        if(pump == "0") {
+        if (pump == "0") {
           pump1State = false;
           pump2State = false;
         }
-        else if(pump == "2") {
+        else if (pump == "2") {
           pump1State = true;
           pump2State = false;
         }
-        else if(pump == "a") {
+        else if (pump == "a") {
           pump1State = true;
           pump2State = true;
         }
-        else if(pump == "8") {
+        else if (pump == "8") {
           pump1State = false;
           pump2State = true;
         }
 
         String heater = result.substring(14, 15);
-        if(heater == "0") {
+        if (heater == "0") {
           heaterState = false;
         }
-        else if(heater == "1" || heater == "2") {
+        else if (heater == "1" || heater == "2") {
           heaterState = true;
         }
 
         String light = result.substring(15, 16);
-        if(light == "0") {
+        if (light == "0") {
           lightState = false;
         }
-        else if(light == "3") {
+        else if (light == "3") {
           lightState = true;
         }
 
         String newRaw = result.substring(4, 17) + " pump=" + pump + " heater=" + heater  + " light=" + light;
-        if(lastRaw != newRaw) {
+        if (lastRaw != newRaw) {
           newData = true;
           lastRaw = newRaw;
         }
 
       }
       else if (result.substring(0, 2) == "fb") {
-        if(lastRaw2 != result) {
+        if (lastRaw2 != result) {
           newData = true;
           lastRaw2 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d00") {
-        if(lastRaw3 != result) {
+        if (lastRaw3 != result) {
           newData = true;
           lastRaw3 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d01") {
-        if(lastRaw4 != result) {
+        if (lastRaw4 != result) {
           newData = true;
           lastRaw4 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d02") {
-        if(lastRaw5 != result) {
+        if (lastRaw5 != result) {
           newData = true;
           lastRaw5 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d03") {
-        if(lastRaw6 != result) {
+        if (lastRaw6 != result) {
           newData = true;
           lastRaw6 = result;
         }
       }
       else if (result.substring(0, 4) == "ca82") {
-        if(lastRaw7 != result) {
+        if (lastRaw7 != result) {
           newData = true;
           lastRaw7 = result;
         }
       }
 
-      
+
       result = ""; // clear buffer
 
     }
