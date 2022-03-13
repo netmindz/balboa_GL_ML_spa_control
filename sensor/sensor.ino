@@ -338,8 +338,11 @@ void handleBytes(uint8_t buf[], size_t len) {
         if (heater == "0") {
           heaterState = false;
         }
-        else if (heater == "1" || heater == "2") {
+        else if (heater == "1") {
           heaterState = true;
+        }
+        else if (heater == "2") {
+          heaterState = false; // heater off, verifying temp change
         }
 
         String light = result.substring(15, 16);
@@ -350,7 +353,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           lightState = true;
         }
 
-        String newRaw = result.substring(4, 17) + " pump=" + pump + " heater=" + heater  + " light=" + light;
+        String newRaw = result.substring(4, 17) + " pump=" + pump + " light=" + light;
         if (lastRaw != newRaw) {
           newData = true;
           lastRaw = newRaw;
