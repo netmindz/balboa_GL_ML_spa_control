@@ -256,7 +256,7 @@ void handleBytes(uint8_t buf[], size_t len) {
 //          Serial.printf("temp = %f\n", tubTemp);
         }
         else if (result.substring(10, 12) == "2d") {
-          Serial.println("temp = unknown");
+//          Serial.println("temp = unknown");
 //          telnetSend("temp = unknown");
         }
         else {
@@ -264,6 +264,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           telnetSend("non-temp " + result);
         }
 
+        // If messages is temp or ---- for temp, it is status message
         if(result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
           String pump = result.substring(13, 14);
           if (pump == "0") {
@@ -317,19 +318,8 @@ void handleBytes(uint8_t buf[], size_t len) {
           lastRaw7 = result.substring(46, 64);
         }
 
-//        if (lastRaw2 != result) {
-//          newData = true;
-//          lastRaw2 = result;
-//        }
-
         // end of FA14        
       }
-//      else if (result.substring(0, 2) == "fb") {
-//        if (lastRaw2 != result) {
-//          newData = true;
-//          lastRaw2 = result;
-//        }
-//      }
       else if (result.substring(0, 6) == "ae0d00") {
         if (lastRaw3 != result && result != "ae0d000000000000000000000000002d") {
           newData = true;
