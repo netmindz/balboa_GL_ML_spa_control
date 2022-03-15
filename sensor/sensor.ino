@@ -109,6 +109,7 @@ void setup() {
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN); 
   tub.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+  Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
 #else
   tub.begin(115200);
 #endif
@@ -136,12 +137,12 @@ void setup() {
   light.setName("Light");
 
   rawData.setName("Raw data");
-  rawData2.setName("FB: ");
+  rawData2.setName("FA: ");
   rawData3.setName("D00: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
-  rawData7.setName("CA82: ");
+  rawData7.setName("FA Tail: ");
 
   mqtt.begin(BROKER_ADDR);
 
@@ -205,9 +206,9 @@ void loop() {
 
   if (newData) {
     newData = false;
-    Serial.printf("Send temp data %f\n", tubTemp);
     if(tubTemp != -1) { // no data yet
       temp.setValue(tubTemp);
+      Serial.printf("Send temp data %f\n", tubTemp);
     }
 
     pump1.setState(pump1State);
@@ -238,7 +239,7 @@ String getStatusJSON() {
 
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "fb" || String(buf[i], HEX) == "ca") {
+    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "ca") { // || String(buf[i], HEX) == "fb"
 
       // next byte is start of new message, so process what we have in result buffer
 
@@ -250,92 +251,107 @@ void handleBytes(uint8_t buf[], size_t len) {
       // fa1433343043 = header + 340C = 34.0C
       if (result.substring(0, 4) == "fa14") {
 
-        if (result.substring(11, 13) == "30") {
+        if (result.substring(10, 12) == "43") {
           tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
-          Serial.printf("temp = %f\n", tubTemp);
+//          Serial.printf("temp = %f\n", tubTemp);
+        }
+        else if (result.substring(10, 12) == "2d") {
+          Serial.println("temp = unknown");
+//          telnetSend("temp = unknown");
         }
         else {
-          Serial.println("temp = unknown");
+          Serial.println("non-temp " + result);
+          telnetSend("non-temp " + result);
         }
 
-        String pump = result.substring(13, 14);
-        if (pump == "0") {
-          pump1State = false;
-          pump2State = false;
+        if(result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
+          String pump = result.substring(13, 14);
+          if (pump == "0") {
+            pump1State = false;
+            pump2State = false;
+          }
+          else if (pump == "2") {
+            pump1State = true;
+            pump2State = false;
+          }
+          else if (pump == "a") {
+            pump1State = true;
+            pump2State = true;
+          }
+          else if (pump == "8") {
+            pump1State = false;
+            pump2State = true;
+          }
+  
+          String heater = result.substring(14, 15);
+          if (heater == "0") {
+            heaterState = false;
+          }
+          else if (heater == "1") {
+            heaterState = true;
+          }
+          else if (heater == "2") {
+            heaterState = false; // heater off, verifying temp change
+          }
+  
+          String light = result.substring(15, 16);
+          if (light == "0") {
+            lightState = false;
+          }
+          else if (light == "3") {
+            lightState = true;
+          }
+  
+          String newRaw = result.substring(4, 17) + " pump=" + pump + " light=" + light;
+          if (lastRaw != newRaw) {
+            newData = true;
+            lastRaw = newRaw;
+          }
         }
-        else if (pump == "2") {
-          pump1State = true;
-          pump2State = false;
-        }
-        else if (pump == "a") {
-          pump1State = true;
-          pump2State = true;
-        }
-        else if (pump == "8") {
-          pump1State = false;
-          pump2State = true;
+        else {
+          // FA but not temp data
+          lastRaw2 = result.substring(4, 28); 
         }
 
-        String heater = result.substring(14, 15);
-        if (heater == "0") {
-          heaterState = false;
-        }
-        else if (heater == "1") {
-          heaterState = true;
-        }
-        else if (heater == "2") {
-          heaterState = false; // heater off, verifying temp change
+        if (result.length() == 64) {
+          lastRaw7 = result.substring(46, 64);
         }
 
-        String light = result.substring(15, 16);
-        if (light == "0") {
-          lightState = false;
-        }
-        else if (light == "3") {
-          lightState = true;
-        }
+//        if (lastRaw2 != result) {
+//          newData = true;
+//          lastRaw2 = result;
+//        }
 
-        String newRaw = result.substring(4, 17) + " pump=" + pump + " light=" + light;
-        if (lastRaw != newRaw) {
-          newData = true;
-          lastRaw = newRaw;
-        }
-
+        // end of FA14        
       }
-      else if (result.substring(0, 2) == "fb") {
-        if (lastRaw2 != result) {
-          newData = true;
-          lastRaw2 = result;
-        }
-      }
+//      else if (result.substring(0, 2) == "fb") {
+//        if (lastRaw2 != result) {
+//          newData = true;
+//          lastRaw2 = result;
+//        }
+//      }
       else if (result.substring(0, 6) == "ae0d00") {
-        if (lastRaw3 != result) {
+        if (lastRaw3 != result && result != "ae0d000000000000000000000000002d") {
           newData = true;
           lastRaw3 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d01") {
-        if (lastRaw4 != result) {
+        if (lastRaw4 != result && result != "ae0d010000000000000000000000005a") {
           newData = true;
           lastRaw4 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d02") {
-        if (lastRaw5 != result) {
+        if (lastRaw5 != result && result != "ae0d02000000000000000000000000c3") {
           newData = true;
           lastRaw5 = result;
         }
       }
       else if (result.substring(0, 6) == "ae0d03") {
-        if (lastRaw6 != result) {
+        if (lastRaw6 != result && result != "ae0d03000000000000000000000000b4") {
           newData = true;
           lastRaw6 = result;
-        }
-      }
-      else if (result.substring(0, 4) == "ca82") {
-        if (lastRaw7 != result) {
-          newData = true;
-          lastRaw7 = result;
         }
       }
 
