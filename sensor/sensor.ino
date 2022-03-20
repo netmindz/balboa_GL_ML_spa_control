@@ -15,6 +15,7 @@
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
 #include <WebServer.h>
+#include <WiFiAP.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -82,7 +83,7 @@ void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 boolean isConnected = false;
 void setup() {
   Serial.begin(115200);
-  delay(10);
+  delay(1000);
 
   // Make sure you're in station mode
   WiFi.mode(WIFI_STA);
@@ -96,14 +97,30 @@ void setup() {
   else
     WiFi.begin(ssid);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  int sanity = 0;
+  while (sanity < 200) {
+    sanity++;
+    if(WiFi.status() == WL_CONNECTED) {
+      Serial.println("");
+      Serial.print(F("Connected with IP: "));
+      Serial.println(WiFi.localIP());
+      break;
+    }
+    else {
+      delay(500);
+     Serial.print(".");
+    }
   }
+  
+  if(WiFi.status() != WL_CONNECTED) {
+    Serial.print("\n\nWifi failed, flip to fallback AP\n");
+    WiFi.softAP("hottub", "Balboa");
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(myIP);    
+  }
+  
 
-  Serial.println("");
-  Serial.print(F("Connected with IP: "));
-  Serial.println(WiFi.localIP());
 
 #ifndef SERIAL_OVER_IP_ADDR
 #ifdef ESP32
@@ -121,7 +138,7 @@ void setup() {
 
 
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.5");
+  device.setSoftwareVersion("0.0.6");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -303,7 +320,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             lightState = true;
           }
   
-          String newRaw = result.substring(4, 17) + " pump=" + pump + " light=" + light;
+          String newRaw = result.substring(13, 17) + " pump=" + pump + " light=" + light;
           if (lastRaw != newRaw) {
             newData = true;
             lastRaw = newRaw;
