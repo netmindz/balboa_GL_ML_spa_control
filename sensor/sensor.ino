@@ -140,9 +140,19 @@ void setup() {
 
   ArduinoOTA.begin();
 
+  // start telnet server
+  server.begin();
+  server.setNoDelay(true);
 
+  // start web
+  webserver.on("/", handleRoot);
+  webserver.begin();
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+
+  // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.6");
+  device.setSoftwareVersion("0.0.7");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -167,15 +177,6 @@ void setup() {
 
   mqtt.begin(BROKER_ADDR);
 
-  // start telnet server
-  server.begin();
-  server.setNoDelay(true);
-
-  // start web
-  webserver.on("/", handleRoot);
-  webserver.begin();
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
 
 }
 
@@ -227,22 +228,9 @@ void loop() {
 
   if (newData) {
     newData = false;
-    if(tubTemp != -1) { // no data yet
-      temp.setValue(tubTemp);
-      Serial.printf("Send temp data %f\n", tubTemp);
-    }
-
-    pump1.setState(pump1State);
-    pump2.setState(pump2State);
-    heater.setState(heaterState);
-    light.setState(lightState);
-
-    rawData.setValue(lastRaw.c_str());
+    
     rawData2.setValue(lastRaw2.c_str());
-    rawData3.setValue(lastRaw3.c_str());
-    rawData4.setValue(lastRaw4.c_str());
-    rawData5.setValue(lastRaw5.c_str());
-    rawData6.setValue(lastRaw6.c_str());
+
     rawData7.setValue(lastRaw7.c_str());
 
     String json = getStatusJSON();
@@ -254,10 +242,6 @@ void loop() {
 
 }
 
-String getStatusJSON() {
-  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + " } }";
-}
-
 void handleBytes(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
     if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "ca") { // || String(buf[i], HEX) == "fb"
@@ -267,13 +251,21 @@ void handleBytes(uint8_t buf[], size_t len) {
       Serial.print("message = ");
       Serial.println(result);
 
-      telnetSend(result);
+
+      if (result.length() == 64 && result.substring(0, 4) == "fa14") {
+
+        Serial.println("FA 14 Long");
+        telnetSend(result);
 
       // fa1433343043 = header + 340C = 34.0C
-      if (result.substring(0, 4) == "fa14") {
-
         if (result.substring(10, 12) == "43") {
-          tubTemp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+          double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+          if(tubTemp != tmp) {
+            newData = true;
+            tubTemp = tmp;
+            temp.setValue(tubTemp);
+            Serial.printf("Sent temp data %f\n", tubTemp);
+          }
 //          Serial.printf("temp = %f\n", tubTemp);
         }
         else if (result.substring(10, 12) == "2d") {
@@ -287,6 +279,7 @@ void handleBytes(uint8_t buf[], size_t len) {
 
         // If messages is temp or ---- for temp, it is status message
         if(result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
+          
           String pump = result.substring(13, 14);
           if (pump == "0") {
             pump1State = false;
@@ -324,48 +317,70 @@ void handleBytes(uint8_t buf[], size_t len) {
             lightState = true;
           }
   
-          String newRaw = result.substring(13, 17) + " pump=" + pump + " light=" + light;
+          String newRaw = result.substring(17, 46) + " pump=" + pump + " light=" + light;
           if (lastRaw != newRaw) {
             newData = true;
             lastRaw = newRaw;
+            rawData.setValue(lastRaw.c_str());
           }
         }
         else {
           // FA but not temp data
+          newData = true;
           lastRaw2 = result.substring(4, 28); 
         }
 
-        if (result.length() == 64) {
-          lastRaw7 = result.substring(46, 64);
-        }
+        lastRaw7 = result.substring(46, 64);
+
+        pump1.setState(pump1State);
+        pump2.setState(pump2State);
+        heater.setState(heaterState);
+        light.setState(lightState);
+
 
         // end of FA14        
       }
-      else if (result.substring(0, 6) == "ae0d00") {
-        if (lastRaw3 != result && result != "ae0d000000000000000000000000002d") {
-          newData = true;
-          lastRaw3 = result;
-        }
-      }
-      else if (result.substring(0, 6) == "ae0d01") {
-        if (lastRaw4 != result && result != "ae0d010000000000000000000000005a") {
-          newData = true;
-          lastRaw4 = result;
-        }
-      }
-      else if (result.substring(0, 6) == "ae0d02") {
-        if (lastRaw5 != result && result != "ae0d02000000000000000000000000c3") {
-          newData = true;
-          lastRaw5 = result;
-        }
-      }
-      else if (result.substring(0, 6) == "ae0d03") {
-        if (lastRaw6 != result && result != "ae0d03000000000000000000000000b4") {
-          newData = true;
-          lastRaw6 = result;
-        }
-      }
+      else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
+        Serial.println("AE 0D Long");
+        telnetSend(result);
+
+        String message = result.substring(0,32);  // ignore any FB ending
+        
+        if (result.substring(0, 6) == "ae0d00") {
+          if (!lastRaw3.equals(message)) {
+            lastRaw3 = message;
+            rawData3.setValue(lastRaw3.c_str());
+          }
+        }
+        else if (result.substring(0, 6) == "ae0d01") {
+          if (!lastRaw4.equals(message)) {
+            lastRaw4 = message;
+            rawData4.setValue(lastRaw4.c_str());
+          }
+        }
+        else if (result.substring(0, 6) == "ae0d02") {
+          if (!lastRaw5.equals(message)) {
+            lastRaw5 = message;
+            rawData5.setValue(lastRaw5.c_str());
+          }
+        }
+        else if (result.substring(0, 6) == "ae0d03") {
+          if (!lastRaw6.equals(message)) {
+            lastRaw6 = message;
+            rawData6.setValue(lastRaw6.c_str());
+          }
+        }
+        // end of AE 0D
+      }
+      else if (result.length() == 46 || result.length() == 32) {
+        // ignore the short-form messages
+        Serial.print(result.substring(0, 6) + " Short");
+      }
+      else {
+        Serial.print("Unknown message : ");
+        Serial.println(result);
+      }
 
       result = ""; // clear buffer
 

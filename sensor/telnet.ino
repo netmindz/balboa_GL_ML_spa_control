@@ -4,7 +4,7 @@ void telnetLoop() {
     int i;
     for (i = 0; i < MAX_SRV_CLIENTS; i++)
       if (!serverClients[i]) { // equivalent to !serverClients[i].connected()
-        Serial.printf("New client: index %u", i);
+        Serial.printf("New client: index %u\n", i);
         serverClients[i] = server.available();
         serverClients[i].printf("Hello %u\n", i);
         break;
