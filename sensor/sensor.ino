@@ -125,8 +125,12 @@ void setup() {
 #ifndef SERIAL_OVER_IP_ADDR
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN); 
-  tub.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+  tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
+  while (tub.available() > 0)  { // workarond for bug with hanging during Serial2.begin
+    Serial.read();
+  }
   Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
+  tub.updateBaudRate(115200);
 #else
   tub.begin(115200);
 #endif
