@@ -52,6 +52,8 @@ SoftwareSerial tub(D6, D7); // RX, TX
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp");
+HASensor targetTemp("targetTemp");
+HASensor currentState("status");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
@@ -59,6 +61,7 @@ HASensor rawData4("raw4");
 HASensor rawData5("raw5");
 HASensor rawData6("raw6");
 HASensor rawData7("raw7");
+HASensor currentMode("mode");
 HABinarySensor pump1("pump1", "moving", false);
 HABinarySensor pump2("pump2", "moving", false);
 HABinarySensor heater("heater", "heat", false);
@@ -132,7 +135,7 @@ void setup() {
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN); 
   tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
-  while (tub.available() > 0)  { // workarond for bug with hanging during Serial2.begin
+  while (tub.available() > 0)  { // workarond for bug with hanging during Serial2.begin - https://github.com/espressif/arduino-esp32/issues/5443
     Serial.read();
   }
   Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
@@ -158,31 +161,42 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.7");
+  device.setSoftwareVersion("0.0.8");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
   // configure sensor (optional)
   temp.setUnitOfMeasurement("°C");
   temp.setDeviceClass("temperature");
-  //  temp.setIcon("mdi:home");
   temp.setName("Tub temperature");
 
+  targetTemp.setUnitOfMeasurement("°C");
+  targetTemp.setDeviceClass("temperature");
+  targetTemp.setName("Target Tub temp");
+
+
+  currentState.setName("Status");
+
   pump1.setName("Pump1");
+//  pump1.setIcon("mdi:chart-bubble");
   pump2.setName("Pump2");
+//  pump2.setIcon("mdi:chart-bubble");
   heater.setName("Heater");
+//  heater.setIcon("mdi:radiator");
   light.setName("Light");
 
   rawData.setName("Raw data");
   rawData2.setName("FA: ");
-  rawData3.setName("D00: ");
+  rawData3.setName("post ffffff: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
   rawData7.setName("FA Tail: ");
 
-  mqtt.begin(BROKER_ADDR);
+  currentMode.setName("Mode");
 
+
+  mqtt.begin(BROKER_ADDR);
 
 }
 
@@ -194,7 +208,9 @@ String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
+String tubMode = "";
 double tubTemp = -1;
+String state = "unknown";
 boolean newData = false;
 String lastJSON = "";
 void loop() {
@@ -239,6 +255,8 @@ void loop() {
 
     rawData7.setValue(lastRaw7.c_str());
 
+    currentMode.setValue(tubMode.c_str());
+
     String json = getStatusJSON();
     if(json != lastJSON) {
       webSocket.broadcastTXT(json);
@@ -254,34 +272,16 @@ void handleBytes(uint8_t buf[], size_t len) {
 
       // next byte is start of new message, so process what we have in result buffer
 
-      Serial.print("message = ");
-      Serial.println(result);
+//      Serial.print("message = ");
+//      Serial.println(result);
 
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
-        Serial.println("FA 14 Long");
+//        Serial.println("FA 14 Long");
         telnetSend(result);
 
       // fa1433343043 = header + 340C = 34.0C
-        if (result.substring(10, 12) == "43") {
-          double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
-          if(tubTemp != tmp) {
-            newData = true;
-            tubTemp = tmp;
-            temp.setValue(tubTemp);
-            Serial.printf("Sent temp data %f\n", tubTemp);
-          }
-//          Serial.printf("temp = %f\n", tubTemp);
-        }
-        else if (result.substring(10, 12) == "2d") {
-//          Serial.println("temp = unknown");
-//          telnetSend("temp = unknown");
-        }
-        else {
-          Serial.println("non-temp " + result);
-          telnetSend("non-temp " + result);
-        }
 
         // If messages is temp or ---- for temp, it is status message
         if(result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
@@ -328,6 +328,99 @@ void handleBytes(uint8_t buf[], size_t len) {
             newData = true;
             lastRaw = newRaw;
             rawData.setValue(lastRaw.c_str());
+
+            String s = result.substring(17,18);
+            if(s == "4") {
+              state = "Sleep";
+              tubMode = "Sleep";
+            }
+            else if(s == "9") {
+              state = "Standard (9)";
+              tubMode = "Standard";
+            }
+            else if(s == "1") {
+              state = "Standard";
+              tubMode = "Standard";
+            }
+            else if(s == "2") {
+              state = "Economy";
+              tubMode = "Economy";
+            }
+            else if(s == "a") {
+              state = "Circulation";
+            }
+            else if(s == "c") {
+              state = "Circulation in sleep?";
+            }
+            else if(s == "b") {
+              state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
+              tubMode = "Std in Eco";
+            }
+            else {
+              state = "Unknown " + s;
+            }
+
+            String menu = result.substring(18,20);
+            if(menu == "00") {
+              // idle
+            }
+            else if(menu == "4c") {
+              state = "Set Mode";
+            }
+            else { // 46 for set temp, but also other things like filter time
+              state = "menu " + menu;
+            }
+
+            // 94600008002ffffff0200000000f5
+
+
+            // temp up - ff0100000000?? - end varies
+            
+            // temp down - ff0200000000?? - end varies
+            
+            String cmd = result.substring(32,46);
+            if (cmd == "640000000000f4")  {
+              // none
+            }
+            else if (cmd.substring(0,4) == "ff01") {
+              state = "Temp Up";
+            }
+            else if (cmd.substring(0,4) == "ff02") {
+              state = "Temp Down";
+            }
+            
+            if (!lastRaw3.equals(cmd)) {
+              lastRaw3 = cmd;
+              rawData3.setValue(lastRaw3.c_str());
+            }
+
+        if (result.substring(10, 12) == "43") {
+          double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
+          if(menu == "46") {
+            targetTemp.setValue(tmp);
+              Serial.printf("Sent target temp data %f\n", tmp);
+          }
+          else {
+            if(tubTemp != tmp) {
+              newData = true;
+              tubTemp = tmp;
+              temp.setValue(tubTemp);
+              Serial.printf("Sent temp data %f\n", tubTemp);
+            }
+          }
+//          Serial.printf("temp = %f\n", tubTemp);
+        }
+        else if (result.substring(10, 12) == "2d") {
+//          Serial.println("temp = unknown");
+//          telnetSend("temp = unknown");
+        }
+        else {
+          Serial.println("non-temp " + result);
+          telnetSend("non-temp " + result);
+        }
+
+            
+            currentState.setValue(state.c_str());
           }
         }
         else {
@@ -348,18 +441,19 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
       else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
-        Serial.println("AE 0D Long");
+//        Serial.println("AE 0D Long");
         telnetSend(result);
 
         String message = result.substring(0,32);  // ignore any FB ending
         
-        if (result.substring(0, 6) == "ae0d00") {
-          if (!lastRaw3.equals(message)) {
-            lastRaw3 = message;
-            rawData3.setValue(lastRaw3.c_str());
-          }
-        }
-        else if (result.substring(0, 6) == "ae0d01") {
+//        if (result.substring(0, 6) == "ae0d00") {
+//          if (!lastRaw3.equals(message)) {
+//            lastRaw3 = message;
+//            rawData3.setValue(lastRaw3.c_str());
+//          }
+//        }
+//        else
+        if (result.substring(0, 6) == "ae0d01") {
           if (!lastRaw4.equals(message)) {
             lastRaw4 = message;
             rawData4.setValue(lastRaw4.c_str());
@@ -381,10 +475,11 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
       else if (result.length() == 46 || result.length() == 32) {
         // ignore the short-form messages
-        Serial.print(result.substring(0, 6) + " Short");
+//        Serial.println(result.substring(0, 6) + " Short");
+        telnetSend(result);
       }
       else {
-        Serial.print("Unknown message : ");
+        Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
       }
 
