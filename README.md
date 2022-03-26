@@ -9,6 +9,8 @@ App for ESP32 or ESP8266 that sends current status including temperature to Home
 
 ![gl2000](GL2000_pcb_2.jpg)
 
+![screenshot](Screenshot_2022-03-22-09-53-29-076_io.homeassistant.companion.android.jpg)
+
 # Source Info
 Original discssion regarding support for spa controllers with 8 pin rather than 4 pin main panels
 * 8-pin Molex https://github.com/ccutrer/balboa_worldwide_app/issues/14
