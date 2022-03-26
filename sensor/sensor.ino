@@ -5,17 +5,19 @@
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WebServer.h>
+#include <WiFiAP.h>
 #else
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <SoftwareSerial.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266WebServer.h>
 #endif
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
-#include <WebServer.h>
-#include <WiFiAP.h>
 
 #include "wifi.h"
 // Create file with the following
