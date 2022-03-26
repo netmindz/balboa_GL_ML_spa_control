@@ -12,7 +12,7 @@
 #include <ESP8266mDNS.h>
 #include <SoftwareSerial.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266WebServer.h>
+#include <ESP8266WiFiAP.h>
 #endif
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
@@ -69,7 +69,11 @@ WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 WebSocketsServer webSocket = WebSocketsServer(81);
+#ifdef ESP32
 WebServer webserver(80);
+#else
+ESP8266WebServer webserver(80);
+#endif
 
 boolean pump1State = false;
 boolean pump2State = false;
