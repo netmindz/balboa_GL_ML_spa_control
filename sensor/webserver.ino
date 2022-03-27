@@ -1,5 +1,5 @@
 void handleRoot() {
-  webserver.send(200, "text/html", "<html><head><title>Spa Status</title></head><body><script>var wsurl = 'ws://' + window.location.hostname + ':81'; var socket = new WebSocket(wsurl); socket.onmessage = function (event) { console.log(event.data);  var msg = JSON.parse(event.data); document.getElementById('temp').innerHTML = msg.data.temp; document.getElementById('heater').innerHTML = msg.data.heater; document.getElementById('date').innerHTML = new Date(); }</script>Temp:&nbsp;<span id=\"temp\"></span>C<br/>Heating:&nbsp;<span id=\"heater\"></span><br/>Last Update:&nbsp;<span id=\"date\"></span></body></html>");
+  webserver.send(200, "text/html", "<html><head><title>Spa Status</title></head><body><script>var wsurl = 'ws://' + window.location.hostname + ':81'; var socket = new WebSocket(wsurl); socket.onmessage = function (event) { console.log(event.data);  var msg = JSON.parse(event.data); document.getElementById('mode').innerHTML = msg.data.mode; document.getElementById('temp').innerHTML = msg.data.temp; document.getElementById('heater').innerHTML = msg.data.heater; document.getElementById('date').innerHTML = new Date(); }</script>Mode:&nbsp;<span id=\"mode\"></span><br/>Temp:&nbsp;<span id=\"temp\"></span>C<br/>Heating:&nbsp;<span id=\"heater\"></span><br/>Last Update:&nbsp;<span id=\"date\"></span></body></html>");
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
@@ -32,5 +32,5 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 }
 
 String getStatusJSON() {
-  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + " } }";
+  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + ", \"mode\": \""+tubMode+"\", \"uptime\": " + lastUptime + " } }";
 }

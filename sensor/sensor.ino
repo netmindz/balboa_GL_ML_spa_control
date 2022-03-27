@@ -62,6 +62,7 @@ HASensor rawData5("raw5");
 HASensor rawData6("raw6");
 HASensor rawData7("raw7");
 HASensor currentMode("mode");
+HASensor uptime("uptime");
 HABinarySensor pump1("pump1", "moving", false);
 HABinarySensor pump2("pump2", "moving", false);
 HABinarySensor heater("heater", "heat", false);
@@ -194,6 +195,7 @@ void setup() {
   rawData7.setName("FA Tail: ");
 
   currentMode.setName("Mode");
+  uptime.setName("Uptime");
 
 
   mqtt.begin(BROKER_ADDR);
@@ -213,6 +215,7 @@ double tubTemp = -1;
 String state = "unknown";
 boolean newData = false;
 String lastJSON = "";
+int lastUptime = 0;
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
@@ -257,11 +260,17 @@ void loop() {
 
     currentMode.setValue(tubMode.c_str());
 
-    String json = getStatusJSON();
-    if(json != lastJSON) {
-      webSocket.broadcastTXT(json);
-      lastJSON = json;
-    }
+  }
+
+  String json = getStatusJSON();
+  if(json != lastJSON) {
+    webSocket.broadcastTXT(json);
+    lastJSON = json;
+  }
+
+  if(((millis() / 1000) - lastUptime) >= 30) {
+    lastUptime = millis() / 1000;
+    uptime.setValue(lastUptime);
   }
 
 }
