@@ -213,7 +213,6 @@ String lastRaw7 = "";
 String tubMode = "";
 double tubTemp = -1;
 String state = "unknown";
-boolean newData = false;
 String lastJSON = "";
 int lastUptime = 0;
 void loop() {
@@ -250,17 +249,6 @@ void loop() {
   telnetLoop();
   webserver.handleClient();
   webSocket.loop();
-
-  if (newData) {
-    newData = false;
-    
-    rawData2.setValue(lastRaw2.c_str());
-
-    rawData7.setValue(lastRaw7.c_str());
-
-    currentMode.setValue(tubMode.c_str());
-
-  }
 
   String json = getStatusJSON();
   if(json != lastJSON) {
@@ -331,10 +319,11 @@ void handleBytes(uint8_t buf[], size_t len) {
           else if (light == "3") {
             lightState = true;
           }
-  
-          String newRaw = result.substring(17, 46) + " pump=" + pump + " light=" + light;
+
+          // Ignore last 2 bytes as possibly checksum, given we have temp earlier making look more complex than perhaps it is
+          String newRaw = result.substring(17, 44) + " pump=" + pump + " light=" + light;
           if (lastRaw != newRaw) {
-            newData = true;
+            
             lastRaw = newRaw;
             rawData.setValue(lastRaw.c_str());
 
@@ -387,7 +376,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             
             // temp down - ff0200000000?? - end varies
             
-            String cmd = result.substring(32,46);
+            String cmd = result.substring(32,44);
             if (cmd == "640000000000f4")  {
               // none
             }
@@ -411,7 +400,6 @@ void handleBytes(uint8_t buf[], size_t len) {
           }
           else {
             if(tubTemp != tmp) {
-              newData = true;
               tubTemp = tmp;
               temp.setValue(tubTemp);
               Serial.printf("Sent temp data %f\n", tubTemp);
@@ -434,11 +422,15 @@ void handleBytes(uint8_t buf[], size_t len) {
         }
         else {
           // FA but not temp data
-          newData = true;
-          lastRaw2 = result.substring(4, 28); 
+          lastRaw2 = result.substring(4, 28);
+          rawData2.setValue(lastRaw2.c_str()); 
         }
 
-        lastRaw7 = result.substring(46, 64);
+        String tail = result.substring(46, 64);
+        if(tail != lastRaw7) {
+          lastRaw7 = tail;
+          rawData7.setValue(lastRaw7.c_str());
+        }
 
         pump1.setState(pump1State);
         pump2.setState(pump2State);
