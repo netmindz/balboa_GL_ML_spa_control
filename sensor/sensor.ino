@@ -278,7 +278,7 @@ void handleBytes(uint8_t buf[], size_t len) {
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
-//        Serial.println("FA 14 Long");
+        Serial.println("FA 14 Long");
         telnetSend(result);
 
       // fa1433343043 = header + 340C = 34.0C
@@ -445,7 +445,7 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
       else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
-//        Serial.println("AE 0D Long");
+        Serial.println("AE 0D Long");
         telnetSend(result);
 
         String message = result.substring(0,32);  // ignore any FB ending
