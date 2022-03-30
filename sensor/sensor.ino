@@ -144,7 +144,7 @@ void setup() {
   Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
   tub.updateBaudRate(115200);
 #else
-  SoftwareSerial::enableIntTx(false);
+  tub.enableIntTx(false);
   tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
 #endif
 #endif
