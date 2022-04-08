@@ -313,7 +313,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             heaterState = true;
           }
           else if (heater == "2") {
-            heaterState = false; // heater off, verifying temp change
+            heaterState = true; // heater off, verifying temp change, but creates noisy state if we return false
           }
 
           String light = result.substring(15, 16);
@@ -337,8 +337,8 @@ void handleBytes(uint8_t buf[], size_t len) {
               tubMode = "Sleep";
             }
             else if (s == "9") {
-              state = "Standard (9)";
-              tubMode = "Standard";
+              state = "Circulation ?";
+//              tubMode = "Standard";
             }
             else if (s == "1") {
               state = "Standard";
@@ -349,7 +349,7 @@ void handleBytes(uint8_t buf[], size_t len) {
               tubMode = "Economy";
             }
             else if (s == "a") {
-              state = "Circulation";
+              state = "Cleaning";
             }
             else if (s == "c") {
               state = "Circulation in sleep?";
@@ -361,6 +361,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             else {
               state = "Unknown " + s;
             }
+            currentMode.setValue(tubMode.c_str());
 
             String menu = result.substring(18, 20);
             if (menu == "00") {
@@ -381,7 +382,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             // temp down - ff0200000000?? - end varies
 
             String cmd = result.substring(32, 44);
-            if (cmd == "640000000000f4")  {
+            if (cmd == "640000000000")  {
               // none
             }
             else if (cmd.substring(0, 4) == "ff01") {
@@ -457,19 +458,19 @@ void handleBytes(uint8_t buf[], size_t len) {
         //          }
         //        }
         //        else
-        if (result.substring(0, 6) == "ae0d01") {
+        if (result.substring(0, 6) == "ae0d01" && message != "ae0d010000000000000000000000005a") {
           if (!lastRaw4.equals(message)) {
             lastRaw4 = message;
             rawData4.setValue(lastRaw4.c_str());
           }
         }
-        else if (result.substring(0, 6) == "ae0d02") {
+        else if (result.substring(0, 6) == "ae0d02" && message != "ae0d02000000000000000000000000c3") {
           if (!lastRaw5.equals(message)) {
             lastRaw5 = message;
             rawData5.setValue(lastRaw5.c_str());
           }
         }
-        else if (result.substring(0, 6) == "ae0d03") {
+        else if (result.substring(0, 6) == "ae0d03" && message != "ae0d03000000000000000000000000b4") {
           if (!lastRaw6.equals(message)) {
             lastRaw6 = message;
             rawData6.setValue(lastRaw6.c_str());
