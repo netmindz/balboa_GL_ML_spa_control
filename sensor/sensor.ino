@@ -34,6 +34,8 @@ const char passphrase[] = SECRET_PSK;
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
 
+const char* LOW_SPEED = "Low";
+const char* HIGH_SPEED = "High";
 
 WiFiClient clients[2];
 
@@ -67,6 +69,8 @@ HASensor currentMode("mode");
 HASensor uptime("uptime");
 HABinarySensor pump1("pump1", "moving", false);
 HABinarySensor pump2("pump2", "moving", false);
+HASensor pump1_state("pump1_state");
+HASensor pump2_state("pump2_state");
 HABinarySensor heater("heater", "heat", false);
 HABinarySensor light("light", "light", false);
 
@@ -166,7 +170,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.8");
+  device.setSoftwareVersion("0.0.9");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -183,8 +187,10 @@ void setup() {
   currentState.setName("Status");
 
   pump1.setName("Pump1");
+  pump1_state.setName("Pump1 State");
   //  pump1.setIcon("mdi:chart-bubble");
   pump2.setName("Pump2");
+  pump2_state.setName("Pump2 State");
   //  pump2.setIcon("mdi:chart-bubble");
   heater.setName("Heater");
   //  heater.setIcon("mdi:radiator");
@@ -291,18 +297,26 @@ void handleBytes(uint8_t buf[], size_t len) {
           if (pump == "0") {
             pump1State = false;
             pump2State = false;
+            pump1_state.setValue("");
+            pump2_state.setValue("");
           }
-          else if (pump == "2") {
+          else if (pump == "1" || pump == "2") {
             pump1State = true;
             pump2State = false;
+            pump1_state.setValue(pump == "1" ? LOW_SPEED : HIGH_SPEED);
+            pump2_state.setValue("");
           }
-          else if (pump == "a") {
+          else if (pump == "9" || pump == "a") {
             pump1State = true;
             pump2State = true;
+            pump1_state.setValue(pump == "9" ? LOW_SPEED : HIGH_SPEED);
+            pump2_state.setValue(pump == "a" ? LOW_SPEED : HIGH_SPEED);
           }
-          else if (pump == "8") {
+          else if (pump == "7" || pump == "8") {
             pump1State = false;
             pump2State = true;
+            pump1_state.setValue("");
+            pump2_state.setValue(pump == "7" ? LOW_SPEED : HIGH_SPEED);
           }
 
           String heater = result.substring(14, 15);
