@@ -368,7 +368,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             else if (s == "c") {
               state = "Circulation in sleep?";
             }
-            else if (s == "b") {
+            else if (s == "b" || s == "3") {
               state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
               tubMode = "Std in Eco";
             }
@@ -383,6 +383,9 @@ void handleBytes(uint8_t buf[], size_t len) {
             }
             else if (menu == "4c") {
               state = "Set Mode";
+            }
+            else if (menu == "5a") {
+              tubMode = "Standby?"; // WT: not tested to confirm if this is the act of setting Standby or just seen when in standby
             }
             else { // 46 for set temp, but also other things like filter time
               state = "menu " + menu;
