@@ -150,7 +150,7 @@ void setup() {
 #else
   tub.enableIntTx(false);
   tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
-  tub.setRxBufferSize(1024);
+//  tub.setRxBufferSize(1024);
 #endif
 #endif
 
