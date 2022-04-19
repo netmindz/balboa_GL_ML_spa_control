@@ -91,6 +91,8 @@ boolean pump2State = false;
 boolean heaterState = false;
 boolean lightState = false;
 
+String sendBuffer;
+
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
   // this callback will be called before publishing new state to HA
@@ -165,6 +167,7 @@ void setup() {
 
   // start web
   webserver.on("/", handleRoot);
+  webserver.on("/send", handleSend);
   webserver.begin();
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
@@ -260,6 +263,14 @@ void loop() {
     uint8_t buf[len];
     tub.read(buf, len);
     handleBytes(buf, len);
+  }
+  else {
+    if(sendBuffer != "") {
+      Serial.printf("Sending [%s]\n", sendBuffer);
+      telnetSend("W: " + sendBuffer);
+      tub.write(sendBuffer.c_str());
+      sendBuffer = "";
+    }
   }
 
   telnetLoop();
