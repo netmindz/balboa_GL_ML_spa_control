@@ -58,6 +58,7 @@ HAMqtt mqtt(clients[0], device);
 HASensor temp("temp");
 HASensor targetTemp("targetTemp");
 HASensor currentState("status");
+HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
@@ -195,10 +196,11 @@ void setup() {
   heater.setName("Heater");
   //  heater.setIcon("mdi:radiator");
   light.setName("Light");
+  haTime.setName("Time");
 
   rawData.setName("Raw data");
   rawData2.setName("FA: ");
-  rawData3.setName("post FFFF: ");
+  rawData3.setName("post time: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
@@ -394,6 +396,14 @@ void handleBytes(uint8_t buf[], size_t len) {
             // 94600008002ffffff0200000000f5
 
 
+            if(result.substring(28, 32) != "ffff") {
+              String timeString = HexString2ASCIIString(result.substring(28, 30)) + ":" + HexString2ASCIIString(result.substring(30, 32));
+              haTime.setValue(timeString.c_str());
+            }
+            else {
+              haTime.setValue("--:--");
+            }
+            
             // temp up - ff0100000000?? - end varies
 
             // temp down - ff0200000000?? - end varies
