@@ -210,7 +210,11 @@ void setup() {
   uptime.setName("Uptime");
 
 
+#ifdef BROKER_USERNAME
+  mqtt.begin(BROKER_ADDR, BROKER_USERNAME, BROKER_PASSWORD);
+#else
   mqtt.begin(BROKER_ADDR);
+#endif
 
 }
 
