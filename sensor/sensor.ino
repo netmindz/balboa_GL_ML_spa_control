@@ -528,6 +528,7 @@ void handleBytes(uint8_t buf[], size_t len) {
       else {
         Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
+        telnetSend("U: " + result);
       }
 
       result = ""; // clear buffer
