@@ -412,7 +412,7 @@ void handleBytes(uint8_t buf[], size_t len) {
 
 
             if(result.substring(28, 32) != "ffff") {
-              String timeString = HexString2ASCIIString(result.substring(28, 30)) + ":" + HexString2ASCIIString(result.substring(30, 32));
+              String timeString = HexString2TimeString(result.substring(28, 32));
               haTime.setValue(timeString.c_str());
             }
             else {
@@ -539,6 +539,15 @@ void handleBytes(uint8_t buf[], size_t len) {
     }
     result += String(buf[i], HEX);
   }
+}
+
+String HexString2TimeString(String hexstring){
+  // Convert "HHMM" in HEX to "HH:MM" with decimal representation
+  String time = "";
+  time.concat(strtol(hexstring.substring(0, 2).c_str(), NULL, 16));
+  time.concat(":");
+  time.concat(strtol(hexstring.substring(2, 4).c_str(), NULL, 16));
+  return time;
 }
 
 String HexString2ASCIIString(String hexstring) {
