@@ -34,8 +34,9 @@ const char passphrase[] = SECRET_PSK;
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
 
-const char* LOW_SPEED = "Low";
-const char* HIGH_SPEED = "High";
+const char* ZERO_SPEED = "off";
+const char* LOW_SPEED = "low";
+const char* HIGH_SPEED = "high";
 
 WiFiClient clients[2];
 
@@ -314,8 +315,8 @@ void handleBytes(uint8_t buf[], size_t len) {
           if (pump == "0") {
             pump1State = false;
             pump2State = false;
-            pump1_state.setValue("");
-            pump2_state.setValue("");
+            pump1_state.setValue(ZERO_SPEED);
+            pump2_state.setValue(ZERO_SPEED);
           }
           else if (pump == "1" || pump == "2") {
             pump1State = true;
