@@ -34,6 +34,16 @@ const char passphrase[] = SECRET_PSK;
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
 
+// Perform measurements or read nameplate values on your tub to define the power [kW]
+// for each device in order to calculate tub power usage
+const float POWER_HEATER = 2.8;
+const float POWER_PUMP_CIRCULATION = 0.3;
+const float POWER_PUMP1_LOW = 0.31;
+const float POWER_PUMP1_HIGH = 1.3;
+const float POWER_PUMP2_LOW = 0.3;
+const float POWER_PUMP2_HIGH = 0.6;
+
+
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
@@ -75,6 +85,7 @@ HASensor pump1_state("pump1_state");
 HASensor pump2_state("pump2_state");
 HABinarySensor heater("heater", "heat", false);
 HABinarySensor light("light", "light", false);
+HASensor tubpower("tubpower");
 
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
@@ -89,8 +100,11 @@ ESP8266WebServer webserver(80);
 
 boolean pump1State = false;
 boolean pump2State = false;
+String pump1Speed = ZERO_SPEED;
+String pump2Speed = ZERO_SPEED;
 boolean heaterState = false;
 boolean lightState = false;
+float tubpowerCalc = 0;
 
 String sendBuffer;
 
@@ -213,6 +227,10 @@ void setup() {
   currentMode.setName("Mode");
   uptime.setName("Uptime");
 
+  tubpower.setName("Tub Power");
+  tubpower.setUnitOfMeasurement("kW");
+  tubpower.setDeviceClass("power");
+
 
 #ifdef BROKER_USERNAME
   mqtt.begin(BROKER_ADDR, BROKER_USERNAME, BROKER_PASSWORD);
@@ -311,30 +329,60 @@ void handleBytes(uint8_t buf[], size_t len) {
         // If messages is temp or ---- for temp, it is status message
         if (result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
 
+          tubpowerCalc = 0;
           String pump = result.substring(13, 14);
+
           if (pump == "0") {
             pump1State = false;
             pump2State = false;
-            pump1_state.setValue(ZERO_SPEED);
-            pump2_state.setValue(ZERO_SPEED);
+            pump1Speed = ZERO_SPEED;
+            pump2Speed = ZERO_SPEED;
           }
-          else if (pump == "1" || pump == "2") {
+          else if (pump == "1"){
             pump1State = true;
             pump2State = false;
-            pump1_state.setValue(pump == "1" ? LOW_SPEED : HIGH_SPEED);
-            pump2_state.setValue("");
+            pump1Speed = LOW_SPEED;
+            pump2Speed = HIGH_SPEED;
+            tubpowerCalc += POWER_PUMP1_LOW;
           }
-          else if (pump == "9" || pump == "a") {
+          else if (pump == "2"){
             pump1State = true;
-            pump2State = true;
-            pump1_state.setValue(pump == "9" ? LOW_SPEED : HIGH_SPEED);
-            pump2_state.setValue(pump == "a" ? LOW_SPEED : HIGH_SPEED);
+            pump2State = false;
+            pump1Speed = HIGH_SPEED;
+            pump2Speed = ZERO_SPEED;
+            tubpowerCalc += POWER_PUMP1_HIGH;
           }
-          else if (pump == "7" || pump == "8") {
+          else if (pump == "7") {
             pump1State = false;
             pump2State = true;
-            pump1_state.setValue("");
-            pump2_state.setValue(pump == "7" ? LOW_SPEED : HIGH_SPEED);
+            pump1Speed = ZERO_SPEED;
+            pump2Speed = LOW_SPEED;
+            tubpowerCalc += POWER_PUMP2_LOW;
+          }
+
+          else if (pump == "8") {
+            pump1State = false;
+            pump2State = true;
+            pump1Speed = ZERO_SPEED;
+            pump2Speed = HIGH_SPEED;
+            tubpowerCalc += POWER_PUMP2_HIGH;
+          }
+
+          else if (pump == "9") {
+            pump1State = true;
+            pump2State = true;
+            pump1Speed = LOW_SPEED;
+            pump2Speed = HIGH_SPEED;
+            tubpowerCalc += POWER_PUMP1_LOW;
+            tubpowerCalc += POWER_PUMP2_HIGH;
+          }
+          else if (pump == "a") {
+            pump1State = true;
+            pump2State = true;
+            pump1Speed = HIGH_SPEED;
+            pump2Speed = LOW_SPEED;
+            tubpowerCalc += POWER_PUMP1_HIGH;
+            tubpowerCalc += POWER_PUMP2_LOW;            
           }
 
           String heater = result.substring(14, 15);
@@ -343,11 +391,15 @@ void handleBytes(uint8_t buf[], size_t len) {
           }
           else if (heater == "1") {
             heaterState = true;
+            tubpowerCalc += POWER_HEATER;
           }
           else if (heater == "2") {
             heaterState = true; // heater off, verifying temp change, but creates noisy state if we return false
+            tubpowerCalc += POWER_HEATER;
           }
 
+          tubpower.setValue(tubpowerCalc);
+          
           String light = result.substring(15, 16);
           if (light == "0") {
             lightState = false;
