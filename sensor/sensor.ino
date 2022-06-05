@@ -235,6 +235,8 @@ double tubTemp = -1;
 String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
+String timeString = "";
+
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
@@ -413,12 +415,12 @@ void handleBytes(uint8_t buf[], size_t len) {
 
 
             if(result.substring(28, 32) != "ffff") {
-              String timeString = HexString2TimeString(result.substring(28, 32));
-              haTime.setValue(timeString.c_str());
+              timeString = HexString2TimeString(result.substring(28, 32));              
             }
             else {
-              haTime.setValue("--:--");
+              timeString = "--:--";
             }
+            haTime.setValue(timeString.c_str());
             
             // temp up - ff0100000000?? - end varies
 
@@ -545,9 +547,15 @@ void handleBytes(uint8_t buf[], size_t len) {
 String HexString2TimeString(String hexstring){
   // Convert "HHMM" in HEX to "HH:MM" with decimal representation
   String time = "";
-  time.concat(strtol(hexstring.substring(0, 2).c_str(), NULL, 16));
+  int hour = strtol(hexstring.substring(0, 2).c_str(), NULL, 16);
+  int minute  = strtol(hexstring.substring(2, 4).c_str(), NULL, 16);
+
+  if(hour<10) time.concat("0");     // Add leading zero
+  time.concat(hour);
   time.concat(":");
-  time.concat(strtol(hexstring.substring(2, 4).c_str(), NULL, 16));
+  if(minute<10) time.concat("0");   // Add leading zero
+  time.concat(minute);
+  
   return time;
 }
 
