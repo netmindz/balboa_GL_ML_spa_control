@@ -2,7 +2,7 @@
 // #define SERIAL_OVER_IP_ADDR "192.168.178.131"
 
 // If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
-#define MAX485 TRUE;
+// #define MAX485 TRUE;
 
 #ifdef ESP32
 #include <WiFi.h>
