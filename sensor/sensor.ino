@@ -532,9 +532,9 @@ void handleBytes(uint8_t buf[], size_t len) {
         }
 
         pump1.setState(pump1State);
-        pump1_state.setState(pump1Speed);
+        pump1_state.setValue(pump1Speed.c_str());
         pump2.setState(pump2State);
-        pump2_state.setState(pump2Speed);
+        pump2_state.setValue(pump2Speed.c_str());
         heater.setState(heaterState);
         light.setState(lightState);
 
