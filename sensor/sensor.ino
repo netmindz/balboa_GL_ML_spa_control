@@ -342,7 +342,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             pump1State = true;
             pump2State = false;
             pump1Speed = LOW_SPEED;
-            pump2Speed = HIGH_SPEED;
+            pump2Speed = ZERO_SPEED;
             tubpowerCalc += POWER_PUMP1_LOW;
           }
           else if (pump == "2"){
@@ -532,7 +532,9 @@ void handleBytes(uint8_t buf[], size_t len) {
         }
 
         pump1.setState(pump1State);
+        pump1_state.setState(pump1Speed);
         pump2.setState(pump2State);
+        pump2_state.setState(pump2Speed);
         heater.setState(heaterState);
         light.setState(lightState);
 
