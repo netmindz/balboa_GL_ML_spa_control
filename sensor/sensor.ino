@@ -57,6 +57,7 @@ SoftwareSerial tub;
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp");
+HASensor temp2("tubtemp");
 HASensor targetTemp("targetTemp");
 HASensor currentState("status");
 HASensor haTime("time");
@@ -184,6 +185,10 @@ void setup() {
   temp.setDeviceClass("temperature");
   temp.setName("Tub temperature");
 
+  temp2.setUnitOfMeasurement("°C");
+  temp2.setDeviceClass("temperature");
+  temp2.setName("Tub temperature From F");
+
   targetTemp.setUnitOfMeasurement("°C");
   targetTemp.setDeviceClass("temperature");
   targetTemp.setName("Target Tub temp");
@@ -235,6 +240,7 @@ double tubTemp = -1;
 String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
+double tubTemp2 = 0.0;
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
@@ -420,6 +426,11 @@ void handleBytes(uint8_t buf[], size_t len) {
               haTime.setValue("--:--");
             }
             
+            // Temperature reading after timestamp, read in hex fahrenheit
+            tubTemp2 = (strtol(result.substring(32, 34).c_str(), NULL, 16)-32)*.55556;
+            tubTemp2 = round(tubTemp2 * 2)/2; // tweak to round to nearest half
+            temp2.setValue(tubTemp2);
+ 
             // temp up - ff0100000000?? - end varies
 
             // temp down - ff0200000000?? - end varies
