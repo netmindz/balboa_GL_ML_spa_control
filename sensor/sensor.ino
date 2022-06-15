@@ -111,6 +111,10 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
+// where are we at in messages?
+int portIndex = 0;
+//boolean isFA = true;
+
 String sendBuffer;
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
@@ -294,14 +298,6 @@ void loop() {
     tub.read(buf, len);
     handleBytes(buf, len);
   }
-  else {
-    if(sendBuffer != "") {
-      Serial.printf("Sending [%s]\n", sendBuffer);
-      telnetSend("W: " + sendBuffer);
-      tub.write(sendBuffer.c_str());
-      sendBuffer = "";
-    }
-  }
 
   telnetLoop();
   webserver.handleClient();
@@ -331,8 +327,7 @@ void handleBytes(uint8_t buf[], size_t len) {
 
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
-
-        Serial.println("FA 14 Long");
+        Serial.printf("FA 14 Long port:%u\n", portIndex);
         telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
@@ -550,22 +545,16 @@ void handleBytes(uint8_t buf[], size_t len) {
         light.setState(lightState);
 
 
+        portIndex++;
         // end of FA14
       }
       else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
-        Serial.println("AE 0D Long");
+        Serial.printf("AE 0D Long port:%u\n", portIndex);
         telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
 
-        //        if (result.substring(0, 6) == "ae0d00") {
-        //          if (!lastRaw3.equals(message)) {
-        //            lastRaw3 = message;
-        //            rawData3.setValue(lastRaw3.c_str());
-        //          }
-        //        }
-        //        else
         if (result.substring(0, 6) == "ae0d01" && message != "ae0d010000000000000000000000005a") {
           if (!lastRaw4.equals(message)) {
             lastRaw4 = message;
@@ -584,13 +573,30 @@ void handleBytes(uint8_t buf[], size_t len) {
             rawData6.setValue(lastRaw6.c_str());
           }
         }
+        portIndex++;
         // end of AE 0D
       }
-      else if (result.length() == 46 || result.length() == 32) {
+      else if (result.length() == 32) { // AE0D
         // ignore the short-form messages
-        //        Serial.println(result.substring(0, 6) + " Short");
+        Serial.printf("%s Short port:%u\n", result.substring(0, 6), portIndex);
+        portIndex++;
         telnetSend(result);
       }
+      else if (result.length() == 46) { // FA
+        // ignore the short-form messages
+        Serial.printf("%s Short port:%u\n", result.substring(0, 6), portIndex);
+        telnetSend(result + " port:" + portIndex);
+        sendBuffer = "fb0603450e0002fd50";
+        if(sendBuffer != "") {
+          Serial.printf("Sending [%s]\n", sendBuffer);
+          telnetSend("W: " + sendBuffer);
+          tub.write(sendBuffer.c_str());
+//          sendBuffer = "";
+        }
+        portIndex++;
+      }
+          
+
       else {
         Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
@@ -598,6 +604,7 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
 
       result = ""; // clear buffer
+      if(portIndex > 2) portIndex = 0;
 
     }
     if (buf[i] < 0x10) {
