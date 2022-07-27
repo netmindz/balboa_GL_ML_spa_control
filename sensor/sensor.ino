@@ -263,6 +263,7 @@ String lastRaw6 = "";
 String lastRaw7 = "";
 String tubMode = "";
 double tubTemp = -1;
+double tubTargetTemp = -1;
 String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
