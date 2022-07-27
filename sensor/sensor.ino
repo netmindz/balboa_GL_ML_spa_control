@@ -45,6 +45,7 @@ const float POWER_PUMP1_HIGH = 1.3;
 const float POWER_PUMP2_LOW = 0.3;
 const float POWER_PUMP2_HIGH = 0.6;
 
+const int MINUTES_PER_DEGC = 60; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
@@ -73,6 +74,7 @@ HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp");
 HASensor targetTemp("targetTemp");
+HASensor timeToTemp("timeToTemp");
 HASensor currentState("status");
 HASensor haTime("time");
 HASensor rawData("raw");
@@ -211,6 +213,8 @@ void setup() {
   targetTemp.setDeviceClass("temperature");
   targetTemp.setName("Target Tub temp");
 
+
+  timeToTemp.setName("Time to temp");
 
   currentState.setName("Status");
 
@@ -515,9 +519,18 @@ void handleBytes(uint8_t buf[], size_t len) {
                   temp.setValue(tubTemp);
                   Serial.printf("Sent temp data %f\n", tubTemp);
                 }
+                if(heaterState && (tubTemp < tubTargetTemp)) {
+                  double tempDiff = (tubTargetTemp - tubTemp);
+                  String timeToTempMsg =  (String) (tempDiff * MINUTES_PER_DEGC);
+                  timeToTempMsg += " mins"; 
+                  timeToTemp.setValue(timeToTempMsg.c_str());  
+                }
+                else {
+                  timeToTemp.setValue("");
+                }
               }
             }
-            else if (result.substring(10, 12) == "2d") {
+            else if (result.substring(10, 12) == "2d") { // "-"
               //          Serial.println("temp = unknown");
               //          telnetSend("temp = unknown");
             }
