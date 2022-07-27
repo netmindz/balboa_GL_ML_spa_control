@@ -231,7 +231,7 @@ void setup() {
 
   rawData.setName("Raw data");
   rawData2.setName("FA: ");
-  rawData3.setName("post time: ");
+  rawData3.setName("post temp: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
@@ -425,7 +425,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           }
 
           // Ignore last 2 bytes as possibly checksum, given we have temp earlier making look more complex than perhaps it is
-          String newRaw = result.substring(17, 44) + " pump=" + pump + " light=" + light;
+          String newRaw = result.substring(17, 44);
           if (lastRaw != newRaw) {
 
             lastRaw = newRaw;
@@ -492,27 +492,31 @@ void handleBytes(uint8_t buf[], size_t len) {
 
             // temp down - ff0200000000?? - end varies
 
-            String cmd = result.substring(32, 44);
-            if (cmd == "640000000000")  {
+            String cmd = result.substring(34, 44);
+            if (cmd == "0000000000")  {
               // none
             }
-            else if (cmd.substring(0, 4) == "ff01") {
+            else if (cmd.substring(0, 4) == "01") {
               state = "Temp Up";
             }
-            else if (cmd.substring(0, 4) == "ff02") {
+            else if (cmd.substring(0, 4) == "02") {
               state = "Temp Down";
             }
+            else {
+              telnetSend("CMD: " + cmd);
+            }
 
-            if (!lastRaw3.equals(cmd)) {
+            if (!lastRaw3.equals(cmd) && cmd != "0000000000") { // ignore idle command
               lastRaw3 = cmd;
               rawData3.setValue(lastRaw3.c_str());
             }
 
-            if (result.substring(10, 12) == "43") {
+            if (result.substring(10, 12) == "43") { // "C"
               double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
               if (menu == "46") {
-                targetTemp.setValue(tmp);
-                Serial.printf("Sent target temp data %f\n", tmp);
+                tubTargetTemp = tmp;
+                targetTemp.setValue(tubTargetTemp);
+                Serial.printf("Sent target temp data %f\n", tubTargetTemp);
               }
               else {
                 if (tubTemp != tmp) {
