@@ -60,6 +60,7 @@ WiFiClient tub = clients[1];
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
+#define DIGITAL_PIN 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -113,6 +114,7 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
+bool digitalState;
 String sendBuffer;
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
@@ -125,6 +127,8 @@ boolean isConnected = false;
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  pinMode(DIGITAL_PIN, INPUT);
 
   // Make sure you're in station mode
   WiFi.mode(WIFI_STA);
@@ -292,12 +296,13 @@ void loop() {
   }
 #endif
 
+  digitalState = digitalRead(DIGITAL_PIN);
   if (tub.available() > 0) {
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     tub.read(buf, len);
-    handleBytes(buf, len);
+    buildString(buf, len);
   }
   else {
     if(sendBuffer != "") {
@@ -307,6 +312,13 @@ void loop() {
       sendBuffer = "";
     }
   }
+  
+  if(digitalState == LOW) {
+    if(result != "") {
+      handlMessage();
+    }
+  }
+
 
   telnetLoop();
   webserver.handleClient();
@@ -325,15 +337,19 @@ void loop() {
 
 }
 
-void handleBytes(uint8_t buf[], size_t len) {
+void buildString(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "ca") { // || String(buf[i], HEX) == "fb"
+    if (buf[i] < 0x10) {
+      result += '0';
+    }
+    result += String(buf[i], HEX);
+  }
+}
 
-      // next byte is start of new message, so process what we have in result buffer
+void handlMessage() {
 
       //      Serial.print("message = ");
       //      Serial.println(result);
-
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
@@ -616,13 +632,6 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
 
       result = ""; // clear buffer
-
-    }
-    if (buf[i] < 0x10) {
-      result += '0';
-    }
-    result += String(buf[i], HEX);
-  }
 }
 
 String HexString2TimeString(String hexstring){
