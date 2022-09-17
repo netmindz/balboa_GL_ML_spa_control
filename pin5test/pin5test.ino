@@ -12,6 +12,7 @@ void setup() {
 
 String tmp;
 bool digitalState;
+int i = 0;
 void loop() {
   digitalState = digitalRead(DIGITAL_PIN);
   if (Serial2.available() > 0) {
@@ -22,7 +23,14 @@ void loop() {
 //    handleBytes(buf, len);    
     buildString(buf, len);    
   }
-
+  if(i % 10 == 0) {
+    if(tmp.length() == 46) {
+      String sendBuffer = "fb0603450e0009f6f6"; // toggle light
+      Serial.println("Sending " + sendBuffer);
+      Serial2.write(sendBuffer.c_str());
+    }
+  }
+  i++;
    if(digitalState == LOW) {
     if(tmp != "") {
       Serial.print("tmp = ");
