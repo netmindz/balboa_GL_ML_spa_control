@@ -45,6 +45,7 @@ const float POWER_PUMP1_HIGH = 1.3;
 const float POWER_PUMP2_LOW = 0.3;
 const float POWER_PUMP2_HIGH = 0.6;
 
+const int MINUTES_PER_DEGC = 60; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
@@ -59,6 +60,7 @@ WiFiClient tub = clients[1];
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
+#define DIGITAL_PIN 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -73,6 +75,7 @@ HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
 HASensor temp("temp");
 HASensor targetTemp("targetTemp");
+HASensor timeToTemp("timeToTemp");
 HASensor currentState("status");
 HASensor haTime("time");
 HASensor rawData("raw");
@@ -115,6 +118,7 @@ float tubpowerCalc = 0;
 int portIndex = 0;
 //boolean isFA = true;
 
+bool digitalState;
 String sendBuffer;
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
@@ -127,6 +131,8 @@ boolean isConnected = false;
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  pinMode(DIGITAL_PIN, INPUT);
 
   // Make sure you're in station mode
   WiFi.mode(WIFI_STA);
@@ -216,6 +222,8 @@ void setup() {
   targetTemp.setName("Target Tub temp");
 
 
+  timeToTemp.setName("Time to temp");
+
   currentState.setName("Status");
 
   pump1.setName("Pump1");
@@ -231,7 +239,7 @@ void setup() {
 
   rawData.setName("Raw data");
   rawData2.setName("FA: ");
-  rawData3.setName("post time: ");
+  rawData3.setName("post temp: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
@@ -263,6 +271,7 @@ String lastRaw6 = "";
 String lastRaw7 = "";
 String tubMode = "";
 double tubTemp = -1;
+double tubTargetTemp = -1;
 String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
@@ -291,13 +300,29 @@ void loop() {
   }
 #endif
 
+  digitalState = digitalRead(DIGITAL_PIN);
   if (tub.available() > 0) {
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     tub.read(buf, len);
-    handleBytes(buf, len);
+    buildString(buf, len);
   }
+  else {
+    if(sendBuffer != "") {
+      Serial.printf("Sending [%s]\n", sendBuffer);
+      telnetSend("W: " + sendBuffer);
+      tub.write(sendBuffer.c_str());
+      sendBuffer = "";
+    }
+  }
+  
+  if(digitalState == LOW) {
+    if(result != "") {
+      handlMessage();
+    }
+  }
+
 
   telnetLoop();
   webserver.handleClient();
@@ -316,15 +341,19 @@ void loop() {
 
 }
 
-void handleBytes(uint8_t buf[], size_t len) {
+void buildString(uint8_t buf[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (String(buf[i], HEX) == "fa" || String(buf[i], HEX) == "ae" || String(buf[i], HEX) == "ca") { // || String(buf[i], HEX) == "fb"
+    if (buf[i] < 0x10) {
+      result += '0';
+    }
+    result += String(buf[i], HEX);
+  }
+}
 
-      // next byte is start of new message, so process what we have in result buffer
+void handlMessage() {
 
       //      Serial.print("message = ");
       //      Serial.println(result);
-
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
         Serial.printf("FA 14 Long port:%u\n", portIndex);
@@ -415,7 +444,7 @@ void handleBytes(uint8_t buf[], size_t len) {
           }
 
           // Ignore last 2 bytes as possibly checksum, given we have temp earlier making look more complex than perhaps it is
-          String newRaw = result.substring(17, 44) + " pump=" + pump + " light=" + light;
+          String newRaw = result.substring(17, 44);
           if (lastRaw != newRaw) {
 
             lastRaw = newRaw;
@@ -482,27 +511,31 @@ void handleBytes(uint8_t buf[], size_t len) {
 
             // temp down - ff0200000000?? - end varies
 
-            String cmd = result.substring(32, 44);
-            if (cmd == "640000000000")  {
+            String cmd = result.substring(34, 44);
+            if (cmd == "0000000000")  {
               // none
             }
-            else if (cmd.substring(0, 4) == "ff01") {
+            else if (cmd.substring(0, 4) == "01") {
               state = "Temp Up";
             }
-            else if (cmd.substring(0, 4) == "ff02") {
+            else if (cmd.substring(0, 4) == "02") {
               state = "Temp Down";
             }
+            else {
+              telnetSend("CMD: " + cmd);
+            }
 
-            if (!lastRaw3.equals(cmd)) {
+            if (!lastRaw3.equals(cmd) && cmd != "0000000000") { // ignore idle command
               lastRaw3 = cmd;
               rawData3.setValue(lastRaw3.c_str());
             }
 
-            if (result.substring(10, 12) == "43") {
+            if (result.substring(10, 12) == "43") { // "C"
               double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
               if (menu == "46") {
-                targetTemp.setValue(tmp);
-                Serial.printf("Sent target temp data %f\n", tmp);
+                tubTargetTemp = tmp;
+                targetTemp.setValue(tubTargetTemp);
+                Serial.printf("Sent target temp data %f\n", tubTargetTemp);
               }
               else {
                 if (tubTemp != tmp) {
@@ -510,9 +543,18 @@ void handleBytes(uint8_t buf[], size_t len) {
                   temp.setValue(tubTemp);
                   Serial.printf("Sent temp data %f\n", tubTemp);
                 }
+                if(heaterState && (tubTemp < tubTargetTemp)) {
+                  double tempDiff = (tubTargetTemp - tubTemp);
+                  String timeToTempMsg =  (String) (tempDiff * MINUTES_PER_DEGC);
+                  timeToTempMsg += " mins"; 
+                  timeToTemp.setValue(timeToTempMsg.c_str());  
+                }
+                else {
+                  timeToTemp.setValue("");
+                }
               }
             }
-            else if (result.substring(10, 12) == "2d") {
+            else if (result.substring(10, 12) == "2d") { // "-"
               //          Serial.println("temp = unknown");
               //          telnetSend("temp = unknown");
             }
@@ -604,14 +646,6 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
 
       result = ""; // clear buffer
-      if(portIndex > 2) portIndex = 0;
-
-    }
-    if (buf[i] < 0x10) {
-      result += '0';
-    }
-    result += String(buf[i], HEX);
-  }
 }
 
 String HexString2TimeString(String hexstring){
