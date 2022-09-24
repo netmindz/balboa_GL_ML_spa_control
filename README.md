@@ -4,6 +4,8 @@ While there is the excellent https://github.com/ccutrer/balboa_worldwide_app pro
 
 The aim of this project is to achieve similar results
 
+For Balboa GS series - https://github.com/MagnusPer/Balboa-GS510SZ
+
 ## Current state
 App for ESP32 or ESP8266 that sends current status including temperature to Home Assistant and also simple web status page with live updates via WebSocket
 
@@ -22,3 +24,5 @@ Original discssion regarding support for spa controllers with 8 pin rather than 
 * Pin 5 - Clock?
 * Pin 6   - 9.7V - PSU? - limited current avail
 * Pin 7+8 - GND
+
+https://www.digikey.co.uk/en/products/detail/molex/2147562082/12180458
