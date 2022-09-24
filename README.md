@@ -24,3 +24,5 @@ Original discssion regarding support for spa controllers with 8 pin rather than 
 * Pin 5 - Clock?
 * Pin 6   - 9.7V - PSU? - limited current avail
 * Pin 7+8 - GND
+
+https://www.digikey.co.uk/en/products/detail/molex/2147562082/12180458
