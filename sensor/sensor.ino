@@ -44,6 +44,8 @@ const float POWER_PUMP2_HIGH = 0.6;
 
 const int MINUTES_PER_DEGC = 60; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
+const int PANEL_PORT_INDEX = 0; // Panel connected to the main panel 1 socket
+
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
@@ -280,14 +282,6 @@ void loop() {
     tub.read(buf, len);
     buildString(buf, len);
   }
-  else {
-    if(sendBuffer != "") {
-      Serial.printf("Sending [%s]\n", sendBuffer);
-      telnetSend("W: " + sendBuffer);
-      tub.write(sendBuffer.c_str());
-      sendBuffer = "";
-    }
-  }
   
   if(digitalState == LOW) {
     if(result != "") {
@@ -328,6 +322,9 @@ void handlMessage() {
       //      Serial.println(result);
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
+
+        portIndex = PANEL_PORT_INDEX;
+        
         Serial.printf("FA 14 Long port:%u\n", portIndex);
         telnetSend(result);
 
@@ -559,12 +556,13 @@ void handlMessage() {
         light.setState(lightState);
 
 
-        portIndex++;
         // end of FA14
       }
       else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
-        Serial.printf("AE 0D Long port:%u\n", portIndex);
+        portIndex = PANEL_PORT_INDEX;
+
+        Serial.printf("AE 0D Long, port:%u\n", portIndex);
         telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
@@ -587,27 +585,24 @@ void handlMessage() {
             rawData6.setValue(lastRaw6.c_str());
           }
         }
-        portIndex++;
         // end of AE 0D
       }
       else if (result.length() == 32) { // AE0D
         // ignore the short-form messages
-        Serial.printf("%s Short port:%u\n", result.substring(0, 6), portIndex);
-        portIndex++;
+        Serial.printf("AE OD Short, port:%u\n", result.substring(0, 6), portIndex);
         telnetSend(result);
       }
       else if (result.length() == 46) { // FA
         // ignore the short-form messages
         Serial.printf("%s Short port:%u\n", result.substring(0, 6), portIndex);
         telnetSend(result + " port:" + portIndex);
-        sendBuffer = "fb0603450e0002fd50";
+        sendBuffer = "fb0603450e0009f6f6";
         if(sendBuffer != "") {
-          Serial.printf("Sending [%s]\n", sendBuffer);
+          Serial.println("Sending " + sendBuffer);
           telnetSend("W: " + sendBuffer);
           tub.write(sendBuffer.c_str());
 //          sendBuffer = "";
         }
-        portIndex++;
       }
           
 
@@ -615,6 +610,11 @@ void handlMessage() {
         Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
         telnetSend("U: " + result);
+      }
+
+      portIndex++;
+      if(portIndex > 2) {
+        portIndex = 0;
       }
 
       result = ""; // clear buffer
