@@ -1,6 +1,3 @@
-// If connect to serial port over TCP, define the following
-// #define SERIAL_OVER_IP_ADDR "192.168.178.131"
-
 // If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
 // #define MAX485 TRUE;
 
@@ -51,11 +48,8 @@ const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
 
-WiFiClient clients[2];
+WiFiClient clients[1];
 
-#ifdef SERIAL_OVER_IP_ADDR
-WiFiClient tub = clients[1];
-#else
 #ifdef ESP32
 #define tub Serial2
 #define RX_PIN 19
@@ -68,7 +62,6 @@ SoftwareSerial tub;
 #endif
 #ifdef MAX485
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#endif
 #endif
 
 HADevice device(mac, sizeof(mac));
@@ -167,7 +160,6 @@ void setup() {
 
 
 
-#ifndef SERIAL_OVER_IP_ADDR
 #ifdef MAX485
   pinMode(RTS_PIN, OUTPUT);
   digitalWrite(RTS_PIN, LOW);
@@ -184,7 +176,6 @@ void setup() {
   tub.enableIntTx(false);
   tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
 //  tub.setRxBufferSize(1024);
-#endif
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -276,25 +267,6 @@ String timeString = "";
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
-
-#ifdef SERIAL_OVER_IP_ADDR
-  if (!isConnected) {
-    Serial.print("Try to connect to hottub ... ");
-    if (!tub.connect(SERIAL_OVER_IP_ADDR, 7777)) {
-      Serial.println("Connection failed.");
-      Serial.println("Waiting 5 seconds before retrying...");
-      delay(5000);
-      return;
-    }
-    else {
-      Serial.println("Connected");
-      isConnected = true;
-    }
-  }
-  if (!isConnected) {
-    return;
-  }
-#endif
 
   digitalState = digitalRead(DIGITAL_PIN);
   if (tub.available() > 0) {
