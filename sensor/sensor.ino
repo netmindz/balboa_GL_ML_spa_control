@@ -4,6 +4,9 @@
 // If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
 // #define MAX485 TRUE;
 
+
+#define WDT_TIMEOUT 30
+
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -20,6 +23,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
+#include <esp_task_wdt.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -251,6 +255,10 @@ void setup() {
   mqtt.begin(BROKER_ADDR);
 #endif
 
+  Serial.println("Configuring WDT...");
+  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL); //add current thread to WDT watch
+
 }
 
 String result = "";
@@ -323,6 +331,7 @@ void loop() {
     uptime.setValue(lastUptime);
   }
 
+  esp_task_wdt_reset();
 }
 
 void handleBytes(uint8_t buf[], size_t len) {
