@@ -226,6 +226,9 @@ void setup() {
 
 
   timeToTemp.setName("Time to temp");
+  timeToTemp.setUnitOfMeasurement("minutes");
+  timeToTemp.setDeviceClass("duration");
+  timeToTemp.setIcon("mdi:clock");
 
   currentState.setName("Status");
 
@@ -246,10 +249,13 @@ void setup() {
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
-  rawData7.setName("FB:");
+  rawData7.setName("FB");
 
   currentMode.setName("Mode");
+  
   uptime.setName("Uptime");
+  uptime.setUnitOfMeasurement("seconds");
+  uptime.setDeviceClass("duration");
 
   tubpower.setName("Tub Power");
   tubpower.setUnitOfMeasurement("kW");
@@ -543,8 +549,7 @@ void handleBytes(uint8_t buf[], size_t len) {
                 if(heaterState && (tubTemp < tubTargetTemp)) {
                   double tempDiff = (tubTargetTemp - tubTemp);
                   String timeToTempMsg =  (String) (tempDiff * MINUTES_PER_DEGC);
-                  timeToTempMsg += " mins"; 
-                  timeToTemp.setValue(timeToTempMsg.c_str());  
+                  timeToTemp.setValue(timeToTempMsg.c_str());
                 }
                 else {
                   timeToTemp.setValue("");
