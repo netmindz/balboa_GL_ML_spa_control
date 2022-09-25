@@ -230,12 +230,12 @@ void setup() {
   haTime.setName("Time");
 
   rawData.setName("Raw data");
-  rawData2.setName("FA: ");
+  rawData2.setName("CMD");
   rawData3.setName("post temp: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
-  rawData7.setName("FA Tail: ");
+  rawData7.setName("FB:");
 
   currentMode.setName("Mode");
   uptime.setName("Uptime");
