@@ -45,7 +45,7 @@ const float POWER_PUMP1_HIGH = 1.3;
 const float POWER_PUMP2_LOW = 0.3;
 const float POWER_PUMP2_HIGH = 0.6;
 
-const int MINUTES_PER_DEGC = 60; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
+const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
