@@ -4,6 +4,8 @@
 // If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
 // #define MAX485 TRUE;
 
+// #define AP_FALLBACK
+
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -139,7 +141,7 @@ void setup() {
     WiFi.begin(ssid);
 
   int sanity = 0;
-  while (sanity < 200) {
+  while (sanity < 20) {
     sanity++;
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("");
@@ -154,11 +156,17 @@ void setup() {
   }
 
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.print("\n\nWifi failed, flip to fallback AP\n");
-    WiFi.softAP("hottub", "Balboa");
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
+    #ifdef AP_FALLBACK
+      Serial.print("\n\nWifi failed, flip to fallback AP\n");
+      WiFi.softAP("hottub", "Balboa");
+      IPAddress myIP = WiFi.softAPIP();
+      Serial.print("AP IP address: ");
+      Serial.println(myIP);
+    #else
+      Serial.print("\n\nWifi failed, reboot\n");
+      delay(1000);
+      ESP.restart();
+    #endif     
   }
 
 
