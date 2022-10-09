@@ -31,9 +31,18 @@ jobs:
       - name: show files
         run: find ./
       - name: build docs
-        run: npm install -g github-wikito-converter && gwtc ./ && mkdir pages && mv documentation.html pages/index.html
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: pages
-  
+        run: npm install -g github-wikito-converter && gwtc --output _site/ --file-name index.html ./
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        
+# Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
