@@ -31,7 +31,7 @@ jobs:
       - name: show files
         run: find ./
       - name: build docs
-        run: npm install -g github-wikito-converter && gwtc --output _site/ --file-name index.html ./
+        run: npm install -g github-wikito-converter && mkdir _site && gwtc --output _site/ --file-name index ./
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         
