@@ -24,12 +24,14 @@ jobs:
     steps:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.5.0
-      - name: checkout wiki
-        run: git clone https://github.com/netmindz/balboa_GL_ML_spa_control.wiki.git
+      - name: cbeckout
+        uses: actions/checkout@v3
+        with:
+          repository: 'https://github.com/netmindz/balboa_GL_ML_spa_control.wiki.git'
       - name: show files
         run: find ./
       - name: build docs
-        run: npm install -g github-wikito-converter && gwtc ./balboa_GL_ML_spa_control.wiki && mkdir pages && mv documentation.html pages/index.html
+        run: npm install -g github-wikito-converter && gwtc ./ && mkdir pages && mv documentation.html pages/index.html
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
