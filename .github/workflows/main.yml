@@ -27,6 +27,8 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.5.0
-      - name: builf docs
-        run: npm install github-wikito-converter
+      - name: show files
+        run: find ./
+      - name: build docs
+        run: npm install -d github-wikito-converter && gwtc ./
   
