@@ -26,3 +26,6 @@ Original discssion regarding support for spa controllers with 8 pin rather than 
 * Pin 7+8 - GND
 
 https://www.digikey.co.uk/en/products/detail/molex/2147562082/12180458
+
+# Docs
+https://netmindz.github.io/balboa_GL_ML_spa_control/
