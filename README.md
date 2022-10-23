@@ -1,10 +1,10 @@
 # Balboa GL ML Spa Control
 
-While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, this is *NOT* compatible with the older GL/EL range such as the GL2000 or EL2000.
+While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, this is *NOT* compatible with the older GL/EL range such as the GL2000, GL2001 or EL2000.
 
-The aim of this project is to achieve similar results
+The aim of this project is to achieve similar results as the app from ccutrer
 
-For Balboa GS series - https://github.com/MagnusPer/Balboa-GS510SZ
+If you have the Balboa GS series please try - https://github.com/MagnusPer/Balboa-GS510SZ
 
 ## Current state
 App for ESP32 or ESP8266 that sends current status including temperature to Home Assistant and also simple web status page with live updates via WebSocket
