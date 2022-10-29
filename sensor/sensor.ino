@@ -4,6 +4,8 @@
 // If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
 // #define MAX485 TRUE;
 
+#define WDT_TIMEOUT 30
+
 // #define AP_FALLBACK
 
 #define WDT_TIMEOUT 30
