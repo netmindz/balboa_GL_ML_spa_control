@@ -1,9 +1,6 @@
 // If connect to serial port over TCP, define the following
 // #define SERIAL_OVER_IP_ADDR "192.168.178.131"
 
-// If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
-// #define MAX485 TRUE;
-
 // #define AP_FALLBACK
 
 #define WDT_TIMEOUT 30
@@ -65,6 +62,7 @@ WiFiClient tub = clients[1];
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
+#define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -175,10 +173,9 @@ void setup() {
 
 
 #ifndef SERIAL_OVER_IP_ADDR
-#ifdef MAX485
   pinMode(RTS_PIN, OUTPUT);
+  Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
-#endif
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
   tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
