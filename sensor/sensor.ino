@@ -1,6 +1,8 @@
 // If connect to serial port over TCP, define the following
 // #define SERIAL_OVER_IP_ADDR "192.168.178.131"
 
+#define WDT_TIMEOUT 30
+
 // #define AP_FALLBACK
 
 #define WDT_TIMEOUT 30
