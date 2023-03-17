@@ -1,5 +1,11 @@
-// If using MAX485 board which requires RTS_PIN for request-to-send, define the following:
-// #define MAX485 TRUE;
+// If connect to serial port over TCP, define the following
+// #define SERIAL_OVER_IP_ADDR "192.168.178.131"
+
+#define WDT_TIMEOUT 30
+
+// #define AP_FALLBACK
+
+#define WDT_TIMEOUT 30
 
 #ifdef ESP32
 #include <WiFi.h>
@@ -17,6 +23,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
+#include <esp_task_wdt.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -42,7 +49,7 @@ const float POWER_PUMP1_HIGH = 1.3;
 const float POWER_PUMP2_LOW = 0.3;
 const float POWER_PUMP2_HIGH = 0.6;
 
-const int MINUTES_PER_DEGC = 60; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
+const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
@@ -55,6 +62,7 @@ WiFiClient clients[1];
 #define RX_PIN 19
 #define TX_PIN 23
 #define DIGITAL_PIN 18
+#define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -136,7 +144,7 @@ void setup() {
     WiFi.begin(ssid);
 
   int sanity = 0;
-  while (sanity < 200) {
+  while (sanity < 20) {
     sanity++;
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("");
@@ -151,19 +159,25 @@ void setup() {
   }
 
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.print("\n\nWifi failed, flip to fallback AP\n");
-    WiFi.softAP("hottub", "Balboa");
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
+    #ifdef AP_FALLBACK
+      Serial.print("\n\nWifi failed, flip to fallback AP\n");
+      WiFi.softAP("hottub", "Balboa");
+      IPAddress myIP = WiFi.softAPIP();
+      Serial.print("AP IP address: ");
+      Serial.println(myIP);
+    #else
+      Serial.print("\n\nWifi failed, reboot\n");
+      delay(1000);
+      ESP.restart();
+    #endif     
   }
 
 
 
-#ifdef MAX485
+#ifdef SERIAL_OVER_IP_ADDR
   pinMode(RTS_PIN, OUTPUT);
+  Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
-#endif
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
   tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -176,6 +190,7 @@ void setup() {
   tub.enableIntTx(false);
   tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
 //  tub.setRxBufferSize(1024);
+#endif
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -210,6 +225,9 @@ void setup() {
 
 
   timeToTemp.setName("Time to temp");
+  timeToTemp.setUnitOfMeasurement("minutes");
+  timeToTemp.setDeviceClass("duration");
+  timeToTemp.setIcon("mdi:clock");
 
   currentState.setName("Status");
 
@@ -225,15 +243,18 @@ void setup() {
   haTime.setName("Time");
 
   rawData.setName("Raw data");
-  rawData2.setName("FA: ");
+  rawData2.setName("CMD");
   rawData3.setName("post temp: ");
   rawData4.setName("D01: ");
   rawData5.setName("D02: ");
   rawData6.setName("D03: ");
-  rawData7.setName("FA Tail: ");
+  rawData7.setName("FB");
 
   currentMode.setName("Mode");
+  
   uptime.setName("Uptime");
+  uptime.setUnitOfMeasurement("seconds");
+  uptime.setDeviceClass("duration");
 
   tubpower.setName("Tub Power");
   tubpower.setUnitOfMeasurement("kW");
@@ -245,6 +266,10 @@ void setup() {
 #else
   mqtt.begin(BROKER_ADDR);
 #endif
+
+  Serial.println("Configuring WDT...");
+  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL); //add current thread to WDT watch
 
 }
 
@@ -307,6 +332,7 @@ void loop() {
     uptime.setValue(lastUptime);
   }
 
+  esp_task_wdt_reset();
 }
 
 void buildString(uint8_t buf[], size_t len) {
@@ -515,8 +541,7 @@ void handlMessage() {
                 if(heaterState && (tubTemp < tubTargetTemp)) {
                   double tempDiff = (tubTargetTemp - tubTemp);
                   String timeToTempMsg =  (String) (tempDiff * MINUTES_PER_DEGC);
-                  timeToTempMsg += " mins"; 
-                  timeToTemp.setValue(timeToTempMsg.c_str());  
+                  timeToTemp.setValue(timeToTempMsg.c_str());
                 }
                 else {
                   timeToTemp.setValue("");
