@@ -174,7 +174,7 @@ void setup() {
 
 
 
-#ifdef SERIAL_OVER_IP_ADDR
+#ifndef SERIAL_OVER_IP_ADDR
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
