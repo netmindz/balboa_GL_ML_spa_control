@@ -2,6 +2,8 @@
 #define TX_PIN 23
 #define PORT_4_PIN 26
 #define PORT_5_PIN 18
+#define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+
 
 void setup() {
   Serial.begin(115200);
@@ -9,6 +11,11 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
   pinMode(PORT_4_PIN, INPUT);
   pinMode(PORT_5_PIN, INPUT);
+
+  // MAX485  
+  pinMode(RTS_PIN, OUTPUT);
+  Serial.printf("Setting RTS pin %u LOW\n", RTS_PIN);
+  digitalWrite(RTS_PIN, LOW);
   Serial.println("Setup Complete");
 }
 
