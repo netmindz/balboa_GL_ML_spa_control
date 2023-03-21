@@ -61,15 +61,17 @@ WiFiClient clients[1];
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
-#define DIGITAL_PIN 18
 #define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
+#define PIN_5_PIN D12345
 #endif
 #ifdef MAX485
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#endif
 #endif
 
 HADevice device(mac, sizeof(mac));
@@ -115,7 +117,6 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
-bool digitalState;
 String sendBuffer;
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
@@ -128,8 +129,6 @@ boolean isConnected = false;
 void setup() {
   Serial.begin(115200);
   delay(1000);
-
-  pinMode(DIGITAL_PIN, INPUT);
 
   // Make sure you're in station mode
   WiFi.mode(WIFI_STA);
@@ -178,6 +177,7 @@ void setup() {
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
+  pinMode(PIN_5_PIN, INPUT);  
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
   tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -288,38 +288,56 @@ String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
 String timeString = "";
+int msgLength = 0;
 
 void loop() {
   mqtt.loop();
   ArduinoOTA.handle();
 
-  digitalState = digitalRead(DIGITAL_PIN);
   if (tub.available() > 0) {
+    bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     tub.read(buf, len);
-    buildString(buf, len);
-  }
-  else {
-    if(sendBuffer != "") {
-      Serial.printf("Sending [%s]\n", sendBuffer);
-      telnetSend("W: " + sendBuffer);
-      tub.write(sendBuffer.c_str());
-      sendBuffer = "";
+    if (panelSelect == LOW) { // Only read data meant for us
+      for (int i = 0; i < len; i++) {
+        if (buf[i] < 0x10) {
+          result += '0';
+        }
+        result += String(buf[i], HEX);
+      }
+      if(msgLength == 0 && result.length() >= 2) {
+        String messageType = result.substring(0, 2);
+        if(messageType == "fa") {
+          msgLength = 46;
+        }
+        else if(messageType == "ae") {
+          msgLength = 32;
+        }
+        else {
+          Serial.print("Unknown message length for ");
+          Serial.println(messageType);
+        }
+      }          
+      if(result.length() == msgLength) {
+        handleMessage();
+        if(sendBuffer != "") {
+          sendCommand();
+        }
+      }
+    }
+    else {
+      result = "";
+      msgLength = 0;
     }
   }
-  
-  if(digitalState == LOW) {
-    if(result != "") {
-      handlMessage();
-    }
-  }
-
 
   telnetLoop();
-  webserver.handleClient();
-  webSocket.loop();
+
+  // TODO: disabled while trying to elimate timing issues
+  // webserver.handleClient();
+  // webSocket.loop();
 
   String json = getStatusJSON();
   if (json != lastJSON) {
@@ -335,23 +353,15 @@ void loop() {
   esp_task_wdt_reset();
 }
 
-void buildString(uint8_t buf[], size_t len) {
-  for (int i = 0; i < len; i++) {
-    if (buf[i] < 0x10) {
-      result += '0';
-    }
-    result += String(buf[i], HEX);
-  }
-}
-
-void handlMessage() {
-
+void handleMessage() {
+  
       //      Serial.print("message = ");
       //      Serial.println(result);
 
-      if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
-        Serial.println("FA 14 Long");
+      if (result.substring(0, 4) == "fa14") {
+
+        Serial.println("FA 14");
         telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
@@ -567,10 +577,12 @@ void handlMessage() {
           rawData2.setValue(lastRaw2.c_str());
         }
 
-        String tail = result.substring(46, 64);
-        if (tail != lastRaw7) {
-          lastRaw7 = tail;
-          rawData7.setValue(lastRaw7.c_str());
+        if(result.length() >= 64) { // "Long" messages only
+          String tail = result.substring(46, 64);
+          if (tail != lastRaw7) {
+            lastRaw7 = tail;
+            rawData7.setValue(lastRaw7.c_str());
+          }
         }
 
         pump1.setState(pump1State);
@@ -583,20 +595,13 @@ void handlMessage() {
 
         // end of FA14
       }
-      else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
+      else if (result.substring(0, 4) == "ae0d") {
 
-        Serial.println("AE 0D Long");
+        Serial.println("AE 0D");
         telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
 
-        //        if (result.substring(0, 6) == "ae0d00") {
-        //          if (!lastRaw3.equals(message)) {
-        //            lastRaw3 = message;
-        //            rawData3.setValue(lastRaw3.c_str());
-        //          }
-        //        }
-        //        else
         if (result.substring(0, 6) == "ae0d01" && message != "ae0d010000000000000000000000005a") {
           if (!lastRaw4.equals(message)) {
             lastRaw4 = message;
@@ -617,18 +622,23 @@ void handlMessage() {
         }
         // end of AE 0D
       }
-      else if (result.length() == 46 || result.length() == 32) {
-        // ignore the short-form messages
-        //        Serial.println(result.substring(0, 6) + " Short");
-        telnetSend(result);
-      }
       else {
         Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
         telnetSend("U: " + result);
       }
+}
 
-      result = ""; // clear buffer
+void sendCommand() {
+  if(sendBuffer != "") {
+    digitalWrite(RTS_PIN, HIGH);
+    Serial.println("Sending " + sendBuffer);
+    byte byteArray[18] = {0};
+    hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
+    Serial2.write(byteArray, sizeof(byteArray));
+    Serial2.flush();
+    digitalWrite(RTS_PIN, LOW);
+  }
 }
 
 String HexString2TimeString(String hexstring){
@@ -659,3 +669,64 @@ String HexString2ASCIIString(String hexstring) {
   }
   return temp;
 }
+
+void hexCharacterStringToBytes(byte *byteArray, const char *hexString)
+{
+  bool oddLength = strlen(hexString) & 1;
+
+  byte currentByte = 0;
+  byte byteIndex = 0;
+
+  for (byte charIndex = 0; charIndex < strlen(hexString); charIndex++)
+  {
+    bool oddCharIndex = charIndex & 1;
+
+    if (oddLength)
+    {
+      // If the length is odd
+      if (oddCharIndex)
+      {
+        // odd characters go in high nibble
+        currentByte = nibble(hexString[charIndex]) << 4;
+      }
+      else
+      {
+        // Even characters go into low nibble
+        currentByte |= nibble(hexString[charIndex]);
+        byteArray[byteIndex++] = currentByte;
+        currentByte = 0;
+      }
+    }
+    else
+    {
+      // If the length is even
+      if (!oddCharIndex)
+      {
+        // Odd characters go into the high nibble
+        currentByte = nibble(hexString[charIndex]) << 4;
+      }
+      else
+      {
+        // Odd characters go into low nibble
+        currentByte |= nibble(hexString[charIndex]);
+        byteArray[byteIndex++] = currentByte;
+        currentByte = 0;
+      }
+    }
+  }
+}
+
+byte nibble(char c)
+{
+  if (c >= '0' && c <= '9')
+    return c - '0';
+
+  if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+
+  if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+
+  return 0;  // Not a valid hexadecimal character
+}
+
