@@ -33,43 +33,48 @@ void loop() {
     size_t len = Serial2.available();
     uint8_t buf[len];
     Serial2.read(buf, len);
+          
     if (panelSelect == LOW) { // Only read data meant for us
       reading = true;
       buildString(buf, len);
+      if(tmp.length() == 46 && tmp.substring(0, 4) == "fa14") {
+        i++;
+        Serial.print("FA14 = ");
+        Serial.println(tmp);
+        sendCommand();
+      }
+      if(tmp.length() == 32 && tmp.substring(0, 4) == "ae0d") {
+        Serial.print("AEOD = ");
+        Serial.println(tmp);
+        sendCommand();
+      }
     }
-    //    else {
-    //      reading = false;
-    //    }
+    else {
+      tmp = "";
+    }
   }
 
   if (reading && panelSelect == HIGH) {
-//  if (reading && something == HIGH) {
-    //    if (tmp != "") {
-    Serial.print("EOM = ");
+    
+    Serial.print("EOM  = ");
     Serial.println(tmp);
-    if (tmp.length() == 46) {
-    i++;
-      sendMsg = true;
-    }
-    tmp = "";
-    //    }
+    // Serial.print(" pin4 = ");
+    // Serial.println(pin4State);
     reading = false;
-  }
-
-  if (sendMsg && something == LOW) { // Can only seem to send when pin4 LOW
-    sendCommand();
-    sendMsg = false;
   }
 
 }
 
 void sendCommand() {
   if (i % 10 == 0) {
+    digitalWrite(RTS_PIN, HIGH);
     String sendBuffer = "fb0603450e0009f6f6"; // toggle light
     Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
     hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
     Serial2.write(byteArray, sizeof(byteArray));
+    Serial2.flush();
+    digitalWrite(RTS_PIN, LOW);
   }
 }
 
