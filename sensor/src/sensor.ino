@@ -77,9 +77,9 @@ SoftwareSerial tub;
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
-HASensor temp("temp");
-HASensor targetTemp("targetTemp");
-HASensor timeToTemp("timeToTemp");
+HASensorNumber temp("temp");
+HASensorNumber targetTemp("targetTemp");
+HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
 HASensor haTime("time");
 HASensor rawData("raw");
@@ -90,14 +90,14 @@ HASensor rawData5("raw5");
 HASensor rawData6("raw6");
 HASensor rawData7("raw7");
 HASensor currentMode("mode");
-HASensor uptime("uptime");
-HABinarySensor pump1("pump1", "moving", false);
-HABinarySensor pump2("pump2", "moving", false);
+HASensorNumber uptime("uptime");
+HABinarySensor pump1("pump1");
+HABinarySensor pump2("pump2");
 HASensor pump1_state("pump1_state");
 HASensor pump2_state("pump2_state");
-HABinarySensor heater("heater", "heat", false);
-HABinarySensor light("light", "light", false);
-HASensor tubpower("tubpower");
+HABinarySensor heater("heater");
+HABinarySensor light("light");
+HASensorNumber tubpower("tubpower");
 
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
@@ -536,22 +536,22 @@ void handleBytes(uint8_t buf[], size_t len) {
               double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
               if (menu == "46") {
                 tubTargetTemp = tmp;
-                targetTemp.setValue(tubTargetTemp);
+                targetTemp.setValue((float) tubTargetTemp);
                 Serial.printf("Sent target temp data %f\n", tubTargetTemp);
               }
               else {
                 if (tubTemp != tmp) {
                   tubTemp = tmp;
-                  temp.setValue(tubTemp);
+                  temp.setValue((float) tubTemp);
                   Serial.printf("Sent temp data %f\n", tubTemp);
                 }
                 if(heaterState && (tubTemp < tubTargetTemp)) {
                   double tempDiff = (tubTargetTemp - tubTemp);
-                  String timeToTempMsg =  (String) (tempDiff * MINUTES_PER_DEGC);
-                  timeToTemp.setValue(timeToTempMsg.c_str());
+                  float timeToTempValue =   (tempDiff * MINUTES_PER_DEGC);
+                  timeToTemp.setValue(timeToTempValue);
                 }
                 else {
-                  timeToTemp.setValue("");
+                  timeToTemp.setValue(0);
                 }
               }
             }
