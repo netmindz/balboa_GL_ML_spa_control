@@ -21,8 +21,11 @@ jobs:
         run: cd sensor; pip install --upgrade platformio
       - name: Display the path
         run: |
-          echo "#define SECRET_SSID \"test\"" > sensor/src/wifi.h
-          echo "#define SECRET_PSK \"test\"" >> sensor/src/wifi.h
+          cat << EOF
+#define SECRET_SSID "test"
+#define SECRET_PSK "test"
+EOF
+> sensor/src/wifi.h
 	  cat sensor/src/wifi.h
         shell: bash
       - name: Build PlatformIO Project
