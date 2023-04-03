@@ -21,4 +21,4 @@ jobs:
         run: cd sensor; pip install --upgrade platformio
 
       - name: Build PlatformIO Project
-        run: pio run
+        run: cd sensor; pio run
