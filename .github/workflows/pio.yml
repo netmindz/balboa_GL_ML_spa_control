@@ -19,14 +19,9 @@ jobs:
           python-version: '3.9'
       - name: Install PlatformIO Core
         run: cd sensor; pip install --upgrade platformio
-      - name: Display the path
-        run: |
-          cat << EOF
-#define SECRET_SSID "test"
-#define SECRET_PSK "test"
-EOF
-> sensor/src/wifi.h
-	  cat sensor/src/wifi.h
-        shell: bash
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: "sensor/src/wifi.h"
+          FILE_BASE64: "I2RlZmluZSBTRUNSRVRfU1NJRCAidGVzdCIKI2RlZmluZSBTRUNSRVRfUFNLICJ0ZXN0Igo="
       - name: Build PlatformIO Project
         run: cd sensor; pio run
