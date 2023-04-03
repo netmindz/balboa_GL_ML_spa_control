@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install PlatformIO Core
-        run: cd senor; pip install --upgrade platformio
+        run: cd sensor; pip install --upgrade platformio
 
       - name: Build PlatformIO Project
         run: pio run
