@@ -12,6 +12,7 @@
 #include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFiAP.h>
+#include <esp_task_wdt.h>
 #else
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -23,7 +24,6 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
-#include <esp_task_wdt.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -67,9 +67,6 @@ WiFiClient clients[1];
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
-#define PIN_5_PIN D12345
-#endif
-#ifdef MAX485
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
 #endif
@@ -267,9 +264,11 @@ void setup() {
   mqtt.begin(BROKER_ADDR);
 #endif
 
+#ifdef ESP32
   Serial.println("Configuring WDT...");
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
+#endif
 
 }
 
@@ -350,7 +349,9 @@ void loop() {
     uptime.setValue(lastUptime);
   }
 
+#ifdef ESP32
   esp_task_wdt_reset();
+#endif
 }
 
 void handleMessage() {
