@@ -69,7 +69,7 @@ SoftwareSerial tub;
 #define TX_PIN D7
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
-#endif
+
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
