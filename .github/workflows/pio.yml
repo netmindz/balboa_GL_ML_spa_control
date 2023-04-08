@@ -1,0 +1,27 @@
+name: PlatformIO CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO Core
+        run: cd sensor; pip install --upgrade platformio
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: "sensor/src/wifi.h"
+          FILE_BASE64: "I2RlZmluZSBTRUNSRVRfU1NJRCAidGVzdCIKI2RlZmluZSBTRUNSRVRfUFNLICJ0ZXN0Igo="
+      - name: Build PlatformIO Project
+        run: cd sensor; pio run
