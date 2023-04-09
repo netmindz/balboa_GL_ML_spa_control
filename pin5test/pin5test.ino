@@ -1,7 +1,7 @@
 #define RX_PIN 19
 #define TX_PIN 23
 #define PORT_4_PIN 26
-#define PORT_5_PIN 18
+#define PIN_5_PIN 18
 #define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 
 
@@ -10,7 +10,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
   pinMode(PORT_4_PIN, INPUT);
-  pinMode(PORT_5_PIN, INPUT);
+  pinMode(PIN_5_PIN, INPUT);
 
   // MAX485  
   pinMode(RTS_PIN, OUTPUT);
@@ -27,7 +27,7 @@ boolean reading = false;
 void loop() {
 
   bool something = digitalRead(PORT_4_PIN);
-  bool panelSelect = digitalRead(PORT_5_PIN); // LOW when we are meant to read data
+  bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
 
   if (Serial2.available() > 0) {
     size_t len = Serial2.available();
@@ -44,9 +44,9 @@ void loop() {
         sendCommand();
       }
       if(tmp.length() == 32 && tmp.substring(0, 4) == "ae0d") {
-        Serial.print("AEOD = ");
-        Serial.println(tmp);
-        sendCommand();
+        // Serial.print("AEOD = ");
+        // Serial.println(tmp);
+        // sendCommand();
       }
     }
     else {
@@ -54,26 +54,42 @@ void loop() {
     }
   }
 
-  if (reading && panelSelect == HIGH) {
+  // if (reading && panelSelect == HIGH) {
     
-    Serial.print("EOM  = ");
-    Serial.println(tmp);
-    // Serial.print(" pin4 = ");
-    // Serial.println(pin4State);
-    reading = false;
-  }
+  //   Serial.print("EOM  = ");
+  //   Serial.println(tmp);
+  //   // Serial.print(" pin4 = ");
+  //   // Serial.println(pin4State);
+  //   reading = false;
+  // }
 
 }
 
 void sendCommand() {
-  if (i % 10 == 0) {
+  String sendBuffer = "fb0603450e0009f6f6"; // toggle light
+  if (i % 100 == 0) {
     digitalWrite(RTS_PIN, HIGH);
-    String sendBuffer = "fb0603450e0009f6f6"; // toggle light
-    Serial.println("Sending " + sendBuffer);
+    // delayMicroseconds(100);
+    // delayMicroseconds(150);
+    // Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
     hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
-    Serial2.write(byteArray, sizeof(byteArray));
-    Serial2.flush();
+    // if(digitalRead(PIN_5_PIN) != LOW) {
+    //   Serial.println("ERROR: Pin5 went high before command before write");
+    // }
+   Serial2.write(byteArray, sizeof(byteArray));
+    // Serial2.write(sendBuffer.c_str());
+    // if(digitalRead(PIN_5_PIN) != LOW) {
+    //   Serial.println("ERROR: Pin5 went high before command before flush");
+    // }
+    Serial2.flush(true);
+    if(digitalRead(PIN_5_PIN) == LOW) {
+      sendBuffer = "";
+      Serial.println("YAY: message sent");
+    }
+    else {
+      Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+    }
     digitalWrite(RTS_PIN, LOW);
   }
 }
