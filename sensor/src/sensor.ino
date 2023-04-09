@@ -92,7 +92,7 @@ HABinarySensor pump2("pump2", "moving", false);
 HASensor pump1_state("pump1_state");
 HASensor pump2_state("pump2_state");
 HABinarySensor heater("heater", "heat", false);
-HABinarySensor light("light", "light", false);
+HASwitch light("light", false);
 HASensor tubpower("tubpower");
 
 #define MAX_SRV_CLIENTS 2
@@ -114,12 +114,18 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
-String sendBuffer;
+String sendBuffer = "fb0603450e0009f6f6";
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
   // this callback will be called before publishing new state to HA
   // in some cases there may be delay before onStateChanged is called due to network latency
+}
+
+void onSwitchStateChanged(bool state, HASwitch* s)
+{
+    Serial.println("Switch changed, so schedule command");
+    sendBuffer = "fb0603450e0009f6f6";
 }
 
 boolean isConnected = false;
@@ -237,6 +243,9 @@ void setup() {
   heater.setName("Heater");
   //  heater.setIcon("mdi:radiator");
   light.setName("Light");
+  light.onBeforeStateChanged(onBeforeSwitchStateChanged); // optional
+  light.onStateChanged(onSwitchStateChanged);
+
   haTime.setName("Time");
 
   rawData.setName("Raw data");
@@ -269,7 +278,7 @@ void setup() {
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
 #endif
-
+  Serial.println("End of setup");
 }
 
 String result = "";
@@ -290,9 +299,6 @@ String timeString = "";
 int msgLength = 0;
 
 void loop() {
-  mqtt.loop();
-  ArduinoOTA.handle();
-
   if (tub.available() > 0) {
     bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
     size_t len = tub.available();
@@ -320,10 +326,10 @@ void loop() {
         }
       }          
       if(result.length() == msgLength) {
-        handleMessage();
-        if(sendBuffer != "") {
+        if(result.length() == 46) {
           sendCommand();
         }
+        handleMessage();
       }
     }
     else {
@@ -331,6 +337,9 @@ void loop() {
       msgLength = 0;
     }
   }
+
+  mqtt.loop();
+  ArduinoOTA.handle();
 
   telnetLoop();
 
@@ -633,11 +642,25 @@ void handleMessage() {
 void sendCommand() {
   if(sendBuffer != "") {
     digitalWrite(RTS_PIN, HIGH);
-    Serial.println("Sending " + sendBuffer);
+    // delayMicroseconds(290);
+    // Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
     hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
+    // if(digitalRead(PIN_5_PIN) != LOW) {
+    //   Serial.println("ERROR: Pin5 went high before command before write");
+    // }
     Serial2.write(byteArray, sizeof(byteArray));
-    Serial2.flush();
+    // if(digitalRead(PIN_5_PIN) != LOW) {
+    //   Serial.println("ERROR: Pin5 went high before command before flush");
+    // }
+    // Serial2.flush();
+    if(digitalRead(PIN_5_PIN) == LOW) {
+      sendBuffer = "";
+      Serial.println("YAY: message sent");
+    }
+    else {
+      Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+    }
     digitalWrite(RTS_PIN, LOW);
   }
 }
