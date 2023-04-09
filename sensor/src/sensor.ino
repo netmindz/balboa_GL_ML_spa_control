@@ -653,7 +653,7 @@ void sendCommand() {
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before flush");
     // }
-    // Serial2.flush();
+    Serial2.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
       sendBuffer = "";
       Serial.println("YAY: message sent");
