@@ -12,6 +12,9 @@ void setup() {
   pinMode(PORT_4_PIN, INPUT);
   pinMode(PIN_5_PIN, INPUT);
 
+  attachInterrupt(PIN_5_PIN, readMessage, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearBuffer, HIGH);
+
   // MAX485
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting RTS pin %u LOW\n", RTS_PIN);
@@ -24,42 +27,60 @@ int i = 0;
 
 void loop() {
 
-  // bool something = digitalRead(PORT_4_PIN);
-  bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
+  // // bool something = digitalRead(PORT_4_PIN);
+  // bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
 
-  if (panelSelect == LOW) {  // Only read data meant for us
-                             // Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+  // if (panelSelect == LOW) {  // Only read data meant for us
+  //                            // Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+  // } else {
+  //   if (tmp != "") {
+  //     Serial.print("EOM  = ");
+  //     Serial.println(tmp);
+  //   }
+  //   // Serial2.end();
+  //   Serial2.flush();  // send tx buffer and flush rx
+  //   tmp = "";
+  // }
+}
+
+void IRAM_ATTR readMessage() {
+    Serial.println("readMessage");
+
+    Serial2.flush(); // Clear data from other main panels from buffer
+
+    // delayMicroseconds(100); // Wait for message to be fully in the RX buffer after the pin changed LOW
+    
     size_t len = Serial2.available();
+
+    Serial.printf("aval = %u\n", len);
+
     uint8_t buf[len];
     Serial2.read(buf, len);
 
-    buildString(buf, len);
-    if (tmp.length() == 46 && tmp.substring(0, 4) == "fa14") {
-      i++;
-      Serial.print("FA14 = ");
-      Serial.println(tmp);
-      sendCommand();
-    }
-    if (tmp.length() == 32 && tmp.substring(0, 4) == "ae0d") {
-      // Serial.print("AEOD = ");
-      // Serial.println(tmp);
-      // sendCommand();
-    }
-  } else {
-    if (tmp != "") {
-      Serial.print("EOM  = ");
-      Serial.println(tmp);
-    }
-    // Serial2.end();
-    Serial2.flush();  // send tx buffer and flush rx
-    tmp = "";
-  }
+    // buildString(buf, len);
+    // if (tmp.length() == 46 && tmp.substring(0, 4) == "fa14") {
+    //   i++;
+    //   Serial.print("FA14 = ");
+    //   Serial.println(tmp);
+    //   // sendCommand();
+    // }
+    // else if (tmp.length() == 32 && tmp.substring(0, 4) == "ae0d") {
+    //   Serial.print("AEOD = ");
+    //   Serial.println(tmp);
+    //   // sendCommand();
+    // }
+    // else {
+    //   Serial.printf("EOM %u = ", tmp.length());
+    //   Serial.println(tmp);
+    // }
+
 }
 
 void sendCommand() {
   String sendBuffer = "fb0603450e0009f6f6";  // toggle light
   i++;
   if (i % 100 == 0) {
+    Serial.printf("availableForWrite before send = %u\n", Serial2.availableForWrite());
     unsigned long startTime = micros();
     digitalWrite(RTS_PIN, HIGH);
     logTimeDiff("high", startTime);
@@ -76,8 +97,10 @@ void sendCommand() {
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before flush");
     // }
+    Serial.printf("availableForWrite before flush = %u\n", Serial2.availableForWrite());
     Serial2.flush(true);
     logTimeDiff("Send write time", startTime);
+    Serial.printf("availableForWrite post flush = %u\n", Serial2.availableForWrite());
     if (digitalRead(PIN_5_PIN) == LOW) {
       sendBuffer = "";
       Serial.println("YAY: message sent");
@@ -91,7 +114,7 @@ void sendCommand() {
 
 void logTimeDiff(String msg, long startTime) {
   Serial.print(msg + " ");
-  Serial.println(startTime - micros());
+  Serial.println(micros() - startTime);
 }
 
 void buildString(uint8_t buf[], size_t len) {
