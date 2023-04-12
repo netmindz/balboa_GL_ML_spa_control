@@ -134,10 +134,10 @@ void loop()
 
   ProcessSerialDataBuffer();
 
-  //Temps de fin de Trame different si on analyse un clavier ou si c'est le notre
-  //Quand on analyse un clavier, on doit attendre l envoi de la commande de retour ( > 1ms )
-  //Sinon environ 300us
-  unsigned long dynamicTimeBeetweenFrame = (gpioKeyboardPin==PIN_KEY_BOARD_1)?timeBeetweenFrame:timeBeetweenFrame_original_keyboard;
+   //Frame end time different if we analyze a keyboard or if it's ours
+   //When we analyze a keyboard, we must wait for the return command to be sent (> 1ms)
+   //Otherwise about 300us
+   unsigned long dynamicTimeBeetweenFrame = (gpioKeyboardPin==PIN_KEY_BOARD_1)?timeBeetweenFrame:timeBeetweenFrame_original_keyboard;
   
   if(((micros()-lastTimeLastData) > dynamicTimeBeetweenFrame) && (iCurrentBufferLength>1))
   {
@@ -148,7 +148,7 @@ void loop()
       //Sample to prepare a command  ( add a command from a push button or wifi command, BLE )
       //setCommand_SetUp();
 
-      //Envoyer tout de suite la commande au SPA sur une commande est préparée
+      //Immediately send the order to the SPA when an order is prepared
       if(iCurrentCommandBufferLength>0)
       {
         sendCommandBuffer(commandBuffer,iCurrentCommandBufferLength);
@@ -167,7 +167,7 @@ void loop()
 //Envoi de la commande sur la liaison série
 void sendCommandBuffer(uint8_t* buffer,int bufferLength)
 {
-  //Sécurité, pas d'envoi de commande si on est en mode debug du clavier Physique
+  //Security, no command sent if you are in debug mode of the Physical keyboard
   if(gpioKeyboardPin!=PIN_KEY_BOARD_1)
   {
     Serial.println("Command not sended > Original KeyBoard");
