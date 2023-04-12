@@ -1,10 +1,10 @@
 // Example code of command sending from https://github.com/TiSiAi based of orginal investigations by netmindz
 
+// Note: any reference to Keyboard here actually means main/top panel
+
 //Enable for analyse Original KeyBoard > no TX Data Enable
 //#define DEBUG_ORIGINAL_KEYBOARD 1
 
-int baudRate = SERIAL_8N1;
-unsigned long baudTransmitExternalData=115200UL;
 unsigned long lastExternalSerialDataValidTime = 2000UL;
 
 
@@ -12,7 +12,8 @@ unsigned long lastExternalSerialDataValidTime = 2000UL;
 //Replace with your PIN GPIO for RX/TX
 #define rxPinExternalSerialData 19
 #define txPinExternalSerialData 23
-#define baudTransmitExternalData 115200
+
+#define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 
 
 //WARNING
@@ -20,10 +21,6 @@ unsigned long lastExternalSerialDataValidTime = 2000UL;
 //>> modify with your PIN5 from your Keyboard
 #define PIN_KEY_BOARD_1 22
 #define PIN_KEY_BOARD_2 5  //my original Keyboard for debug FB Frame 
-
-//Led state
-#define ledGreen 26
-#define ledRed 25
 
 
 //Keyboard Command
@@ -69,7 +66,7 @@ int nbFrameProcess = 0;
 unsigned long lastTimeLastDataAnalysing = 0;
 unsigned long timeBeetweenFrameAnalysing = 1*3000000UL;  //1ms
 
-HardwareSerial SerialExternalDataTub(2); //27/17
+HardwareSerial SerialExternalDataTub(2); // pins set during begin
 
 int iPinState=-1;
 
@@ -95,25 +92,24 @@ void setup()
   pinMode(PIN_KEY_BOARD_1, INPUT);
   pinMode(PIN_KEY_BOARD_2, INPUT);
 
-  pinMode(ledGreen, OUTPUT);
-  pinMode(ledRed, OUTPUT);
-
-  digitalWrite(ledGreen,HIGH);
-  digitalWrite(ledRed,HIGH);
+  pinMode(RTS_PIN, OUTPUT);
+  Serial.printf("Setting RTS pin %u LOW\n", RTS_PIN);
+  digitalWrite(RTS_PIN, LOW);
   
-
   clearDataBuffer();
   clearCommandBuffer();
   
   Serial.begin(115200);
 
-  delay(500);
-  digitalWrite(ledGreen,LOW);
-  delay(500);
-  digitalWrite(ledRed,LOW);
+  delay(1000);
 
   SerialExternalDataTub.setTimeout(2000);
-  SerialExternalDataTub.begin(baudTransmitExternalData,baudRate,rxPinExternalSerialData,txPinExternalSerialData,false);
+  SerialExternalDataTub.begin(115200,SERIAL_8N1,rxPinExternalSerialData,txPinExternalSerialData,false);
+  
+  pinMode(RTS_PIN, OUTPUT);
+  Serial.printf("Setting RTS pin %u LOW\n", RTS_PIN);
+  digitalWrite(RTS_PIN, LOW);
+
 }
 
 
@@ -181,6 +177,7 @@ void sendCommandBuffer(uint8_t* buffer,int bufferLength)
     Serial.println("Command not sended > No Data");
     return;
   }
+  digitalWrite(RTS_PIN, HIGH);
 
   SerialExternalDataTub.write(buffer,bufferLength);
   
@@ -190,6 +187,7 @@ void sendCommandBuffer(uint8_t* buffer,int bufferLength)
     printHexa2Digit((byte)buffer[i],false);
   }
   Serial.println("");
+  digitalWrite(RTS_PIN, LOW);
 } 
 
 
