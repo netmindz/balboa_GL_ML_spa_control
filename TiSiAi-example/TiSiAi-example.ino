@@ -8,15 +8,15 @@ unsigned long lastExternalSerialDataValidTime = 2000UL;
 
 //WARNING
 //Replace with your PIN GPIO for RX/TX
-#define rxPinExternalSerialData 14
-#define txPinExternalSerialData 27
+#define rxPinExternalSerialData 19
+#define txPinExternalSerialData 23
 #define baudTransmitExternalData 115200
 
 
 //WARNING
 //Pin Keyboard
 //>> modify with your PIN5 from your Keyboard
-#define PIN_KEY_BOARD_1 16
+#define PIN_KEY_BOARD_1 22
 #define PIN_KEY_BOARD_2 5  //my original Keyboard for debug FB Frame 
 
 //Led state
