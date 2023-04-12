@@ -9,6 +9,8 @@ void setup() {
   Serial.begin(115200);
   // put your setup code here, to run once:
   Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+  Serial2.setRxBufferSize(8); // We only want to actually read while LOW, so don't have "crap" in the buffer we have to deal with
+
   pinMode(PORT_4_PIN, INPUT);
   pinMode(PIN_5_PIN, INPUT);
 
@@ -30,6 +32,7 @@ void loop() {
   if (panelSelect == LOW) {  // Only read data meant for us
                              // Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
     size_t len = Serial2.available();
+    // Serial.printf("aval = %u\n", len);
     uint8_t buf[len];
     Serial2.read(buf, len);
 
