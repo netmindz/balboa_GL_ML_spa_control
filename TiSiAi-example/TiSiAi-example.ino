@@ -1,3 +1,5 @@
+// Example code of command sending from https://github.com/TiSiAi based of orginal investigations by netmindz
+
 //Enable for analyse Original KeyBoard > no TX Data Enable
 //#define DEBUG_ORIGINAL_KEYBOARD 1
 
