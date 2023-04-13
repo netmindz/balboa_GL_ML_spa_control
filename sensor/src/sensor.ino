@@ -651,17 +651,17 @@ void sendCommand() {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
     tub.write(byteArray, sizeof(byteArray));
-    // if(digitalRead(PIN_5_PIN) != LOW) {
-    //   Serial.println("ERROR: Pin5 went high before command before flush");
+    if(digitalRead(PIN_5_PIN) != LOW) {
+      Serial.println("ERROR: Pin5 went high before command before flush");
+    }
+    // tub.flush(true);
+    // if(digitalRead(PIN_5_PIN) == LOW) {
+    //   sendBuffer = "";
+    //   Serial.println("YAY: message sent");
     // }
-    tub.flush(true);
-    if(digitalRead(PIN_5_PIN) == LOW) {
-      sendBuffer = "";
-      Serial.println("YAY: message sent");
-    }
-    else {
-      Serial.println("ERROR: Pin5 went high before command could be sent after flush");
-    }
+    // else {
+    //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+    // }
     digitalWrite(RTS_PIN, LOW);
   }
 }
