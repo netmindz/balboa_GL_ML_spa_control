@@ -67,6 +67,7 @@ WiFiClient clients[1];
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
+#define PIN_5_PIN D4
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
 
