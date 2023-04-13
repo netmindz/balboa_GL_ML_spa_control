@@ -19,7 +19,7 @@ unsigned long lastExternalSerialDataValidTime = 2000UL;
 //WARNING
 //Pin Keyboard
 //>> modify with your PIN5 from your Keyboard
-#define PIN_KEY_BOARD_1 22
+#define PIN_KEY_BOARD_1 18
 #define PIN_KEY_BOARD_2 5  //my original Keyboard for debug FB Frame 
 
 
@@ -41,6 +41,7 @@ uint8_t keyboardCommand_JET2[] = { 0xFB,0x06,0x66,0x66,0x66,0x66,0x07,0xF8,0x3E}
 
 uint8_t keyboardCommand_EMPTY[] ={ 0xFB,0x06,0x66,0x66,0x66,0x66,0x00,0xFF,0x40};
 
+uint8_t keyboardCommand_LIGHT[] = { 0xFB,0x06,0x03,0x45,0x0E,0x00,0x09,0xF6,0xF6};
 
 
 int gpioKeyboardPin = PIN_KEY_BOARD_1; //Default ( my virtual new Keyboard with ESP32)
@@ -129,7 +130,7 @@ void clearCommandBuffer()
   memset(commandBuffer,0,maxSizeCommandBufferLength);
 }
 
-
+int i = 0;
 void loop() 
 {
 
@@ -147,7 +148,10 @@ void loop()
     {
 
       //Sample to prepare a command  ( add a command from a push button or wifi command, BLE )
-      //setCommand_SetUp();
+      i++;
+      if(i % 100 == 0) { 
+        setCommand_SetUp();
+      }
 
       //Immediately send the order to the SPA when an order is prepared
       if(iCurrentCommandBufferLength>0)
@@ -294,15 +298,15 @@ void setCommand_SetProg()
   int lengthCommand = sizeof(keyboardCommand_CHANGE_MODE);
   memcpy(commandBuffer,keyboardCommand_CHANGE_MODE,lengthCommand);
   iCurrentCommandBufferLength=lengthCommand;
-  //Serial.println("CMD_SET_PROG");
+  Serial.println("CMD_SET_PROG");
 }
 void setCommand_SetUp()
 {
   clearCommandBuffer();
-  int lengthCommand = sizeof(keyboardCommand_UP);
-  memcpy(commandBuffer,keyboardCommand_UP,lengthCommand);
+  int lengthCommand = sizeof(keyboardCommand_LIGHT);
+  memcpy(commandBuffer,keyboardCommand_LIGHT,lengthCommand);
   iCurrentCommandBufferLength=lengthCommand;
-  //Serial.println("CMD_SET_UP");
+  Serial.println("CMD_LIGHT");
 }
 void setCommand_SetDown()
 {
