@@ -57,6 +57,6 @@ void loop() {
     delay(1000); // wait to give chance to see if that value was the magic delay
   }
   else {
-    Serial.println("HIGH");
+    // Serial.println("HIGH");
   }
 }
