@@ -67,6 +67,7 @@ WiFiClient clients[1];
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
+#define PIN_5_PIN D4
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
 
@@ -649,18 +650,18 @@ void sendCommand() {
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
-    Serial2.write(byteArray, sizeof(byteArray));
-    // if(digitalRead(PIN_5_PIN) != LOW) {
-    //   Serial.println("ERROR: Pin5 went high before command before flush");
+    tub.write(byteArray, sizeof(byteArray));
+    if(digitalRead(PIN_5_PIN) != LOW) {
+      Serial.println("ERROR: Pin5 went high before command before flush");
+    }
+    // tub.flush(true);
+    // if(digitalRead(PIN_5_PIN) == LOW) {
+    //   sendBuffer = "";
+    //   Serial.println("YAY: message sent");
     // }
-    Serial2.flush(true);
-    if(digitalRead(PIN_5_PIN) == LOW) {
-      sendBuffer = "";
-      Serial.println("YAY: message sent");
-    }
-    else {
-      Serial.println("ERROR: Pin5 went high before command could be sent after flush");
-    }
+    // else {
+    //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+    // }
     digitalWrite(RTS_PIN, LOW);
   }
 }
