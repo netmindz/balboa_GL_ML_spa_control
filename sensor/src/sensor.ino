@@ -650,11 +650,11 @@ void sendCommand() {
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
-    Serial2.write(byteArray, sizeof(byteArray));
+    tub.write(byteArray, sizeof(byteArray));
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before flush");
     // }
-    Serial2.flush(true);
+    tub.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
       sendBuffer = "";
       Serial.println("YAY: message sent");
