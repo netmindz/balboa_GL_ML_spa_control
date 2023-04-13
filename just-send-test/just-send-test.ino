@@ -11,13 +11,13 @@
 
 //Buffer pour la commande vers le SPA
 #define maxSizeCommandBufferLength 16
-int iCurrentCommandBufferLength=0;
+int iCurrentCommandBufferLength = 0;
 uint8_t commandBuffer[maxSizeCommandBufferLength];
 
-uint8_t keyboardCommand_UP[] = { 0xFB,0x06,0x66,0x66,0x66,0x66,0x01,0xFE,0x52};
-uint8_t keyboardCommand_LIGHT[] = { 0xFB,0x06,0x03,0x45,0x0E,0x00,0x09,0xF6,0xF6};
+uint8_t keyboardCommand_UP[] = { 0xFB, 0x06, 0x66, 0x66, 0x66, 0x66, 0x01, 0xFE, 0x52 };
+uint8_t keyboardCommand_LIGHT[] = { 0xFB, 0x06, 0x03, 0x45, 0x0E, 0x00, 0x09, 0xF6, 0xF6 };
 
-HardwareSerial SerialExternalDataTub(2); // pins set during begin
+HardwareSerial SerialExternalDataTub(2);  // pins set during begin
 
 
 void setup() {
@@ -29,34 +29,31 @@ void setup() {
   Serial.printf("Setting RTS pin %u HIGH\n", RTS_PIN);
   digitalWrite(RTS_PIN, HIGH);
 
-  SerialExternalDataTub.begin(115200,SERIAL_8N1,rxPinExternalSerialData,txPinExternalSerialData,false);
+  SerialExternalDataTub.begin(115200, SERIAL_8N1, rxPinExternalSerialData, txPinExternalSerialData, false);
 
 
   int lengthCommand = sizeof(keyboardCommand_LIGHT);
-  memcpy(commandBuffer,keyboardCommand_LIGHT,lengthCommand);
-  iCurrentCommandBufferLength=lengthCommand;
-
+  memcpy(commandBuffer, keyboardCommand_LIGHT, lengthCommand);
+  iCurrentCommandBufferLength = lengthCommand;
 }
 
 int cmdDelay = 0;
 void loop() {
   // Serial.printf("pin:%u\n", digitalRead(PIN_5_PIN));
-  if(digitalRead(PIN_5_PIN) == LOW) {
+  if (digitalRead(PIN_5_PIN) == LOW) {
     delayMicroseconds(cmdDelay);
     SerialExternalDataTub.write(commandBuffer, iCurrentCommandBufferLength);
     int pinState = digitalRead(PIN_5_PIN);
     Serial.printf("Send command after %u delay", cmdDelay);
-    if(pinState == HIGH) {
+    if (pinState == HIGH) {
       Serial.println(" LATE");
-    }
-    else {
+    } else {
       Serial.println(" OK");
     }
     cmdDelay += 10;
-    if(cmdDelay > 5000) cmdDelay = 0;
-    delay(1000); // wait to give chance to see if that value was the magic delay
-  }
-  else {
+    if (cmdDelay > 5000) cmdDelay = 0;
+    delay(1000);  // wait to give chance to see if that value was the magic delay
+  } else {
     // Serial.println("HIGH");
   }
 }
