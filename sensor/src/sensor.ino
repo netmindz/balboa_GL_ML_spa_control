@@ -1,3 +1,6 @@
+// If connect to serial port over TCP, define the following
+// #define SERIAL_OVER_IP_ADDR "192.168.178.131"
+
 #define WDT_TIMEOUT 30
 
 // #define AP_FALLBACK
@@ -48,8 +51,6 @@ const float POWER_PUMP2_HIGH = 0.6;
 
 const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
-const int PANEL_PORT_INDEX = 0; // Panel connected to the main panel 1 socket
-
 const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
@@ -60,14 +61,16 @@ WiFiClient clients[1];
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
-#define DIGITAL_PIN 18
 #define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
+#define PIN_5_PIN D4
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
+
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device);
@@ -90,7 +93,7 @@ HABinarySensor pump2("pump2", "moving", false);
 HASensor pump1_state("pump1_state");
 HASensor pump2_state("pump2_state");
 HABinarySensor heater("heater", "heat", false);
-HABinarySensor light("light", "light", false);
+HASwitch light("light", false);
 HASensor tubpower("tubpower");
 
 #define MAX_SRV_CLIENTS 2
@@ -112,17 +115,26 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
-// where are we at in messages?
-int portIndex = 0;
-//boolean isFA = true;
-
-bool digitalState;
-String sendBuffer;
+String sendBuffer = ""; // light: fb0603450e0009f6f6";
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
   // this callback will be called before publishing new state to HA
   // in some cases there may be delay before onStateChanged is called due to network latency
+  // Serial.println("before Switch changed, clear command");
+  // sendBuffer = "";
+}
+
+void onSwitchStateChanged(bool state, HASwitch* s)
+{
+    Serial.print("Switch changed - ");
+    if(state != lightState) {
+      Serial.println("Toggle");
+      sendBuffer = "fb0603450e0009f6f6";
+    }
+    else {
+      Serial.println("No change needed");
+    }
 }
 
 boolean isConnected = false;
@@ -130,7 +142,8 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  pinMode(DIGITAL_PIN, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 
   // Make sure you're in station mode
   WiFi.mode(WIFI_STA);
@@ -175,11 +188,12 @@ void setup() {
 
 
 
-#ifdef MAX485
+
+#ifndef SERIAL_OVER_IP_ADDR
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
-#endif
+  pinMode(PIN_5_PIN, INPUT);  
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
   tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -192,6 +206,7 @@ void setup() {
   tub.enableIntTx(false);
   tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
 //  tub.setRxBufferSize(1024);
+#endif
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -241,6 +256,9 @@ void setup() {
   heater.setName("Heater");
   //  heater.setIcon("mdi:radiator");
   light.setName("Light");
+  light.onBeforeStateChanged(onBeforeSwitchStateChanged); // optional
+  light.onStateChanged(onSwitchStateChanged);
+
   haTime.setName("Time");
 
   rawData.setName("Raw data");
@@ -273,7 +291,8 @@ void setup() {
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
 #endif
-
+  Serial.println("End of setup");
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 String result = "";
@@ -291,66 +310,87 @@ String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
 String timeString = "";
+int msgLength = 0;
 
+int i = 0;
 void loop() {
-  mqtt.loop();
-  ArduinoOTA.handle();
-
-  digitalState = digitalRead(DIGITAL_PIN);
+  bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
   if (tub.available() > 0) {
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
     tub.read(buf, len);
-    buildString(buf, len);
-  }
-  
-  if(digitalState == LOW) {
-    if(result != "") {
-      handlMessage();
+    if (panelSelect == LOW) { // Only read data meant for us
+      for (int i = 0; i < len; i++) {
+        if (buf[i] < 0x10) {
+          result += '0';
+        }
+        result += String(buf[i], HEX);
+      }
+      if(msgLength == 0 && result.length() == 2) {
+        String messageType = result.substring(0, 2);
+        if(messageType == "fa") {
+          msgLength = 46;
+        }
+        else if(messageType == "ae") {
+          msgLength = 32;
+        }
+        else {
+          Serial.print("Unknown message length for ");
+          Serial.println(messageType);
+        }
+      }          
+      else if(result.length() == msgLength) {
+         if(result.length() == 46 ) {
+          // if(i %10 == 0)  
+          sendCommand();
+          i++;
+        }
+        handleMessage();
+      }
+    }
+    else {
+      // Serial.print("H");
+      result = "";
+      msgLength = 0;
     }
   }
 
+  if(panelSelect == HIGH) {
+    mqtt.loop();
+    ArduinoOTA.handle();
 
-  telnetLoop();
-  webserver.handleClient();
-  webSocket.loop();
+    telnetLoop();
 
-  String json = getStatusJSON();
-  if (json != lastJSON) {
-    webSocket.broadcastTXT(json);
-    lastJSON = json;
-  }
+    // TODO: disabled while trying to elimate timing issues
+    webserver.handleClient();
+    webSocket.loop();
 
-  if (((millis() / 1000) - lastUptime) >= 30) {
+  // String json = getStatusJSON();
+  // if (json != lastJSON) {
+  //   webSocket.broadcastTXT(json);
+  //   lastJSON = json;
+  // }
+
+  if (((millis() / 1000) - lastUptime) >= 15) {
     lastUptime = millis() / 1000;
     uptime.setValue(lastUptime);
   }
-
+  }
 #ifdef ESP32
   esp_task_wdt_reset();
 #endif
 }
 
-void buildString(uint8_t buf[], size_t len) {
-  for (int i = 0; i < len; i++) {
-    if (buf[i] < 0x10) {
-      result += '0';
-    }
-    result += String(buf[i], HEX);
-  }
-}
-
-void handlMessage() {
-
+void handleMessage() {
+  
       //      Serial.print("message = ");
       //      Serial.println(result);
 
-      if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
-        portIndex = PANEL_PORT_INDEX;
-        
-        Serial.printf("FA 14 Long port:%u\n", portIndex);
+      if (result.substring(0, 4) == "fa14") {
+
+        Serial.println("FA 14");
         telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
@@ -566,10 +606,12 @@ void handlMessage() {
           rawData2.setValue(lastRaw2.c_str());
         }
 
-        String tail = result.substring(46, 64);
-        if (tail != lastRaw7) {
-          lastRaw7 = tail;
-          rawData7.setValue(lastRaw7.c_str());
+        if(result.length() >= 64) { // "Long" messages only
+          String tail = result.substring(46, 64);
+          if (tail != lastRaw7) {
+            lastRaw7 = tail;
+            rawData7.setValue(lastRaw7.c_str());
+          }
         }
 
         pump1.setState(pump1State);
@@ -582,11 +624,9 @@ void handlMessage() {
 
         // end of FA14
       }
-      else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
+      else if (result.substring(0, 4) == "ae0d") {
 
-        portIndex = PANEL_PORT_INDEX;
-
-        Serial.printf("AE 0D Long, port:%u\n", portIndex);
+        Serial.println("AE 0D");
         telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
@@ -611,44 +651,73 @@ void handlMessage() {
         }
         // end of AE 0D
       }
-      else if (result.length() == 32) { // AE0D
-        // ignore the short-form messages
-        Serial.printf("AE OD Short, port:%u\n", result.substring(0, 6), portIndex);
-        telnetSend(result);
-      }
-      else if (result.length() == 46) { // FA
-        // ignore the short-form messages
-        Serial.printf("%s Short port:%u\n", result.substring(0, 6), portIndex);
-        telnetSend(result + " port:" + portIndex);
-        sendBuffer = "fb0603450e0009f6f6";
-        if(sendBuffer != "") {
-          writeToTub(sendBuffer);
-//          sendBuffer = "";
-        }
-      }
-          
-
       else {
         Serial.printf("Unknown message (%u): ", result.length() );
         Serial.println(result);
         telnetSend("U: " + result);
       }
-
-      portIndex++;
-      if(portIndex > 2) {
-        portIndex = 0;
-      }
-
-      result = ""; // clear buffer
 }
 
-void writeToTub(String value) {
-  byte byteArray[100] = {0};
-  // As when we read, we convert bytes to hex, i'm assuming we need to do the same to write?
-  hexCharacterStringToBytes(byteArray, value.c_str());
-  Serial.println("Sending " + value);
-  telnetSend("W: " + value);
-  tub.write(byteArray, sizeof(value.c_str()));
+int delayTime = 40;
+void sendCommand() {
+  if(sendBuffer != "") {
+    digitalWrite(RTS_PIN, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
+
+    delayMicroseconds(delayTime);
+    // Serial.println("Sending " + sendBuffer);
+    byte byteArray[18] = {0};
+    hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
+    // if(digitalRead(PIN_5_PIN) != LOW) {
+    //   Serial.println("ERROR: Pin5 went high before command before write");
+    // }
+    tub.write(byteArray, sizeof(byteArray));
+    if(digitalRead(PIN_5_PIN) != LOW) {
+      Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
+      delayTime = 0;
+      sendBuffer = "";
+    }
+    // tub.flush(true);
+    if(digitalRead(PIN_5_PIN) == LOW) {
+      sendBuffer = "";
+      Serial.printf("YAY: message sent : %u\n", delayTime);
+      // delayTime += 10;
+    }
+    // else {
+    //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+    // }
+    digitalWrite(RTS_PIN, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+}
+
+String HexString2TimeString(String hexstring){
+  // Convert "HHMM" in HEX to "HH:MM" with decimal representation
+  String time = "";
+  int hour = strtol(hexstring.substring(0, 2).c_str(), NULL, 16);
+  int minute  = strtol(hexstring.substring(2, 4).c_str(), NULL, 16);
+
+  if(hour<10) time.concat("0");     // Add leading zero
+  time.concat(hour);
+  time.concat(":");
+  if(minute<10) time.concat("0");   // Add leading zero
+  time.concat(minute);
+  
+  return time;
+}
+
+String HexString2ASCIIString(String hexstring) {
+  String temp = "", sub = "", result;
+  char buf[3];
+  for (int i = 0; i < hexstring.length(); i += 2) {
+    sub = hexstring.substring(i, i + 2);
+    sub.toCharArray(buf, 3);
+    char b = (char)strtol(buf, 0, 16);
+    if (b == '\0')
+      break;
+    temp += b;
+  }
+  return temp;
 }
 
 void hexCharacterStringToBytes(byte *byteArray, const char *hexString)
@@ -711,31 +780,3 @@ byte nibble(char c)
   return 0;  // Not a valid hexadecimal character
 }
 
-String HexString2TimeString(String hexstring){
-  // Convert "HHMM" in HEX to "HH:MM" with decimal representation
-  String time = "";
-  int hour = strtol(hexstring.substring(0, 2).c_str(), NULL, 16);
-  int minute  = strtol(hexstring.substring(2, 4).c_str(), NULL, 16);
-
-  if(hour<10) time.concat("0");     // Add leading zero
-  time.concat(hour);
-  time.concat(":");
-  if(minute<10) time.concat("0");   // Add leading zero
-  time.concat(minute);
-  
-  return time;
-}
-
-String HexString2ASCIIString(String hexstring) {
-  String temp = "", sub = "", result;
-  char buf[3];
-  for (int i = 0; i < hexstring.length(); i += 2) {
-    sub = hexstring.substring(i, i + 2);
-    sub.toCharArray(buf, 3);
-    char b = (char)strtol(buf, 0, 16);
-    if (b == '\0')
-      break;
-    temp += b;
-  }
-  return temp;
-}
