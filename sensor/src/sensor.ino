@@ -299,9 +299,10 @@ int lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 
+int i = 0;
 void loop() {
+  bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
   if (tub.available() > 0) {
-    bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len];
@@ -313,7 +314,7 @@ void loop() {
         }
         result += String(buf[i], HEX);
       }
-      if(msgLength == 0 && result.length() >= 2) {
+      if(msgLength == 0 && result.length() == 2) {
         String messageType = result.substring(0, 2);
         if(messageType == "fa") {
           msgLength = 46;
@@ -326,39 +327,43 @@ void loop() {
           Serial.println(messageType);
         }
       }          
-      if(result.length() == msgLength) {
-        if(result.length() == 46) {
+      else if(result.length() == msgLength) {
+         if(result.length() == 46 ) {
+          // if(i %10 == 0)  
           sendCommand();
+          i++;
         }
         handleMessage();
       }
     }
     else {
+      // Serial.print("H");
       result = "";
       msgLength = 0;
     }
   }
 
-  mqtt.loop();
-  ArduinoOTA.handle();
+  if(panelSelect == HIGH) {
+    mqtt.loop();
+    ArduinoOTA.handle();
 
-  telnetLoop();
+    telnetLoop();
 
-  // TODO: disabled while trying to elimate timing issues
-  // webserver.handleClient();
-  // webSocket.loop();
+    // TODO: disabled while trying to elimate timing issues
+    webserver.handleClient();
+    webSocket.loop();
 
-  String json = getStatusJSON();
-  if (json != lastJSON) {
-    webSocket.broadcastTXT(json);
-    lastJSON = json;
-  }
+  // String json = getStatusJSON();
+  // if (json != lastJSON) {
+  //   webSocket.broadcastTXT(json);
+  //   lastJSON = json;
+  // }
 
-  if (((millis() / 1000) - lastUptime) >= 30) {
+  if (((millis() / 1000) - lastUptime) >= 15) {
     lastUptime = millis() / 1000;
     uptime.setValue(lastUptime);
   }
-
+  }
 #ifdef ESP32
   esp_task_wdt_reset();
 #endif
@@ -640,10 +645,11 @@ void handleMessage() {
       }
 }
 
+int delayTime = 0;
 void sendCommand() {
   if(sendBuffer != "") {
     digitalWrite(RTS_PIN, HIGH);
-    // delayMicroseconds(290);
+    delayMicroseconds(delayTime);
     // Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
     hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
@@ -652,13 +658,16 @@ void sendCommand() {
     // }
     tub.write(byteArray, sizeof(byteArray));
     if(digitalRead(PIN_5_PIN) != LOW) {
-      Serial.println("ERROR: Pin5 went high before command before flush");
+      Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
+      delayTime = 0;
+      sendBuffer = "";
     }
     // tub.flush(true);
-    // if(digitalRead(PIN_5_PIN) == LOW) {
-    //   sendBuffer = "";
-    //   Serial.println("YAY: message sent");
-    // }
+    if(digitalRead(PIN_5_PIN) == LOW) {
+      sendBuffer = "";
+      Serial.printf("YAY: message sent : %u\n", delayTime);
+      delayTime += 10;
+    }
     // else {
     //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
     // }
