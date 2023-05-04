@@ -12,7 +12,7 @@ void handleSend() {
     String message = webserver.arg("plain");
     webserver.send(200, "text/plain", message);
     Serial.printf("Send data: %s\n", message);
-    sendBuffer = sendBuffer + message;
+    sendBuffer.enqueue(message);
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {

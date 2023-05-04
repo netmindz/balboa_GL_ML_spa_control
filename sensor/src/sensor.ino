@@ -24,6 +24,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
+#include <ArduinoQueue.h>
 
 #include "wifi.h"
 // Create file with the following
@@ -115,7 +116,7 @@ boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
 
-String sendBuffer = ""; // light: fb0603450e0009f6f6";
+ArduinoQueue<String> sendBuffer(10);
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
@@ -130,7 +131,7 @@ void onSwitchStateChanged(bool state, HASwitch* s)
     Serial.print("Switch changed - ");
     if(state != lightState) {
       Serial.println("Toggle");
-      sendBuffer = "fb0603450e0009f6f6";
+      sendBuffer.enqueue("fb0603450e0009f6f6");
     }
     else {
       Serial.println("No change needed");
@@ -660,14 +661,14 @@ void handleMessage() {
 
 int delayTime = 40;
 void sendCommand() {
-  if(sendBuffer != "") {
+  if(!sendBuffer.isEmpty()) {
     digitalWrite(RTS_PIN, HIGH);
     digitalWrite(LED_BUILTIN, HIGH);
 
     delayMicroseconds(delayTime);
     // Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
-    hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
+    hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
@@ -675,11 +676,11 @@ void sendCommand() {
     if(digitalRead(PIN_5_PIN) != LOW) {
       Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
       delayTime = 0;
-      sendBuffer = "";
+      sendBuffer.dequeue();
     }
     // tub.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
-      sendBuffer = "";
+      sendBuffer.dequeue();
       Serial.printf("YAY: message sent : %u\n", delayTime);
       // delayTime += 10;
     }
