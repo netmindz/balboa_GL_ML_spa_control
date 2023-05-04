@@ -25,7 +25,7 @@
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
 
-#include "wifi.h"
+#include "wifi_secrets.h"
 // Create file with the following
 // *************************************************************************
 // #define SECRET_SSID "";  /* Replace with your SSID */
