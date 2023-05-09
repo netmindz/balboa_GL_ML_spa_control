@@ -56,6 +56,8 @@ const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
 
+int delayTime = 40;
+
 WiFiClient clients[1];
 
 #ifdef ESP32
@@ -563,6 +565,9 @@ void handleMessage() {
             if (!lastRaw3.equals(cmd) && cmd != "0000000000") { // ignore idle command
               lastRaw3 = cmd;
               rawData3.setValue(lastRaw3.c_str());
+              // Controller responded to command
+              sendBuffer.dequeue();
+              Serial.printf("YAY: message sent : %u\n", delayTime);
             }
 
             if (result.substring(10, 12) == "43") { // "C"
@@ -659,7 +664,7 @@ void handleMessage() {
       }
 }
 
-int delayTime = 40;
+
 void sendCommand() {
   if(!sendBuffer.isEmpty()) {
     digitalWrite(RTS_PIN, HIGH);
@@ -680,8 +685,8 @@ void sendCommand() {
     }
     // tub.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
-      sendBuffer.dequeue();
-      Serial.printf("YAY: message sent : %u\n", delayTime);
+      // sendBuffer.dequeue();
+      // Serial.printf("YAY: message sent : %u\n", delayTime);
       // delayTime += 10;
     }
     // else {
