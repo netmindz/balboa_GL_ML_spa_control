@@ -82,16 +82,15 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-HASensor rawData4("raw4");
-HASensor rawData5("raw5");
-HASensor rawData6("raw6");
+// HASensor rawData4("raw4");
+// HASensor rawData5("raw5");
+// HASensor rawData6("raw6");
 HASensor rawData7("raw7");
 HASensor currentMode("mode");
+HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
-HABinarySensor pump1("pump1");
-HABinarySensor pump2("pump2");
-HASensor pump1_state("pump1_state");
-HASensor pump2_state("pump2_state");
+HASelect pump1("pump1");
+HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower");
@@ -107,10 +106,8 @@ WebServer webserver(80);
 ESP8266WebServer webserver(80);
 #endif
 
-boolean pump1State = false;
-boolean pump2State = false;
-String pump1Speed = ZERO_SPEED;
-String pump2Speed = ZERO_SPEED;
+int pump1State = 0;
+int pump2State = 0;
 boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
@@ -125,7 +122,7 @@ void onBeforeSwitchStateChanged(bool state, HASwitch* s)
   // sendBuffer = "";
 }
 
-void onSwitchStateChanged(bool state, HASwitch* s)
+void onSwitchStateChanged(bool state, HASwitch* sender)
 {
     Serial.print("Switch changed - ");
     if(state != lightState) {
@@ -136,6 +133,29 @@ void onSwitchStateChanged(bool state, HASwitch* s)
       Serial.println("No change needed");
     }
 }
+
+void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
+{
+  switch (index) {
+    case 0:
+        // Option "Off" was selected
+        break;
+
+    case 1:
+        // Option "Low" was selected
+        break;
+
+    case 2:
+        // Option "High" was selected
+        break;
+
+    default:
+        // unknown option
+        return;
+    }
+
+}
+
 
 boolean isConnected = false;
 void setup() {
@@ -189,7 +209,6 @@ void setup() {
 
 
 
-#ifndef SERIAL_OVER_IP_ADDR
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
@@ -202,11 +221,6 @@ void setup() {
   }
   Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
   tub.updateBaudRate(115200);
-#else
-  tub.enableIntTx(false);
-  tub.begin(115200, SWSERIAL_8N1, RX_PIN, TX_PIN, false); // RX, TX
-//  tub.setRxBufferSize(1024);
-#endif
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -226,7 +240,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.9");
+  device.setSoftwareVersion("0.1.0");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -248,13 +262,17 @@ void setup() {
   currentState.setName("Status");
 
   pump1.setName("Pump1");
-  pump1_state.setName("Pump1 State");
-  //  pump1.setIcon("mdi:chart-bubble");
+  pump1.setOptions("Off;Medium;High");
+  pump1.setIcon("mdi:chart-bubble");
+  pump1.onCommand(onPumpSwitchStateChanged);
+
   pump2.setName("Pump2");
-  pump2_state.setName("Pump2 State");
-  //  pump2.setIcon("mdi:chart-bubble");
+  pump2.setOptions("Off;Medium;High");
+  pump2.setIcon("mdi:chart-bubble");
+  pump2.onCommand(onPumpSwitchStateChanged);
+
   heater.setName("Heater");
-  //  heater.setIcon("mdi:radiator");
+  heater.setIcon("mdi:radiator");
   light.setName("Light");
   light.onCommand(onSwitchStateChanged);
 
@@ -263,12 +281,15 @@ void setup() {
   rawData.setName("Raw data");
   rawData2.setName("CMD");
   rawData3.setName("post temp: ");
-  rawData4.setName("D01: ");
-  rawData5.setName("D02: ");
-  rawData6.setName("D03: ");
+  // rawData4.setName("D01: ");
+  // rawData5.setName("D02: ");
+  // rawData6.setName("D03: ");
   rawData7.setName("FB");
 
   currentMode.setName("Mode");
+
+  tubMode.setOptions("Std;Eco;Sleep");
+
   
   uptime.setName("Uptime");
   uptime.setUnitOfMeasurement("seconds");
@@ -302,7 +323,6 @@ String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
-String tubMode = "";
 double tubTemp = -1;
 double tubTargetTemp = -1;
 String state = "unknown";
@@ -370,12 +390,13 @@ void loop() {
   //   webSocket.broadcastTXT(json);
   //   lastJSON = json;
   // }
+  }
 
   if (((millis() / 1000) - lastUptime) >= 15) {
     lastUptime = millis() / 1000;
     uptime.setValue(lastUptime);
   }
-  }
+  
 #ifdef ESP32
   esp_task_wdt_reset();
 #endif
@@ -401,54 +422,40 @@ void handleMessage() {
           String pump = result.substring(13, 14);
 
           if (pump == "0") {
-            pump1State = false;
-            pump2State = false;
-            pump1Speed = ZERO_SPEED;
-            pump2Speed = ZERO_SPEED;
+            pump1State = 0;
+            pump2State = 0;
           }
           else if (pump == "1"){
-            pump1State = true;
-            pump2State = false;
-            pump1Speed = LOW_SPEED;
-            pump2Speed = ZERO_SPEED;
+            pump1State = 1;
+            pump2State = 0;
             tubpowerCalc += POWER_PUMP1_LOW;
           }
           else if (pump == "2"){
-            pump1State = true;
-            pump2State = false;
-            pump1Speed = HIGH_SPEED;
-            pump2Speed = ZERO_SPEED;
+            pump1State = 2;
+            pump2State = 0;
             tubpowerCalc += POWER_PUMP1_HIGH;
           }
           else if (pump == "7") {
-            pump1State = false;
-            pump2State = true;
-            pump1Speed = ZERO_SPEED;
-            pump2Speed = LOW_SPEED;
+            pump1State = 0;
+            pump2State = 1;
             tubpowerCalc += POWER_PUMP2_LOW;
           }
 
           else if (pump == "8") {
-            pump1State = false;
-            pump2State = true;
-            pump1Speed = ZERO_SPEED;
-            pump2Speed = HIGH_SPEED;
+            pump1State = 0;
+            pump2State = 2;
             tubpowerCalc += POWER_PUMP2_HIGH;
           }
 
           else if (pump == "9") {
-            pump1State = true;
-            pump2State = true;
-            pump1Speed = LOW_SPEED;
-            pump2Speed = HIGH_SPEED;
+            pump1State = 1;
+            pump2State = 2;
             tubpowerCalc += POWER_PUMP1_LOW;
             tubpowerCalc += POWER_PUMP2_HIGH;
           }
           else if (pump == "a") {
-            pump1State = true;
-            pump2State = true;
-            pump1Speed = HIGH_SPEED;
-            pump2Speed = LOW_SPEED;
+            pump1State = 2;
+            pump2State = 1;
             tubpowerCalc += POWER_PUMP1_HIGH;
             tubpowerCalc += POWER_PUMP2_LOW;            
           }
@@ -486,7 +493,7 @@ void handleMessage() {
             String s = result.substring(17, 18);
             if (s == "4") {
               state = "Sleep";
-              tubMode = "Sleep";
+              tubMode.setState(2);
             }
             else if (s == "9") {
               state = "Circulation ?";
@@ -494,11 +501,11 @@ void handleMessage() {
             }
             else if (s == "1") {
               state = "Standard";
-              tubMode = "Standard";
+              tubMode.setState(0);
             }
             else if (s == "2") {
               state = "Economy";
-              tubMode = "Economy";
+              tubMode.setState(1);
             }
             else if (s == "a") {
               state = "Cleaning";
@@ -508,12 +515,12 @@ void handleMessage() {
             }
             else if (s == "b" || s == "3") {
               state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
-              tubMode = "Std in Eco";
+              tubMode.setState(1);
             }
             else {
               state = "Unknown " + s;
             }
-            currentMode.setValue(tubMode.c_str());
+// TODO            currentMode.setValue(tubMode.getCurrentState c_str());
 
             String menu = result.substring(18, 20);
             if (menu == "00") {
@@ -523,7 +530,7 @@ void handleMessage() {
               state = "Set Mode";
             }
             else if (menu == "5a") {
-              tubMode = "Standby?"; // WT: not tested to confirm if this is the act of setting Standby or just seen when in standby
+              state = "Standby?"; // WT: not tested to confirm if this is the act of setting Standby or just seen when in standby
             }
             else { // 46 for set temp, but also other things like filter time
               state = "menu " + menu;
@@ -614,9 +621,7 @@ void handleMessage() {
         }
 
         pump1.setState(pump1State);
-        pump1_state.setValue(pump1Speed.c_str());
         pump2.setState(pump2State);
-        pump2_state.setValue(pump2Speed.c_str());
         heater.setState(heaterState);
         light.setState(lightState);
 
@@ -633,19 +638,19 @@ void handleMessage() {
         if (result.substring(0, 6) == "ae0d01" && message != "ae0d010000000000000000000000005a") {
           if (!lastRaw4.equals(message)) {
             lastRaw4 = message;
-            rawData4.setValue(lastRaw4.c_str());
+            // rawData4.setValue(lastRaw4.c_str());
           }
         }
         else if (result.substring(0, 6) == "ae0d02" && message != "ae0d02000000000000000000000000c3") {
           if (!lastRaw5.equals(message)) {
             lastRaw5 = message;
-            rawData5.setValue(lastRaw5.c_str());
+            // rawData5.setValue(lastRaw5.c_str());
           }
         }
         else if (result.substring(0, 6) == "ae0d03" && message != "ae0d03000000000000000000000000b4") {
           if (!lastRaw6.equals(message)) {
             lastRaw6 = message;
-            rawData6.setValue(lastRaw6.c_str());
+            // rawData6.setValue(lastRaw6.c_str());
           }
         }
         // end of AE 0D
