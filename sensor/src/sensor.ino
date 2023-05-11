@@ -561,7 +561,7 @@ void handleMessage() {
             else {
               telnetSend("CMD: " + cmd);
             }
-            if (!lastRaw3.equals(cmd)) { // ignore idle command
+            if (!lastRaw3.equals(cmd)) {
               // Controller responded to command
               sendBuffer.dequeue();
               Serial.printf("YAY: command response : %u\n", delayTime);
