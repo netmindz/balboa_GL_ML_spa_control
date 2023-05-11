@@ -561,13 +561,15 @@ void handleMessage() {
             else {
               telnetSend("CMD: " + cmd);
             }
+            if (!lastRaw3.equals(cmd)) { // ignore idle command
+              // Controller responded to command
+              sendBuffer.dequeue();
+              Serial.printf("YAY: command response : %u\n", delayTime);
+            }
 
             if (!lastRaw3.equals(cmd) && cmd != "0000000000") { // ignore idle command
               lastRaw3 = cmd;
               rawData3.setValue(lastRaw3.c_str());
-              // Controller responded to command
-              sendBuffer.dequeue();
-              Serial.printf("YAY: message sent : %u\n", delayTime);
             }
 
             if (result.substring(10, 12) == "43") { // "C"
@@ -685,8 +687,8 @@ void sendCommand() {
     }
     // tub.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
-      // sendBuffer.dequeue();
-      // Serial.printf("YAY: message sent : %u\n", delayTime);
+      // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+      Serial.printf("message sent : %u\n", delayTime);
       // delayTime += 10;
     }
     // else {
