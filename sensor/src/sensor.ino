@@ -28,7 +28,7 @@
 
 #include "constants.h"
 
-#include "wifi_secrets.h""
+#include "wifi_secrets.h"
 // Create file with the following
 // *************************************************************************
 // #define SECRET_SSID "";  /* Replace with your SSID */

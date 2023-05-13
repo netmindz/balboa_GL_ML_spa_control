@@ -6,6 +6,8 @@ The aim of this project is to achieve similar results as the app from ccutrer
 
 If you have the Balboa GS series please try - https://github.com/MagnusPer/Balboa-GS510SZ
 
+[Install Guide](https://github.com/netmindz/balboa_GL_ML_spa_control/wiki/Install-Guide)
+
 ## Current state
 App for ESP32 or ESP8266 that sends current status including temperature to Home Assistant and also simple web status page with live updates via WebSocket
 
