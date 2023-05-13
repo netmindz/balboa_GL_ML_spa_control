@@ -28,7 +28,7 @@
 
 #include "constants.h"
 
-#include "wifi.h"
+#include "wifi_secrets.h""
 // Create file with the following
 // *************************************************************************
 // #define SECRET_SSID "";  /* Replace with your SSID */
@@ -151,20 +151,51 @@ void onSwitchStateChanged(bool state, HASwitch* s)
 void onEcoSwitchStateChanged(bool state, HASwitch* s)
 {
     Serial.print("Eco Switch changed - ");
-    if(state == true && tubMode != "Eco") {
-      Serial.println("Turn on Eco");
-      sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      sendBuffer.enqueue(COMMAND_DOWN);
+    if(state == true) {
+      if(tubMode == "Economy") {
+        Serial.println("No change needed");
+      }
+      else if(tubMode == "Standard") {
+        Serial.println("Turn on Eco from STD");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+      else if(tubMode == "Sleep") {
+        Serial.println("Turn on Eco from Sleep");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
     }
-    else if(state == true && tubMode == "Eco") {
-      Serial.println("No change needed");
+    else {
+      if(tubMode == "Standard") {
+        Serial.println("No change needed");
+      }
+      else if(tubMode == "Economy") {
+        Serial.println("Turn off eco from eco");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+      else if(tubMode == "Sleep") {
+        Serial.println("Turn off eco from sleep");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
     }
-    else if(state == false && tubMode != "Standard") {
-      Serial.println("Turn off eco");
-      sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      sendBuffer.enqueue(COMMAND_UP);
-    }
-}
+  }
 
 
 boolean isConnected = false;
@@ -256,7 +287,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.0.9");
+  device.setSoftwareVersion("0.1.2");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
