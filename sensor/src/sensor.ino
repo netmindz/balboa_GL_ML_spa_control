@@ -26,6 +26,8 @@
 #include <WebSocketsServer.h>
 #include <ArduinoQueue.h>
 
+#include "constants.h"
+
 #include "wifi.h"
 // Create file with the following
 // *************************************************************************
@@ -98,6 +100,7 @@ HASensor pump2_state("pump2_state");
 HABinarySensor heater("heater", "heat", false);
 HASwitch light("light", false);
 HASensor tubpower("tubpower");
+HASwitch ecoMode("eco_only", false);
 
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
@@ -117,6 +120,11 @@ String pump2Speed = ZERO_SPEED;
 boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
+String tubMode = "";
+double tubTemp = -1;
+double tubTargetTemp = -1;
+String state = "unknown";
+
 
 ArduinoQueue<String> sendBuffer(10);
 
@@ -133,12 +141,31 @@ void onSwitchStateChanged(bool state, HASwitch* s)
     Serial.print("Switch changed - ");
     if(state != lightState) {
       Serial.println("Toggle");
-      sendBuffer.enqueue("fb0603450e0009f6f6");
+      sendBuffer.enqueue(COMMAND_LIGHT);
     }
     else {
       Serial.println("No change needed");
     }
 }
+
+void onEcoSwitchStateChanged(bool state, HASwitch* s)
+{
+    Serial.print("Eco Switch changed - ");
+    if(state == true && tubMode != "Eco") {
+      Serial.println("Turn on Eco");
+      sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      sendBuffer.enqueue(COMMAND_DOWN);
+    }
+    else if(state == true && tubMode == "Eco") {
+      Serial.println("No change needed");
+    }
+    else if(state == false && tubMode != "Standard") {
+      Serial.println("Turn off eco");
+      sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      sendBuffer.enqueue(COMMAND_UP);
+    }
+}
+
 
 boolean isConnected = false;
 void setup() {
@@ -262,6 +289,10 @@ void setup() {
   light.onBeforeStateChanged(onBeforeSwitchStateChanged); // optional
   light.onStateChanged(onSwitchStateChanged);
 
+  eco.setName("Eco-Only");
+  eco.onStateChanged(onEcoSwitchStateChanged);
+
+
   haTime.setName("Time");
 
   rawData.setName("Raw data");
@@ -306,10 +337,6 @@ String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
-String tubMode = "";
-double tubTemp = -1;
-double tubTargetTemp = -1;
-String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
 String timeString = "";
