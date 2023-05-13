@@ -289,8 +289,8 @@ void setup() {
   light.onBeforeStateChanged(onBeforeSwitchStateChanged); // optional
   light.onStateChanged(onSwitchStateChanged);
 
-  eco.setName("Eco-Only");
-  eco.onStateChanged(onEcoSwitchStateChanged);
+  ecoMode.setName("Eco Only");
+  ecoMode.onStateChanged(onEcoSwitchStateChanged);
 
 
   haTime.setName("Time");
