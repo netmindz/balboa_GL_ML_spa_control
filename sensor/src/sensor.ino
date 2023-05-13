@@ -360,8 +360,8 @@ void handleBytes(uint8_t buf[], size_t len) {
 
       if (result.length() == 64 && result.substring(0, 4) == "fa14") {
 
-        Serial.println("FA 14 Long");
-        telnetSend(result);
+        // Serial.println("FA 14 Long");
+        // telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
 
@@ -516,6 +516,7 @@ void handleBytes(uint8_t buf[], size_t len) {
             // temp down - ff0200000000?? - end varies
 
             String cmd = result.substring(34, 44);
+            Serial.println(cmd);
             if (cmd == "0000000000")  {
               // none
             }
@@ -579,6 +580,8 @@ void handleBytes(uint8_t buf[], size_t len) {
         String tail = result.substring(46, 64);
         if (tail != lastRaw7) {
           lastRaw7 = tail;
+          Serial.println(tail);
+          telnetSend(tail);
           rawData7.setValue(lastRaw7.c_str());
         }
 
@@ -594,8 +597,8 @@ void handleBytes(uint8_t buf[], size_t len) {
       }
       else if (result.length() == 50 && result.substring(0, 4) == "ae0d") {
 
-        Serial.println("AE 0D Long");
-        telnetSend(result);
+        // Serial.println("AE 0D Long");
+        // telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
 
