@@ -552,7 +552,7 @@ void handleMessage() {
             }
             else if (s == "9") {
               state = "Circulation ?";
-//              tubMode = "Standard";
+              tubMode = "Standard"; // TODO: confirm
             }
             else if (s == "1") {
               state = "Standard";
@@ -570,7 +570,7 @@ void handleMessage() {
             }
             else if (s == "b" || s == "3") {
               state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
-              tubMode = "Std in Eco";
+              tubMode = "Economy";
             }
             else {
               state = "Unknown " + s;
