@@ -24,8 +24,11 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
+#include <ArduinoQueue.h>
 
-#include "wifi.h"
+#include "constants.h"
+
+#include "wifi_secrets.h"
 // Create file with the following
 // *************************************************************************
 // #define SECRET_SSID "";  /* Replace with your SSID */
@@ -55,6 +58,8 @@ const char* ZERO_SPEED = "off";
 const char* LOW_SPEED = "low";
 const char* HIGH_SPEED = "high";
 
+int delayTime = 40;
+
 WiFiClient clients[1];
 
 #ifdef ESP32
@@ -73,7 +78,8 @@ SoftwareSerial tub;
 
 
 HADevice device(mac, sizeof(mac));
-HAMqtt mqtt(clients[0], device);
+HAMqtt mqtt(clients[0], device, 25);
+HASwitch ecoMode("eco_only");
 HASensorNumber temp("temp");
 HASensorNumber targetTemp("targetTemp");
 HASensorNumber timeToTemp("timeToTemp");
@@ -111,8 +117,12 @@ int pump2State = 0;
 boolean heaterState = false;
 boolean lightState = false;
 float tubpowerCalc = 0;
+double tubTemp = -1;
+double tubTargetTemp = -1;
+String state = "unknown";
 
-String sendBuffer = ""; // light: fb0603450e0009f6f6";
+
+ArduinoQueue<String> sendBuffer(10);
 
 void onBeforeSwitchStateChanged(bool state, HASwitch* s)
 {
@@ -127,7 +137,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender)
     Serial.print("Switch changed - ");
     if(state != lightState) {
       Serial.println("Toggle");
-      sendBuffer = "fb0603450e0009f6f6";
+      sendBuffer.enqueue(COMMAND_LIGHT);
     }
     else {
       Serial.println("No change needed");
@@ -136,6 +146,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender)
 
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
 {
+  Serial.printf("onPumpSwitchStateChanged %s %u", sender->getName(), index);
   switch (index) {
     case 0:
         // Option "Off" was selected
@@ -155,6 +166,54 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
     }
 
 }
+void onEcoSwitchStateChanged(bool state, HASwitch* s)
+{
+    Serial.print("Eco Switch changed - ");
+    if(state == true) {
+      if(tubMode.getCurrentState() == MODE_IDX_ECO) {
+        Serial.println("No change needed");
+      }
+      else if(tubMode.getCurrentState() == MODE_IDX_STD) {
+        Serial.println("Turn on Eco from STD");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+      else if(tubMode.getCurrentState() == MODE_IDX_SLP) {
+        Serial.println("Turn on Eco from Sleep");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+    }
+    else {
+      if(tubMode.getCurrentState() == MODE_IDX_STD) {
+        Serial.println("No change needed");
+      }
+      else if(tubMode.getCurrentState() == MODE_IDX_ECO) {
+        Serial.println("Turn off eco from eco");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+      else if(tubMode.getCurrentState() == MODE_IDX_SLP) {
+        Serial.println("Turn off eco from sleep");
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_DOWN);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+      }
+    }
+  }
 
 
 boolean isConnected = false;
@@ -240,7 +299,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.1.0");
+  device.setSoftwareVersion("0.1.2");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -275,6 +334,10 @@ void setup() {
   heater.setIcon("mdi:radiator");
   light.setName("Light");
   light.onCommand(onSwitchStateChanged);
+
+  ecoMode.setName("Eco Only");
+  ecoMode.onCommand(onEcoSwitchStateChanged);
+
 
   haTime.setName("Time");
 
@@ -323,9 +386,6 @@ String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
-double tubTemp = -1;
-double tubTargetTemp = -1;
-String state = "unknown";
 String lastJSON = "";
 int lastUptime = 0;
 String timeString = "";
@@ -382,8 +442,8 @@ void loop() {
     telnetLoop();
 
     // TODO: disabled while trying to elimate timing issues
-    webserver.handleClient();
-    webSocket.loop();
+    // webserver.handleClient();
+    // webSocket.loop();
 
   // String json = getStatusJSON();
   // if (json != lastJSON) {
@@ -493,19 +553,19 @@ void handleMessage() {
             String s = result.substring(17, 18);
             if (s == "4") {
               state = "Sleep";
-              tubMode.setState(2);
+              tubMode.setState(MODE_IDX_SLP);
             }
             else if (s == "9") {
               state = "Circulation ?";
-//              tubMode = "Standard";
+              tubMode.setState(MODE_IDX_STD); // TODO: confirm
             }
             else if (s == "1") {
               state = "Standard";
-              tubMode.setState(0);
+              tubMode.setState(MODE_IDX_STD);
             }
             else if (s == "2") {
               state = "Economy";
-              tubMode.setState(1);
+              tubMode.setState(MODE_IDX_ECO);
             }
             else if (s == "a") {
               state = "Cleaning";
@@ -515,7 +575,7 @@ void handleMessage() {
             }
             else if (s == "b" || s == "3") {
               state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
-              tubMode.setState(1);
+              tubMode.setState(MODE_IDX_STD);
             }
             else {
               state = "Unknown " + s;
@@ -563,6 +623,11 @@ void handleMessage() {
             }
             else {
               telnetSend("CMD: " + cmd);
+            }
+            if (!lastRaw3.equals(cmd)) {
+              // Controller responded to command
+              sendBuffer.dequeue();
+              Serial.printf("YAY: command response : %u\n", delayTime);
             }
 
             if (!lastRaw3.equals(cmd) && cmd != "0000000000") { // ignore idle command
@@ -662,16 +727,16 @@ void handleMessage() {
       }
 }
 
-int delayTime = 40;
+
 void sendCommand() {
-  if(sendBuffer != "") {
+  if(!sendBuffer.isEmpty()) {
     digitalWrite(RTS_PIN, HIGH);
     digitalWrite(LED_BUILTIN, HIGH);
 
     delayMicroseconds(delayTime);
     // Serial.println("Sending " + sendBuffer);
     byte byteArray[18] = {0};
-    hexCharacterStringToBytes(byteArray, sendBuffer.c_str());
+    hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
@@ -679,12 +744,12 @@ void sendCommand() {
     if(digitalRead(PIN_5_PIN) != LOW) {
       Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
       delayTime = 0;
-      sendBuffer = "";
+      sendBuffer.dequeue();
     }
     // tub.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
-      sendBuffer = "";
-      Serial.printf("YAY: message sent : %u\n", delayTime);
+      // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+      Serial.printf("message sent : %u\n", delayTime);
       // delayTime += 10;
     }
     // else {
