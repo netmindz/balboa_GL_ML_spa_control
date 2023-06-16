@@ -92,7 +92,6 @@ HASensor rawData3("raw3");
 // HASensor rawData5("raw5");
 // HASensor rawData6("raw6");
 HASensor rawData7("raw7");
-HASensor currentMode("mode");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
@@ -100,6 +99,10 @@ HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower");
+
+HAButton btnUp("up");
+HAButton btnDown("down");
+HAButton btnMode("mode");
 
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
@@ -146,7 +149,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender)
 
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
 {
-  Serial.printf("onPumpSwitchStateChanged %s %u", sender->getName(), index);
+  Serial.printf("onPumpSwitchStateChanged %s %u\n", sender->getName(), index);
   switch (index) {
     case 0:
         // Option "Off" was selected
@@ -198,7 +201,7 @@ void onEcoSwitchStateChanged(bool state, HASwitch* s)
       else if(tubMode.getCurrentState() == MODE_IDX_ECO) {
         Serial.println("Turn off eco from eco");
         sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-        // sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_EMPTY);
         sendBuffer.enqueue(COMMAND_DOWN);
         sendBuffer.enqueue(COMMAND_EMPTY);
         sendBuffer.enqueue(COMMAND_DOWN);
@@ -215,6 +218,27 @@ void onEcoSwitchStateChanged(bool state, HASwitch* s)
     }
   }
 
+void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
+    Serial.printf("Mode Switch changed - %u\n", index);
+}
+
+void onButtonPress(HAButton * sender) {
+  String name = sender->getName();
+  Serial.printf("Button press - %s\n", name);
+  if(name == "Up") {
+    sendBuffer.enqueue(COMMAND_UP);
+  }
+  else if(name == "Down") {
+    sendBuffer.enqueue(COMMAND_DOWN);
+  }
+  else if(name == "Mode") {
+    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+  }
+  else {
+    Serial.printf("Unknown button %s\n", name);
+  }
+
+}
 
 boolean isConnected = false;
 void setup() {
@@ -299,7 +323,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.1.2");
+  device.setSoftwareVersion("0.2.0");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -349,9 +373,10 @@ void setup() {
   // rawData6.setName("D03: ");
   rawData7.setName("FB");
 
-  currentMode.setName("Mode");
-
-  tubMode.setOptions("Std;Eco;Sleep");
+  
+  tubMode.setName("Mode");
+  tubMode.setOptions("Standard;Economy;Sleep");
+  tubMode.onCommand(onModeSwitchStateChanged);
 
   
   uptime.setName("Uptime");
@@ -361,6 +386,15 @@ void setup() {
   tubpower.setName("Tub Power");
   tubpower.setUnitOfMeasurement("kW");
   tubpower.setDeviceClass("power");
+
+  btnUp.setName("Up");
+  btnDown.setName("Down");
+  btnMode.setName("Mode");
+
+  btnUp.onCommand(onButtonPress);
+  btnDown.onCommand(onButtonPress);
+  btnMode.onCommand(onButtonPress);
+
 
 
 #ifdef BROKER_USERNAME
@@ -470,8 +504,8 @@ void handleMessage() {
 
       if (result.substring(0, 4) == "fa14") {
 
-        Serial.println("FA 14");
-        telnetSend(result);
+        // Serial.println("FA 14");
+        // telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
 
@@ -568,10 +602,11 @@ void handleMessage() {
               tubMode.setState(MODE_IDX_ECO);
             }
             else if (s == "a") {
-              state = "Cleaning";
+              state = "Cleaning"; // TODO: can't tell our actual mode here - could be any of the 3 I think
             }
             else if (s == "c") {
               state = "Circulation in sleep?";
+              tubMode.setState(MODE_IDX_SLP);
             }
             else if (s == "b" || s == "3") {
               state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
@@ -695,8 +730,8 @@ void handleMessage() {
       }
       else if (result.substring(0, 4) == "ae0d") {
 
-        Serial.println("AE 0D");
-        telnetSend(result);
+        // Serial.println("AE 0D");
+        // telnetSend(result);
 
         String message = result.substring(0, 32); // ignore any FB ending
 
