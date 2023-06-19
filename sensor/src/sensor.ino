@@ -104,6 +104,11 @@ HAButton btnUp("up");
 HAButton btnDown("down");
 HAButton btnMode("mode");
 
+HAHVAC hvac(
+  "temp",
+  HAHVAC::TargetTemperatureFeature
+);
+
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
@@ -238,6 +243,17 @@ void onButtonPress(HAButton * sender) {
     Serial.printf("Unknown button %s\n", name);
   }
 
+}
+
+void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
+    float temperatureFloat = temperature.toFloat();
+
+    Serial.print("Target temperature: ");
+    Serial.println(temperatureFloat);
+
+  // TODO: actually send commands to change
+
+    sender->setTargetTemperature(temperature); // report target temperature back to the HA panel
 }
 
 boolean isConnected = false;
@@ -395,6 +411,11 @@ void setup() {
   btnDown.onCommand(onButtonPress);
   btnMode.onCommand(onButtonPress);
 
+  hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
+  hvac.setName("Temp");
+  hvac.setMinTemp(10); // TODO: see what this value is
+  hvac.setMaxTemp(40);
+  hvac.setTempStep(0.5);
 
 
 #ifdef BROKER_USERNAME
@@ -675,12 +696,14 @@ void handleMessage() {
               if (menu == "46") {
                 tubTargetTemp = tmp;
                 targetTemp.setValue((float) tubTargetTemp);
+                hvac.setTargetTemperature((float) tubTargetTemp);
                 Serial.printf("Sent target temp data %f\n", tubTargetTemp);
               }
               else {
                 if (tubTemp != tmp) {
                   tubTemp = tmp;
                   temp.setValue((float) tubTemp);
+                  hvac.setCurrentCurrentTemperature((float) tubTemp);
                   Serial.printf("Sent temp data %f\n", tubTemp);
                 }
                 if(heaterState && (tubTemp < tubTargetTemp)) {
