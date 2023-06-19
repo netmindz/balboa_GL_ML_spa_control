@@ -38,7 +38,7 @@
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
 
-#define BROKER_ADDR IPAddress(192,168,178,42)
+// #define BROKER_ADDR IPAddress(192,168,178,42)
 
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
 // WiFi.macAddress();
