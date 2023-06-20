@@ -155,25 +155,22 @@ void onSwitchStateChanged(bool state, HASwitch* sender)
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
 {
   Serial.printf("onPumpSwitchStateChanged %s %u\n", sender->getName(), index);
-  switch (index) {
-    case 0:
-        // Option "Off" was selected
-        break;
-
-    case 1:
-        // Option "Low" was selected
-        break;
-
-    case 2:
-        // Option "High" was selected
-        break;
-
-    default:
-        // unknown option
-        return;
+  int currentIndex = sender->getCurrentState();
+  String command = COMMAND_JET1;
+  if(sender->getName() == "Pump2") {
+    command = COMMAND_JET2;
+  }
+  if(index > currentIndex) {
+    for(int i = 0; i < (index - currentIndex); i++) {
+      sendBuffer.enqueue(command); 
     }
+  }
+  else {
+    // TODO: how many presses to "loop back around" 
+  }
 
 }
+
 void onEcoSwitchStateChanged(bool state, HASwitch* s)
 {
     Serial.print("Eco Switch changed - ");
