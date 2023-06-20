@@ -75,7 +75,10 @@ SoftwareSerial tub;
 #define PIN_5_PIN D4
 #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
-
+ 
+// Uncomment if you have dual-speed pump
+// #define PUMP1_DUAL_SPEED
+// #define PUMP2_DUAL_SPEED
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 25);
@@ -229,9 +232,7 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     }
   }
   else {
-    for(int i = 0; i < (currentIndex - index); i++) {
-      sendBuffer.enqueue(COMMAND_UP);
-    }
+     // TODO: how many presses to "loop back around" 
   }
   sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
@@ -386,12 +387,24 @@ void setup() {
   currentState.setName("Status");
 
   pump1.setName("Pump1");
+  #ifdef PUMP1_DUAL_SPEED
   pump1.setOptions("Off;Medium;High");
+  #define PUMP1_STATE_HIGH 2
+  #else
+  pump1.setOptions("Off;High");
+  #define PUMP1_STATE_HIGH 1
+  #endif 
   pump1.setIcon("mdi:chart-bubble");
   pump1.onCommand(onPumpSwitchStateChanged);
 
   pump2.setName("Pump2");
+  #ifdef PUMP2_DUAL_SPEED
   pump2.setOptions("Off;Medium;High");
+  #define PUMP2_STATE_HIGH 2
+  #else
+  pump2.setOptions("Off;High");
+  #define PUMP2_STATE_HIGH 1
+  #endif 
   pump2.setIcon("mdi:chart-bubble");
   pump2.onCommand(onPumpSwitchStateChanged);
 
@@ -567,7 +580,7 @@ void handleMessage() {
             tubpowerCalc += POWER_PUMP1_LOW;
           }
           else if (pump == "2"){
-            pump1State = 2;
+            pump1State = PUMP1_STATE_HIGH;
             pump2State = 0;
             tubpowerCalc += POWER_PUMP1_HIGH;
           }
@@ -579,7 +592,7 @@ void handleMessage() {
 
           else if (pump == "8") {
             pump1State = 0;
-            pump2State = 2;
+            pump2State = PUMP2_STATE_HIGH;
             tubpowerCalc += POWER_PUMP2_HIGH;
           }
 
