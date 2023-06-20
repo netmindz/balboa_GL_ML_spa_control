@@ -257,19 +257,19 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
   sendBuffer.enqueue(COMMAND_EMPTY);
 
   if(temperatureFloat > tubTargetTemp) {
-    Serial.println("Raise the temp");
     for(int i = 0; i < (target - current); i++) {
+      Serial.println("Raise the temp");
       sendBuffer.enqueue(COMMAND_UP);
     }
   }
   else {
-    Serial.println("Lower the temp");
     for(int i = 0; i < (current - target); i++) {
+     Serial.println("Lower the temp");
       sendBuffer.enqueue(COMMAND_DOWN);
     }
   }
 
-    sender->setTargetTemperature(temperature); // report target temperature back to the HA panel
+    // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel
 }
 
 boolean isConnected = false;
@@ -429,7 +429,7 @@ void setup() {
 
   hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
   hvac.setName("Temp");
-  hvac.setMinTemp(10); // TODO: see what this value is
+  hvac.setMinTemp(26);
   hvac.setMaxTemp(40);
   hvac.setTempStep(0.5);
 
