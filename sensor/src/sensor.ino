@@ -79,7 +79,6 @@ SoftwareSerial tub;
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 25);
-HASwitch ecoMode("eco_only");
 HASensorNumber temp("temp");
 HASensorNumber targetTemp("targetTemp");
 HASensorNumber timeToTemp("timeToTemp");
@@ -221,7 +220,20 @@ void onEcoSwitchStateChanged(bool state, HASwitch* s)
   }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
-    Serial.printf("Mode Switch changed - %u\n", index);
+  Serial.printf("Mode Switch changed - %u\n", index);
+  int currentIndex = sender->getCurrentState();
+  sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+  if(index > currentIndex) {
+    for(int i = 0; i < (index - currentIndex); i++) {
+      sendBuffer.enqueue(COMMAND_DOWN); 
+    }
+  }
+  else {
+    for(int i = 0; i < (currentIndex - index); i++) {
+      sendBuffer.enqueue(COMMAND_UP);
+    }
+  }
+  sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
 
 void onButtonPress(HAButton * sender) {
@@ -352,7 +364,7 @@ void setup() {
 
   // Home Assistant
   device.setName("Hottub");
-  device.setSoftwareVersion("0.2.0");
+  device.setSoftwareVersion("0.2.1");
   device.setManufacturer("Balboa");
   device.setModel("GL2000");
 
@@ -387,10 +399,6 @@ void setup() {
   heater.setIcon("mdi:radiator");
   light.setName("Light");
   light.onCommand(onSwitchStateChanged);
-
-  ecoMode.setName("Eco Only");
-  ecoMode.onCommand(onEcoSwitchStateChanged);
-
 
   haTime.setName("Time");
 
