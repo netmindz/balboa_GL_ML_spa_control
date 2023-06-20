@@ -246,12 +246,28 @@ void onButtonPress(HAButton * sender) {
 }
 
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
-    float temperatureFloat = temperature.toFloat();
+  float temperatureFloat = temperature.toFloat();
 
-    Serial.print("Target temperature: ");
-    Serial.println(temperatureFloat);
+  Serial.print("Target temperature: ");
+  Serial.println(temperatureFloat);
 
-  // TODO: actually send commands to change
+  int target = temperatureFloat * 2; // 0.5 inc so double
+  int current = tubTargetTemp * 2;
+  sendBuffer.enqueue(COMMAND_UP); // Enter set temp mode
+  sendBuffer.enqueue(COMMAND_EMPTY);
+
+  if(temperatureFloat > tubTargetTemp) {
+    Serial.println("Raise the temp");
+    for(int i = 0; i < (target - current); i++) {
+      sendBuffer.enqueue(COMMAND_UP);
+    }
+  }
+  else {
+    Serial.println("Lower the temp");
+    for(int i = 0; i < (current - target); i++) {
+      sendBuffer.enqueue(COMMAND_DOWN);
+    }
+  }
 
     sender->setTargetTemperature(temperature); // report target temperature back to the HA panel
 }
