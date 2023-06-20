@@ -428,7 +428,7 @@ void setup() {
   btnMode.onCommand(onButtonPress);
 
   hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
-  hvac.setName("Temp");
+  hvac.setName("Target Temp");
   hvac.setMinTemp(26);
   hvac.setMaxTemp(40);
   hvac.setTempStep(0.5);
