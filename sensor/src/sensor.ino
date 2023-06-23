@@ -434,7 +434,7 @@ void loop() {
   if (tub.available() > 0) {
     size_t len = tub.available();
     //    Serial.printf("bytes avail = %u\n", len);
-    uint8_t buf[len];
+    uint8_t buf[len]; // TODO: swap to fixed buffer to help prevent fragmentation of memory
     tub.read(buf, len);
     if (panelSelect == LOW) { // Only read data meant for us
       for (int i = 0; i < len; i++) {
