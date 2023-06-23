@@ -1,12 +1,3 @@
-// If connect to serial port over TCP, define the following
-// #define SERIAL_OVER_IP_ADDR "192.168.178.131"
-
-#define WDT_TIMEOUT 30
-
-// #define AP_FALLBACK
-
-#define WDT_TIMEOUT 30
-
 #ifdef ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -28,6 +19,16 @@
 
 #include "constants.h"
 
+// ************************************************************************************************
+// Start of config
+// ************************************************************************************************
+
+#define WDT_TIMEOUT 30
+
+// Should we run as AP if we can't connect to WIFI?
+// #define AP_FALLBACK 
+
+
 #include "wifi_secrets.h"
 // Create file with the following
 // *************************************************************************
@@ -38,10 +39,11 @@
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
 
-#define BROKER_ADDR IPAddress(192,168,178,42)
+#define BROKER_ADDR IPAddress(192,168,178,42) // Set the IP of your MQTT server
+// #define BROKER_USERNAME "my-username"
+// #define BROKER_PASSWORD "my-password"
 
-byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};
-// WiFi.macAddress();
+byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A}; // Leave this value, unless you own multiple hot tubs
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
 // for each device in order to calculate tub power usage
@@ -54,13 +56,8 @@ const float POWER_PUMP2_HIGH = 0.6;
 
 const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
-const char* ZERO_SPEED = "off";
-const char* LOW_SPEED = "low";
-const char* HIGH_SPEED = "high";
-
 int delayTime = 40;
 
-WiFiClient clients[1];
 
 #ifdef ESP32
 #define tub Serial2
@@ -80,8 +77,14 @@ SoftwareSerial tub;
 // #define PUMP1_DUAL_SPEED
 // #define PUMP2_DUAL_SPEED
 
+// ************************************************************************************************
+// End of config
+// ************************************************************************************************
+
+WiFiClient clients[1];
+
 HADevice device(mac, sizeof(mac));
-HAMqtt mqtt(clients[0], device, 25);
+HAMqtt mqtt(clients[0], device, 30);
 HASensorNumber temp("temp");
 HASensorNumber targetTemp("targetTemp");
 HASensorNumber timeToTemp("timeToTemp");
@@ -90,9 +93,6 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-// HASensor rawData4("raw4");
-// HASensor rawData5("raw5");
-// HASensor rawData6("raw6");
 HASensor rawData7("raw7");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
@@ -106,7 +106,7 @@ HAButton btnUp("up");
 HAButton btnDown("down");
 HAButton btnMode("mode");
 
-HAHVAC hvac(
+HAHVAC hvac( // Not really HVAC device, but only way to get controls to set
   "temp",
   HAHVAC::TargetTemperatureFeature
 );
@@ -132,19 +132,11 @@ double tubTargetTemp = -1;
 String state = "unknown";
 
 
-ArduinoQueue<String> sendBuffer(10);
-
-void onBeforeSwitchStateChanged(bool state, HASwitch* s)
-{
-  // this callback will be called before publishing new state to HA
-  // in some cases there may be delay before onStateChanged is called due to network latency
-  // Serial.println("before Switch changed, clear command");
-  // sendBuffer = "";
-}
+ArduinoQueue<String> sendBuffer(10); // TODO: might be better bigger for large temp changes. Would need testing
 
 void onSwitchStateChanged(bool state, HASwitch* sender)
 {
-    Serial.print("Switch changed - ");
+    Serial.printf("Switch %s changed - ", sender->getName());
     if(state != lightState) {
       Serial.println("Toggle");
       sendBuffer.enqueue(COMMAND_LIGHT);
@@ -172,55 +164,6 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
   }
 
 }
-
-void onEcoSwitchStateChanged(bool state, HASwitch* s)
-{
-    Serial.print("Eco Switch changed - ");
-    if(state == true) {
-      if(tubMode.getCurrentState() == MODE_IDX_ECO) {
-        Serial.println("No change needed");
-      }
-      else if(tubMode.getCurrentState() == MODE_IDX_STD) {
-        Serial.println("Turn on Eco from STD");
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-        // sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      }
-      else if(tubMode.getCurrentState() == MODE_IDX_SLP) {
-        Serial.println("Turn on Eco from Sleep");
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-        // sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        // sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      }
-    }
-    else {
-      if(tubMode.getCurrentState() == MODE_IDX_STD) {
-        Serial.println("No change needed");
-      }
-      else if(tubMode.getCurrentState() == MODE_IDX_ECO) {
-        Serial.println("Turn off eco from eco");
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-        sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      }
-      else if(tubMode.getCurrentState() == MODE_IDX_SLP) {
-        Serial.println("Turn off eco from sleep");
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-        sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_DOWN);
-        sendBuffer.enqueue(COMMAND_EMPTY);
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-      }
-    }
-  }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
   Serial.printf("Mode Switch changed - %u\n", index);
@@ -426,9 +369,6 @@ void setup() {
   rawData.setName("Raw data");
   rawData2.setName("CMD");
   rawData3.setName("post temp: ");
-  // rawData4.setName("D01: ");
-  // rawData5.setName("D02: ");
-  // rawData6.setName("D03: ");
   rawData7.setName("FB");
 
   
@@ -489,7 +429,6 @@ int lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 
-int i = 0;
 void loop() {
   bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
   if (tub.available() > 0) {
@@ -519,9 +458,7 @@ void loop() {
       }          
       else if(result.length() == msgLength) {
          if(result.length() == 46 ) {
-          // if(i %10 == 0)  
-          sendCommand();
-          i++;
+          sendCommand(); // send reply *before* we parse the FA string as we don't want to delay the reply by say sending MQTT updates
         }
         handleMessage();
       }
@@ -533,14 +470,15 @@ void loop() {
     }
   }
 
-  if(panelSelect == HIGH) {
+  if(panelSelect == HIGH) { // Controller talking to other topside panels - we are in effect idle
+
     mqtt.loop();
     ArduinoOTA.handle();
 
     telnetLoop();
 
 
-    if(sendBuffer.isEmpty()) { // Only handle status is we aren't trying to send commands
+    if(sendBuffer.isEmpty()) { // Only handle status is we aren't trying to send commands, webserver and websocket can both block for a long time
 
       webserver.handleClient();
       webSocket.loop();
@@ -685,7 +623,6 @@ void handleMessage() {
             else {
               state = "Unknown " + s;
             }
-// TODO            currentMode.setValue(tubMode.getCurrentState c_str());
 
             String menu = result.substring(18, 20);
             if (menu == "00") {
