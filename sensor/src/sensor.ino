@@ -85,8 +85,8 @@ WiFiClient clients[1];
 
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 30);
-HASensorNumber temp("temp");
-HASensorNumber targetTemp("targetTemp");
+HASensorNumber temp("temp", HANumber::PrecisionP1);
+HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
 HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
 HASensor haTime("time");
@@ -100,7 +100,7 @@ HASelect pump1("pump1");
 HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
-HASensorNumber tubpower("tubpower");
+HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
