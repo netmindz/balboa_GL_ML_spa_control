@@ -531,8 +531,8 @@ void loop() {
 
     telnetLoop();
 
+    webserver.handleClient();
     // TODO: disabled while trying to elimate timing issues
-    // webserver.handleClient();
     // webSocket.loop();
 
   // String json = getStatusJSON();
