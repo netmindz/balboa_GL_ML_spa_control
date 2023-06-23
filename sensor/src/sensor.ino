@@ -531,15 +531,21 @@ void loop() {
 
     telnetLoop();
 
-    webserver.handleClient();
-    // TODO: disabled while trying to elimate timing issues
-    // webSocket.loop();
 
-  // String json = getStatusJSON();
-  // if (json != lastJSON) {
-  //   webSocket.broadcastTXT(json);
-  //   lastJSON = json;
-  // }
+    if(sendBuffer.isEmpty()) { // Only handle status is we aren't trying to send commands
+
+      webserver.handleClient();
+      webSocket.loop();
+
+      if(webSocket.connectedClients(false) > 0) {
+        String json = getStatusJSON();
+        if (json != lastJSON) {
+          webSocket.broadcastTXT(json);
+          lastJSON = json;
+        }
+      }
+    }
+
   }
 
   if (((millis() / 1000) - lastUptime) >= 15) {
