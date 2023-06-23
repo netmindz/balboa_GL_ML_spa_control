@@ -395,6 +395,7 @@ void setup() {
 
   hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
   hvac.setModes(HAHVAC::AutoMode);
+  hvac.setMode(HAHVAC::AutoMode);
   hvac.setName("Target Temp");
   hvac.setMinTemp(26);
   hvac.setMaxTemp(40);
