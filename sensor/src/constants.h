@@ -13,3 +13,15 @@
 #define MODE_IDX_STD 0
 #define MODE_IDX_ECO 1
 #define MODE_IDX_SLP 2
+
+#ifdef PUMP1_DUAL_SPEED
+#define PUMP1_STATE_HIGH 2
+#else
+#define PUMP1_STATE_HIGH 1
+#endif 
+
+#ifdef PUMP2_DUAL_SPEED
+#define PUMP2_STATE_HIGH 2
+#else
+#define PUMP2_STATE_HIGH 1
+#endif 

@@ -17,7 +17,6 @@
 #include <WebSocketsServer.h>
 #include <ArduinoQueue.h>
 
-#include "constants.h"
 
 // ************************************************************************************************
 // Start of config
@@ -81,6 +80,8 @@ SoftwareSerial tub;
 // End of config
 // ************************************************************************************************
 
+#include "constants.h"
+
 WiFiClient clients[1];
 
 HADevice device(mac, sizeof(mac));
@@ -134,6 +135,23 @@ String state = "unknown";
 
 ArduinoQueue<String> sendBuffer(10); // TODO: might be better bigger for large temp changes. Would need testing
 
+void sendCommand(String command, int count) {
+  Serial.printf("Sending %s - %u times\n", command.c_str(), count);
+  for(int i = 0; i < count; i++) {
+    sendBuffer.enqueue(command.c_str()); 
+  }
+}
+
+void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN) {
+  if(targetIndex > currentIndex) {
+    sendCommand(command, (targetIndex - currentIndex));
+  }
+  else if(currentIndex != targetIndex) {
+    int presses = (options - currentIndex) + targetIndex;
+    sendCommand(command, presses);
+  }
+}
+
 void onSwitchStateChanged(bool state, HASwitch* sender)
 {
     Serial.printf("Switch %s changed - ", sender->getName());
@@ -151,32 +169,21 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender)
   Serial.printf("onPumpSwitchStateChanged %s %u\n", sender->getName(), index);
   int currentIndex = sender->getCurrentState();
   String command = COMMAND_JET1;
+  int options = PUMP1_STATE_HIGH + 1;
   if(sender->getName() == "Pump2") {
     command = COMMAND_JET2;
+    options = PUMP2_STATE_HIGH + 1;
   }
-  if(index > currentIndex) {
-    for(int i = 0; i < (index - currentIndex); i++) {
-      sendBuffer.enqueue(command); 
-    }
-  }
-  else {
-    // TODO: how many presses to "loop back around" 
-  }
-
+  setOption(currentIndex, index, options, command);
 }
+
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
   Serial.printf("Mode Switch changed - %u\n", index);
   int currentIndex = sender->getCurrentState();
+  int options = 3;
   sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-  if(index > currentIndex) {
-    for(int i = 0; i < (index - currentIndex); i++) {
-      sendBuffer.enqueue(COMMAND_DOWN); 
-    }
-  }
-  else {
-     // TODO: how many presses to "loop back around" 
-  }
+  setOption(currentIndex, index, options);
   sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
 
@@ -340,10 +347,8 @@ void setup() {
   pump1.setName("Pump1");
   #ifdef PUMP1_DUAL_SPEED
   pump1.setOptions("Off;Medium;High");
-  #define PUMP1_STATE_HIGH 2
   #else
   pump1.setOptions("Off;High");
-  #define PUMP1_STATE_HIGH 1
   #endif 
   pump1.setIcon("mdi:chart-bubble");
   pump1.onCommand(onPumpSwitchStateChanged);
@@ -351,10 +356,8 @@ void setup() {
   pump2.setName("Pump2");
   #ifdef PUMP2_DUAL_SPEED
   pump2.setOptions("Off;Medium;High");
-  #define PUMP2_STATE_HIGH 2
   #else
   pump2.setOptions("Off;High");
-  #define PUMP2_STATE_HIGH 1
   #endif 
   pump2.setIcon("mdi:chart-bubble");
   pump2.onCommand(onPumpSwitchStateChanged);
