@@ -261,6 +261,12 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
   Serial.print("Target temperature: ");
   Serial.println(temperatureFloat);
 
+  if(tubTargetTemp < 0) {
+    Serial.print("ERROR: can't adjust target as current value not known");
+    sendBuffer.enqueue(COMMAND_UP); // Enter set temp mode - won't change, but should allow us to capture the set target value
+    return;
+  }
+
   int target = temperatureFloat * 2; // 0.5 inc so double
   int current = tubTargetTemp * 2;
   sendBuffer.enqueue(COMMAND_UP); // Enter set temp mode
@@ -270,16 +276,18 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     for(int i = 0; i < (target - current); i++) {
       Serial.println("Raise the temp");
       sendBuffer.enqueue(COMMAND_UP);
+      // sendBuffer.enqueue(COMMAND_EMPTY);
     }
   }
   else {
     for(int i = 0; i < (current - target); i++) {
      Serial.println("Lower the temp");
       sendBuffer.enqueue(COMMAND_DOWN);
+      // sendBuffer.enqueue(COMMAND_EMPTY);
     }
   }
 
-    // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel
+    // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel - better to see what the control unit reports that assume our commands worked
 }
 
 boolean isConnected = false;
@@ -737,7 +745,9 @@ void handleMessage() {
               if (menu == "46") {
                 tubTargetTemp = tmp;
                 targetTemp.setValue((float) tubTargetTemp);
-                hvac.setTargetTemperature((float) tubTargetTemp);
+                if(sendBuffer.isEmpty()) {  // supress setting the target while we are changing the target
+                  hvac.setTargetTemperature( (float) tubTargetTemp);
+                }
                 Serial.printf("Sent target temp data %f\n", tubTargetTemp);
               }
               else {
