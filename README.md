@@ -1,5 +1,9 @@
 # Balboa GL ML Spa Control
 
+## Read Only Branch
+
+Archive verion of the codebase that only needs the RS485 connection and provides read-only support
+
 While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, this is *NOT* compatible with the older GL/EL range such as the GL2000, GL2001 or EL2000.
 
 The aim of this project is to achieve similar results as the app from ccutrer
@@ -23,7 +27,7 @@ Original discssion regarding support for spa controllers with 8 pin rather than 
 # Connection
 * Pin 1+3 - RS485
 * Pin 2,4 - Unknown
-* Pin 5 - Main panel port selector
+* Pin 5 - Main panel port selector (not used in the read-only branch)
 * Pin 6   - 9.7V - PSU - limited current avail
 * Pin 7+8 - GND
 
