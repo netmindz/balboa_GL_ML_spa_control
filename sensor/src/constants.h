@@ -4,8 +4,8 @@
 // #define COMMAND_TIME        "fb066666666603fc76"
 #define COMMAND_CHANGE_MODE "fb0603450e0004fb3c"
 // #define COMMAND_BLOWER      "fb06666666660af5f4"
-#define COMMAND_JET1        "fb06030a450e6f918" // TODO: fix me - one char short
-#define COMMAND_JET2        "fb06030a450e7f80a" // TODO: fix me - one char short
+#define COMMAND_JET1        "fb060343060006f9a2" // TODO: fix me - swapped to tmjo's panel as mine was one char short in my notes
+#define COMMAND_JET2        "fb060343060007f8b0" // TODO: fix me - swapped to tmjo's panel as mine was one char short in my notes
 #define COMMAND_EMPTY       "fb0603450e0000ff74"
 #define COMMAND_LIGHT       "fb0603450e0009f6f6"
 
