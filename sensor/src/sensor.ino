@@ -133,101 +133,62 @@ void setOption(int currentIndex, int targetIndex, int options, String command = 
 
 
 void setup() {
+  /* Start serial for debugging */
   Serial.begin(115200);
   delay(1000);
 
+  /* Switch on ESP LED during setup */
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  // Make sure you're in station mode
-  WiFi.mode(WIFI_STA);
+  /* Setup, start and verify WIFI-connection */
+  setupWifi();
 
-  Serial.println("");
-  Serial.print(F("Connecting to "));
-  Serial.print(ssid);
-
-  if (passphrase != NULL)
-    WiFi.begin(ssid, passphrase);
-  else
-    WiFi.begin(ssid);
-
-  int sanity = 0;
-  while (sanity < 20) {
-    sanity++;
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("");
-      Serial.print(F("Connected with IP: "));
-      Serial.println(WiFi.localIP());
-      break;
-    }
-    else {
-      delay(500);
-      Serial.print(".");
-    }
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    #ifdef AP_FALLBACK
-      Serial.print("\n\nWifi failed, flip to fallback AP\n");
-      WiFi.softAP("hottub", "Balboa");
-      IPAddress myIP = WiFi.softAPIP();
-      Serial.print("AP IP address: ");
-      Serial.println(myIP);
-    #else
-      Serial.print("\n\nWifi failed, reboot\n");
-      delay(1000);
-      ESP.restart();
-    #endif     
-  }
-
-
-
-
+  /* Setup and start serial connection to hottub */
   pinMode(RTS_PIN, OUTPUT);
   Serial.printf("Setting pin %u LOW\n", RTS_PIN);
   digitalWrite(RTS_PIN, LOW);
   pinMode(PIN_5_PIN, INPUT);  
-#ifdef ESP32
-  Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
-  tubserial.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
-  while (tubserial.available() > 0)  { // workarond for bug with hanging during Serial2.begin - https://github.com/espressif/arduino-esp32/issues/5443
-    Serial.read();
-  }
-  Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
-  tubserial.updateBaudRate(115200);
-#endif
+  #ifdef ESP32
+    Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
+    tubserial.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
+    while (tubserial.available() > 0)  { // workarond for bug with hanging during Serial2.begin - https://github.com/espressif/arduino-esp32/issues/5443
+      Serial.read();
+    }
+    Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
+    tubserial.updateBaudRate(115200);
+  #endif
 
+  /* start OTA */
   ArduinoOTA.setHostname("hottub-sensor");
   ArduinoOTA.begin();
 
-  // start telnet server
+  /* start telnet server */
   server.begin();
   server.setNoDelay(true);
 
-  // start web
+  /* start web */
   webserver.on("/", handleRoot);
   webserver.on("/send", handleSend);
   webserver.begin();
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
 
-  // setup Home Assistant MQTT
+  /* setup Home Assistant MQTT */
   setupHaMqtt();
+  #ifdef BROKER_USERNAME
+    mqtt.begin(BROKER_ADDR, BROKER_USERNAME, BROKER_PASSWORD);
+  #else
+    mqtt.begin(BROKER_ADDR);
+  #endif
 
-
-#ifdef BROKER_USERNAME
-  mqtt.begin(BROKER_ADDR, BROKER_USERNAME, BROKER_PASSWORD);
-#else
-  mqtt.begin(BROKER_ADDR);
-#endif
-
-#ifdef ESP32
-  Serial.println("Configuring WDT...");
-  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
-  esp_task_wdt_add(NULL); //add current thread to WDT watch
-#endif
-  Serial.println("End of setup");
-  digitalWrite(LED_BUILTIN, LOW);
+  #ifdef ESP32
+    Serial.println("Configuring WDT...");
+    esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL); //add current thread to WDT watch
+  #endif
+    Serial.println("End of setup");
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop() {
@@ -605,6 +566,49 @@ void sendCommand() {
     digitalWrite(RTS_PIN, LOW);
     digitalWrite(LED_BUILTIN, LOW);
   }
+}
+
+void setupWifi(){
+  // Make sure you're in station mode
+  WiFi.mode(WIFI_STA);
+
+  Serial.println("");
+  Serial.print(F("Connecting to "));
+  Serial.print(ssid);
+
+  if (passphrase != NULL)
+    WiFi.begin(ssid, passphrase);
+  else
+    WiFi.begin(ssid);
+
+  int sanity = 0;
+  while (sanity < 20) {
+    sanity++;
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("");
+      Serial.print(F("Connected with IP: "));
+      Serial.println(WiFi.localIP());
+      break;
+    }
+    else {
+      delay(500);
+      Serial.print(".");
+    }
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    #ifdef AP_FALLBACK
+      Serial.print("\n\nWifi failed, flip to fallback AP\n");
+      WiFi.softAP("hottub", "Balboa");
+      IPAddress myIP = WiFi.softAPIP();
+      Serial.print("AP IP address: ");
+      Serial.println(myIP);
+    #else
+      Serial.print("\n\nWifi failed, reboot\n");
+      delay(1000);
+      ESP.restart();
+    #endif     
+  }  
 }
 
 String HexString2TimeString(String hexstring){
