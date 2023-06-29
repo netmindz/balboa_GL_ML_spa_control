@@ -114,22 +114,9 @@ int msgLength = 0;
 boolean isConnected = false;
 ArduinoQueue<String> sendBuffer(10); // TODO: might be better bigger for large temp changes. Would need testing
 
-void sendCommand(String command, int count) {
-  Serial.printf("Sending %s - %u times\n", command.c_str(), count);
-  for(int i = 0; i < count; i++) {
-    sendBuffer.enqueue(command.c_str()); 
-  }
-}
-
-void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN) {
-  if(targetIndex > currentIndex) {
-    sendCommand(command, (targetIndex - currentIndex));
-  }
-  else if(currentIndex != targetIndex) {
-    int presses = (options - currentIndex) + targetIndex;
-    sendCommand(command, presses);
-  }
-}
+/* Function declarations */
+void sendCommand(String command, int count);
+void setOption(int currentIndex, int targetIndex, int options, String command);
 
 #include "ha_mqtt.h"
 
@@ -537,6 +524,22 @@ void handleMessage() {
       }
 }
 
+void sendCommand(String command, int count) {
+  Serial.printf("Sending %s - %u times\n", command.c_str(), count);
+  for(int i = 0; i < count; i++) {
+    sendBuffer.enqueue(command.c_str()); 
+  }
+}
+
+void setOption(int currentIndex, int targetIndex, int options, String command) {
+  if(targetIndex > currentIndex) {
+    sendCommand(command, (targetIndex - currentIndex));
+  }
+  else if(currentIndex != targetIndex) {
+    int presses = (options - currentIndex) + targetIndex;
+    sendCommand(command, presses);
+  }
+}
 
 void sendCommand() {
   if(!sendBuffer.isEmpty()) {
