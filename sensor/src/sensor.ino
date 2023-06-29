@@ -1,32 +1,27 @@
 #ifdef ESP32
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <WebServer.h>
-#include <WiFiAP.h>
-#include <esp_task_wdt.h>
+  #include <WiFi.h>
+  #include <ESPmDNS.h>
+  #include <WebServer.h>
+  #include <WiFiAP.h>
+  #include <esp_task_wdt.h>
 #else
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-#include <SoftwareSerial.h> // - https://github.com/plerup/espsoftwareserial
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFiAP.h>
+  #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>
+  #include <SoftwareSerial.h> // - https://github.com/plerup/espsoftwareserial
+  #include <ESP8266WebServer.h>
+  #include <ESP8266WiFiAP.h>
 #endif
-// #include <ArduinoHA.h>
+
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WebSocketsServer.h>
 #include <ArduinoQueue.h>
 
+#include "constants.h"
 
 // ************************************************************************************************
 // Start of config
 // ************************************************************************************************
-
-#define WDT_TIMEOUT 30
-
-// Should we run as AP if we can't connect to WIFI?
-// #define AP_FALLBACK 
-
 
 #include "wifi_secrets.h"
 // Create file with the following
@@ -36,56 +31,53 @@
 // #define BROKER_ADDR IPAddress(192,168,178,42)      /* Replace with your MQTT BROKER IP-address */
 // byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A}; /* Replace with your mac-address or leave unchanged if you don't have multiple tubs */
 // *************************************************************************
-
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
 
+// Uncomment if you want fallback to accesspoint (AP) if WIFI-connection could not be established. TODO: Define default.
+// #define AP_FALLBACK 
 
-
-
-
-
-
-int delayTime = 40;
-
-
-#ifdef ESP32
-#define tubserial Serial2
-#define RX_PIN 19
-#define TX_PIN 23
-#define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 18
-#else
-SoftwareSerial tubserial;
-#define RX_PIN D6
-#define TX_PIN D7
-#define PIN_5_PIN D4
-#define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#endif
- 
 // Uncomment if you have dual-speed pump
 #define PUMP1_DUAL_SPEED
 #define PUMP2_DUAL_SPEED
+
+
+#define WDT_TIMEOUT 30
+int delayTime = 40;
+
+// Setup of hardware pins for serial connection
+#ifdef ESP32
+  #define tubserial Serial2
+  #define RX_PIN 19
+  #define TX_PIN 23
+  #define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+  #define PIN_5_PIN 18
+#else
+  SoftwareSerial tubserial;
+  #define RX_PIN D6
+  #define TX_PIN D7
+  #define PIN_5_PIN D4
+  #define RTS_PIN D1 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#endif
+ 
 
 // ************************************************************************************************
 // End of config
 // ************************************************************************************************
 
-#include "constants.h"
 
-
-
+/* WIFI */
 WiFiClient clients[1];
-
 #define MAX_SRV_CLIENTS 2
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
+/* WEBSERVER */
 WebSocketsServer webSocket = WebSocketsServer(81);
 #ifdef ESP32
-WebServer webserver(80);
+  WebServer webserver(80);
 #else
-ESP8266WebServer webserver(80);
+  ESP8266WebServer webserver(80);
 #endif
 
 struct {
@@ -120,7 +112,7 @@ void setOption(int currentIndex, int targetIndex, int options, String command);
 
 #include "ha_mqtt.h"
 
-
+/* ESP SETUP */
 void setup() {
   /* Start serial for debugging */
   Serial.begin(115200);
@@ -180,6 +172,7 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
 }
 
+/* ESP LOOP */
 void loop() {
   bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
   if (tubserial.available() > 0) {
