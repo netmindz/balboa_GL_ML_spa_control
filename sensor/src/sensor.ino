@@ -31,16 +31,18 @@
 #include "wifi_secrets.h"
 // Create file with the following
 // *************************************************************************
-// #define SECRET_SSID "";  /* Replace with your SSID */
-// #define SECRET_PSK "";   /* Replace with your WPA2 passphrase */
+// #define SECRET_SSID "";                            /* Replace with your SSID */
+// #define SECRET_PSK "";                             /* Replace with your WPA2 passphrase */
+// #define BROKER_ADDR IPAddress(192,168,178,42)      /* Replace with your MQTT BROKER IP-address */
+// byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A}; /* Replace with your mac-address or leave unchanged if you don't have multiple tubs */
 // *************************************************************************
 
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
 
-// #define BROKER_ADDR IPAddress(192,168,178,42)
 
-byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A}; // Leave this value, unless you own multiple hot tubs
+
+
 
 
 
