@@ -500,37 +500,38 @@ void handleMessage() {
             tubpowerCalc = 0;
             String pump = result.substring(13, 14);
 
-            if (pump == "0") {
+            if (pump == "0") {  // Pump 1 Off - Pump 2 Off
                 pump1State = 0;
                 pump2State = 0;
-            } else if (pump == "1") {
+            } else if (pump == "1") {  // Pump 1 Low - Pump 2 Off
                 pump1State = 1;
                 pump2State = 0;
                 tubpowerCalc += POWER_PUMP1_LOW;
-            } else if (pump == "2") {
+            } else if (pump == "2") {  // Pump 1 High - Pump 2 Off
                 pump1State = PUMP1_STATE_HIGH;
                 pump2State = 0;
                 tubpowerCalc += POWER_PUMP1_HIGH;
-            } else if (pump == "7") {
+            } else if (pump == "6") {  // Pump 1 High - Pump 2 Low
+                pump1State = PUMP1_STATE_HIGH;
+                pump2State = 1;
+                tubpowerCalc += POWER_PUMP1_HIGH;
+                tubpowerCalc += POWER_PUMP2_LOW;
+            } else if (pump == "7") {  // Pump 1 Off - Pump 2 Low
                 pump1State = 0;
                 pump2State = 1;
                 tubpowerCalc += POWER_PUMP2_LOW;
-            }
-
-            else if (pump == "8") {
+            } else if (pump == "8") {  // Pump 1 Off - Pump 2 High
                 pump1State = 0;
                 pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP2_HIGH;
-            }
-
-            else if (pump == "9") {
+            } else if (pump == "9") {  // Pump 1 Low - Pump 2 High
                 pump1State = 1;
-                pump2State = 2;
+                pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP1_LOW;
                 tubpowerCalc += POWER_PUMP2_HIGH;
-            } else if (pump == "a") {
-                pump1State = 2;
-                pump2State = 1;
+            } else if (pump == "a") {  // Pump 1 High - Pump 2 High
+                pump1State = PUMP1_STATE_HIGH;
+                pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP1_HIGH;
                 tubpowerCalc += POWER_PUMP2_LOW;
             }
