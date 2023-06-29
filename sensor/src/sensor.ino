@@ -88,14 +88,17 @@ WebServer webserver(80);
 ESP8266WebServer webserver(80);
 #endif
 
-int pump1State = 0;
-int pump2State = 0;
-boolean heaterState = false;
-boolean lightState = false;
-float tubpowerCalc = 0;
-double tubTemp = -1;
-double tubTargetTemp = -1;
-String state = "unknown";
+struct {
+  int pump1State = 0;
+  int pump2State = 0;
+  boolean heaterState = false;
+  boolean lightState = false;
+  float tubpowerCalc = 0;
+  double tubTemp = -1;
+  double tubTargetTemp = -1;
+  String state = "unknown";
+  String timeString = "";
+} tubState;
 
 String result = "";
 String lastRaw = "";
@@ -107,7 +110,6 @@ String lastRaw6 = "";
 String lastRaw7 = "";
 String lastJSON = "";
 int lastUptime = 0;
-String timeString = "";
 int msgLength = 0;
 boolean isConnected = false;
 ArduinoQueue<String> sendBuffer(10); // TODO: might be better bigger for large temp changes. Would need testing
@@ -282,69 +284,69 @@ void handleMessage() {
         // If messages is temp or ---- for temp, it is status message
         if (result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
 
-          tubpowerCalc = 0;
+          tubState.tubpowerCalc = 0;
           String pump = result.substring(13, 14);
 
           if (pump == "0") {
-            pump1State = 0;
-            pump2State = 0;
+            tubState.pump1State = 0;
+            tubState.pump2State = 0;
           }
           else if (pump == "1"){
-            pump1State = 1;
-            pump2State = 0;
-            tubpowerCalc += POWER_PUMP1_LOW;
+            tubState.pump1State = 1;
+            tubState.pump2State = 0;
+            tubState.tubpowerCalc += POWER_PUMP1_LOW;
           }
           else if (pump == "2"){
-            pump1State = PUMP1_STATE_HIGH;
-            pump2State = 0;
-            tubpowerCalc += POWER_PUMP1_HIGH;
+            tubState.pump1State = PUMP1_STATE_HIGH;
+            tubState.pump2State = 0;
+            tubState.tubpowerCalc += POWER_PUMP1_HIGH;
           }
           else if (pump == "7") {
-            pump1State = 0;
-            pump2State = 1;
-            tubpowerCalc += POWER_PUMP2_LOW;
+            tubState.pump1State = 0;
+            tubState.pump2State = 1;
+            tubState.tubpowerCalc += POWER_PUMP2_LOW;
           }
 
           else if (pump == "8") {
-            pump1State = 0;
-            pump2State = PUMP2_STATE_HIGH;
-            tubpowerCalc += POWER_PUMP2_HIGH;
+            tubState.pump1State = 0;
+            tubState.pump2State = PUMP2_STATE_HIGH;
+            tubState.tubpowerCalc += POWER_PUMP2_HIGH;
           }
 
           else if (pump == "9") {
-            pump1State = 1;
-            pump2State = 2;
-            tubpowerCalc += POWER_PUMP1_LOW;
-            tubpowerCalc += POWER_PUMP2_HIGH;
+            tubState.pump1State = 1;
+            tubState.pump2State = 2;
+            tubState.tubpowerCalc += POWER_PUMP1_LOW;
+            tubState.tubpowerCalc += POWER_PUMP2_HIGH;
           }
           else if (pump == "a") {
-            pump1State = 2;
-            pump2State = 1;
-            tubpowerCalc += POWER_PUMP1_HIGH;
-            tubpowerCalc += POWER_PUMP2_LOW;            
+            tubState.pump1State = 2;
+            tubState.pump2State = 1;
+            tubState.tubpowerCalc += POWER_PUMP1_HIGH;
+            tubState.tubpowerCalc += POWER_PUMP2_LOW;            
           }
 
           String heater = result.substring(14, 15);
           if (heater == "0") {
-            heaterState = false;
+            tubState.heaterState = false;
           }
           else if (heater == "1") {
-            heaterState = true;
-            tubpowerCalc += POWER_HEATER;
+            tubState.heaterState = true;
+            tubState.tubpowerCalc += POWER_HEATER;
           }
           else if (heater == "2") {
-            heaterState = true; // heater off, verifying temp change, but creates noisy state if we return false
-            tubpowerCalc += POWER_HEATER;
+            tubState.heaterState = true; // heater off, verifying temp change, but creates noisy state if we return false
+            tubState.tubpowerCalc += POWER_HEATER;
           }
 
-          tubpower.setValue(tubpowerCalc);
+          tubpower.setValue(tubState.tubpowerCalc);
           
           String light = result.substring(15, 16);
           if (light == "0") {
-            lightState = false;
+            tubState.lightState = false;
           }
           else if (light == "3") {
-            lightState = true;
+            tubState.lightState = true;
           }
 
           // Ignore last 2 bytes as possibly checksum, given we have temp earlier making look more complex than perhaps it is
@@ -356,34 +358,34 @@ void handleMessage() {
 
             String s = result.substring(17, 18);
             if (s == "4") {
-              state = "Sleep";
+              tubState.state = "Sleep";
               tubMode.setState(MODE_IDX_SLP);
             }
             else if (s == "9") {
-              state = "Circulation ?";
+              tubState.state = "Circulation ?";
               tubMode.setState(MODE_IDX_STD); // TODO: confirm
             }
             else if (s == "1") {
-              state = "Standard";
+              tubState.state = "Standard";
               tubMode.setState(MODE_IDX_STD);
             }
             else if (s == "2") {
-              state = "Economy";
+              tubState.state = "Economy";
               tubMode.setState(MODE_IDX_ECO);
             }
             else if (s == "a") {
-              state = "Cleaning"; // TODO: can't tell our actual mode here - could be any of the 3 I think
+              tubState.state = "Cleaning"; // TODO: can't tell our actual mode here - could be any of the 3 I think
             }
             else if (s == "c") {
-              state = "Circulation in sleep?";
+              tubState.state = "Circulation in sleep?";
               tubMode.setState(MODE_IDX_SLP);
             }
             else if (s == "b" || s == "3") {
-              state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
+              tubState.state = "Std in Eco"; // Was in eco, Swap to STD for 1 hour only
               tubMode.setState(MODE_IDX_STD);
             }
             else {
-              state = "Unknown " + s;
+              tubState.state = "Unknown " + s;
             }
 
             String menu = result.substring(18, 20);
@@ -391,25 +393,25 @@ void handleMessage() {
               // idle
             }
             else if (menu == "4c") {
-              state = "Set Mode";
+              tubState.state = "Set Mode";
             }
             else if (menu == "5a") {
-              state = "Standby?"; // WT: not tested to confirm if this is the act of setting Standby or just seen when in standby
+              tubState.state = "Standby?"; // WT: not tested to confirm if this is the act of setting Standby or just seen when in standby
             }
             else { // 46 for set temp, but also other things like filter time
-              state = "menu " + menu;
+              tubState.state = "menu " + menu;
             }
 
             // 94600008002ffffff0200000000f5
 
 
             if(result.substring(28, 32) != "ffff") {
-              timeString = HexString2TimeString(result.substring(28, 32));              
+              tubState.timeString = HexString2TimeString(result.substring(28, 32));              
             }
             else {
-              timeString = "--:--";
+              tubState.timeString = "--:--";
             }
-            haTime.setValue(timeString.c_str());
+            haTime.setValue(tubState.timeString.c_str());
             
             // temp up - ff0100000000?? - end varies
 
@@ -420,10 +422,10 @@ void handleMessage() {
               // none
             }
             else if (cmd.substring(0, 4) == "01") {
-              state = "Temp Up";
+              tubState.state = "Temp Up";
             }
             else if (cmd.substring(0, 4) == "02") {
-              state = "Temp Down";
+              tubState.state = "Temp Down";
             }
             else {
               telnetSend("CMD: " + cmd);
@@ -442,22 +444,22 @@ void handleMessage() {
             if (result.substring(10, 12) == "43") { // "C"
               double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
               if (menu == "46") {
-                tubTargetTemp = tmp;
-                targetTemp.setValue((float) tubTargetTemp);
+                tubState.tubTargetTemp = tmp;
+                targetTemp.setValue((float) tubState.tubTargetTemp);
                 if(sendBuffer.isEmpty()) {  // supress setting the target while we are changing the target
-                  hvac.setTargetTemperature( (float) tubTargetTemp);
+                  hvac.setTargetTemperature( (float) tubState.tubTargetTemp);
                 }
-                Serial.printf("Sent target temp data %f\n", tubTargetTemp);
+                Serial.printf("Sent target temp data %f\n", tubState.tubTargetTemp);
               }
               else {
-                if (tubTemp != tmp) {
-                  tubTemp = tmp;
-                  temp.setValue((float) tubTemp);
-                  hvac.setCurrentCurrentTemperature((float) tubTemp);
-                  Serial.printf("Sent temp data %f\n", tubTemp);
+                if (tubState.tubTemp != tmp) {
+                  tubState.tubTemp = tmp;
+                  temp.setValue((float) tubState.tubTemp);
+                  hvac.setCurrentCurrentTemperature((float) tubState.tubTemp);
+                  Serial.printf("Sent temp data %f\n", tubState.tubTemp);
                 }
-                if(heaterState && (tubTemp < tubTargetTemp)) {
-                  double tempDiff = (tubTargetTemp - tubTemp);
+                if(tubState.heaterState && (tubState.tubTemp < tubState.tubTargetTemp)) {
+                  double tempDiff = (tubState.tubTargetTemp - tubState.tubTemp);
                   float timeToTempValue =   (tempDiff * MINUTES_PER_DEGC);
                   timeToTemp.setValue(timeToTempValue);
                 }
@@ -476,7 +478,7 @@ void handleMessage() {
             }
 
 
-            currentState.setValue(state.c_str());
+            currentState.setValue(tubState.state.c_str());
           }
         }
         else {
@@ -493,10 +495,10 @@ void handleMessage() {
           }
         }
 
-        pump1.setState(pump1State);
-        pump2.setState(pump2State);
-        heater.setState(heaterState);
-        light.setState(lightState);
+        pump1.setState(tubState.pump1State);
+        pump2.setState(tubState.pump2State);
+        heater.setState(tubState.heaterState);
+        light.setState(tubState.lightState);
 
 
         // end of FA14
