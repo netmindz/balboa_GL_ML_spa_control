@@ -97,7 +97,19 @@ double tubTemp = -1;
 double tubTargetTemp = -1;
 String state = "unknown";
 
-
+String result = "";
+String lastRaw = "";
+String lastRaw2 = "";
+String lastRaw3 = "";
+String lastRaw4 = "";
+String lastRaw5 = "";
+String lastRaw6 = "";
+String lastRaw7 = "";
+String lastJSON = "";
+int lastUptime = 0;
+String timeString = "";
+int msgLength = 0;
+boolean isConnected = false;
 ArduinoQueue<String> sendBuffer(10); // TODO: might be better bigger for large temp changes. Would need testing
 
 void sendCommand(String command, int count) {
@@ -119,7 +131,7 @@ void setOption(int currentIndex, int targetIndex, int options, String command = 
 
 #include "ha_mqtt.h"
 
-boolean isConnected = false;
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -217,19 +229,6 @@ void setup() {
   Serial.println("End of setup");
   digitalWrite(LED_BUILTIN, LOW);
 }
-
-String result = "";
-String lastRaw = "";
-String lastRaw2 = "";
-String lastRaw3 = "";
-String lastRaw4 = "";
-String lastRaw5 = "";
-String lastRaw6 = "";
-String lastRaw7 = "";
-String lastJSON = "";
-int lastUptime = 0;
-String timeString = "";
-int msgLength = 0;
 
 void loop() {
   bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
