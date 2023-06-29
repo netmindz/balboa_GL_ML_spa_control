@@ -42,16 +42,7 @@ const char passphrase[] = SECRET_PSK;
 
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A}; // Leave this value, unless you own multiple hot tubs
 
-// Perform measurements or read nameplate values on your tub to define the power [kW]
-// for each device in order to calculate tub power usage
-const float POWER_HEATER = 2.8;
-const float POWER_PUMP_CIRCULATION = 0.3;
-const float POWER_PUMP1_LOW = 0.31;
-const float POWER_PUMP1_HIGH = 1.3;
-const float POWER_PUMP2_LOW = 0.3;
-const float POWER_PUMP2_HIGH = 0.6;
 
-const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 
 int delayTime = 40;
 

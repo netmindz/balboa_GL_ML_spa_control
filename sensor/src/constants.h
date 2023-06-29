@@ -25,3 +25,15 @@
 #else
 #define PUMP2_STATE_HIGH 1
 #endif 
+
+
+// Perform measurements or read nameplate values on your tub to define the power [kW]
+// for each device in order to calculate tub power usage
+const float POWER_HEATER = 2.8;
+const float POWER_PUMP_CIRCULATION = 0.3;
+const float POWER_PUMP1_LOW = 0.31;
+const float POWER_PUMP1_HIGH = 1.3;
+const float POWER_PUMP2_LOW = 0.3;
+const float POWER_PUMP2_HIGH = 0.6;
+
+const int MINUTES_PER_DEGC = 45; // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
