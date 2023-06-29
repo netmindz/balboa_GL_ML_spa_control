@@ -50,13 +50,13 @@ int delayTime = 40;
 
 
 #ifdef ESP32
-#define tub Serial2
+#define tubserial Serial2
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN 22 // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #define PIN_5_PIN 18
 #else
-SoftwareSerial tub;
+SoftwareSerial tubserial;
 #define RX_PIN D6
 #define TX_PIN D7
 #define PIN_5_PIN D4
@@ -189,12 +189,12 @@ void setup() {
   pinMode(PIN_5_PIN, INPUT);  
 #ifdef ESP32
   Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
-  tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
-  while (tub.available() > 0)  { // workarond for bug with hanging during Serial2.begin - https://github.com/espressif/arduino-esp32/issues/5443
+  tubserial.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
+  while (tubserial.available() > 0)  { // workarond for bug with hanging during Serial2.begin - https://github.com/espressif/arduino-esp32/issues/5443
     Serial.read();
   }
   Serial.printf("Set serial port as pins %u, %u\n", RX_PIN, TX_PIN); // added here to see if line about was where the hang was
-  tub.updateBaudRate(115200);
+  tubserial.updateBaudRate(115200);
 #endif
 
   ArduinoOTA.setHostname("hottub-sensor");
@@ -232,11 +232,11 @@ void setup() {
 
 void loop() {
   bool panelSelect = digitalRead(PIN_5_PIN); // LOW when we are meant to read data
-  if (tub.available() > 0) {
-    size_t len = tub.available();
+  if (tubserial.available() > 0) {
+    size_t len = tubserial.available();
     //    Serial.printf("bytes avail = %u\n", len);
     uint8_t buf[len]; // TODO: swap to fixed buffer to help prevent fragmentation of memory
-    tub.read(buf, len);
+    tubserial.read(buf, len);
     if (panelSelect == LOW) { // Only read data meant for us
       for (int i = 0; i < len; i++) {
         if (buf[i] < 0x10) {
@@ -587,13 +587,13 @@ void sendCommand() {
     // if(digitalRead(PIN_5_PIN) != LOW) {
     //   Serial.println("ERROR: Pin5 went high before command before write");
     // }
-    tub.write(byteArray, sizeof(byteArray));
+    tubserial.write(byteArray, sizeof(byteArray));
     if(digitalRead(PIN_5_PIN) != LOW) {
       Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
       delayTime = 0;
       sendBuffer.dequeue();
     }
-    // tub.flush(true);
+    // tubserial.flush(true);
     if(digitalRead(PIN_5_PIN) == LOW) {
       // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
       Serial.printf("message sent : %u\n", delayTime);
