@@ -13,7 +13,7 @@ App for ESP32 or ESP8266 that sends current status and allows remote control usi
 
 ![gl2000](GL2000_pcb_2.jpg)
 
-![screenshot](Screenshot_20230616-134349.png)
+![screenshot](Screenshot from 2023-06-29 17-51-00.png)
 
 # Source Info
 Original discssion regarding support for spa controllers with 8 pin rather than 4 pin main panels
