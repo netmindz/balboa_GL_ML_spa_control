@@ -5,3 +5,4 @@
 .vscode/ipch
 wifi_secrets.h
 .DS_Store
+*.swp
