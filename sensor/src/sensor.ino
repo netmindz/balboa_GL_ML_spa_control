@@ -500,40 +500,45 @@ void handleMessage() {
             tubpowerCalc = 0;
             String pump = result.substring(13, 14);
 
-            if (pump == "0") {  // Pump 1 Off - Pump 2 Off
+            if (pump == "0") {  // Pump 1 Off - Pump 2 Off - 0b0000
                 pump1State = 0;
                 pump2State = 0;
-            } else if (pump == "1") {  // Pump 1 Low - Pump 2 Off
+            } else if (pump == "1") {  // Pump 1 Low - Pump 2 Off - 0b0001
                 pump1State = 1;
                 pump2State = 0;
                 tubpowerCalc += POWER_PUMP1_LOW;
-            } else if (pump == "2") {  // Pump 1 High - Pump 2 Off
+            } else if (pump == "2") {  // Pump 1 High - Pump 2 Off - 0b0010
                 pump1State = PUMP1_STATE_HIGH;
                 pump2State = 0;
                 tubpowerCalc += POWER_PUMP1_HIGH;
-            } else if (pump == "6") {  // Pump 1 High - Pump 2 Low
+            } else if (pump == "4") {  // Pump 1 Off - Pump 2 Low - 0b0100
+                pump1State = 0;
+                pump2State = 1;
+                tubpowerCalc += POWER_PUMP2_LOW;
+            } else if (pump == "5") {  // Pump 1 Low - Pump 2 Low - 0b0101
+                pump1State = 1;
+                pump2State = 1;
+                tubpowerCalc += POWER_PUMP1_LOW;
+                tubpowerCalc += POWER_PUMP2_LOW;
+            } else if (pump == "6") {  // Pump 1 High - Pump 2 Low - 0b0110
                 pump1State = PUMP1_STATE_HIGH;
                 pump2State = 1;
                 tubpowerCalc += POWER_PUMP1_HIGH;
                 tubpowerCalc += POWER_PUMP2_LOW;
-            } else if (pump == "7") {  // Pump 1 Off - Pump 2 Low
-                pump1State = 0;
-                pump2State = 1;
-                tubpowerCalc += POWER_PUMP2_LOW;
-            } else if (pump == "8") {  // Pump 1 Off - Pump 2 High
+            } else if (pump == "8") {  // Pump 1 Off - Pump 2 High - 0b1000
                 pump1State = 0;
                 pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP2_HIGH;
-            } else if (pump == "9") {  // Pump 1 Low - Pump 2 High
+            } else if (pump == "9") {  // Pump 1 Low - Pump 2 High - 0b1001
                 pump1State = 1;
                 pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP1_LOW;
                 tubpowerCalc += POWER_PUMP2_HIGH;
-            } else if (pump == "a") {  // Pump 1 High - Pump 2 High
+            } else if (pump == "a") {  // Pump 1 High - Pump 2 HIGH = 0b1010
                 pump1State = PUMP1_STATE_HIGH;
                 pump2State = PUMP2_STATE_HIGH;
                 tubpowerCalc += POWER_PUMP1_HIGH;
-                tubpowerCalc += POWER_PUMP2_LOW;
+                tubpowerCalc += POWER_PUMP2_HIGH;
             }
 
             String heater = result.substring(14, 15);
