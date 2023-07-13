@@ -1,6 +1,6 @@
 # Balboa GL ML Spa Control
 
-While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, this is *NOT* compatible with the older GL/EL range such as the GL2000, GL2001 or EL2000.
+While there is the excellent https://github.com/ccutrer/balboa_worldwide_app project that handled the new WiFi capable BP range of controllers, their project is *NOT* compatible with the older GL/EL range such as the GL2000, GL2001 or EL2000 - This one is.
 
 The aim of this project is to achieve similar Home Assistant integration as the app from ccutrer - we are about 90% of the way there
 
