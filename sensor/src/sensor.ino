@@ -103,7 +103,7 @@ HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
-HAButton btnMode("mode");
+HAButton btnMode("btnMode");
 
 // Not really HVAC device, but only way to get controls to set
 HAHVAC hvac("temp", HAHVAC::TargetTemperatureFeature);
