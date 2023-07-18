@@ -3,7 +3,7 @@
 //#define COMMAND_TOGGLE      "fb066666666609f6c2"
 #define COMMAND_TIME        "fb0664d4060003fc76"
 #define COMMAND_CHANGE_MODE "fb0603450e0004fb3c"
-// #define COMMAND_BLOWER      "fb06666666660af5f4"
+#define COMMAND_AUX         "fb06666666660af5f4" // TODO: FIXME - Not actual value
 #define COMMAND_JET1        "fb060343060006f9a2" // TODO: fix me - swapped to tmjo's panel as mine was one char short in my notes
 #define COMMAND_JET2        "fb060343060007f8b0" // TODO: fix me - swapped to tmjo's panel as mine was one char short in my notes
 #define COMMAND_EMPTY       "fb0603450e0000ff74"
@@ -24,4 +24,10 @@
 #define PUMP2_STATE_HIGH 2
 #else
 #define PUMP2_STATE_HIGH 1
+#endif 
+
+#ifdef AUX_DUAL_SPEED
+#define AUX_STATE_HIGH 2
+#else
+#define AUX_STATE_HIGH 1
 #endif 
