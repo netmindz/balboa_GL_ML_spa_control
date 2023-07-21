@@ -322,7 +322,7 @@ void setup() {
     targetTemp.setName("Target Tub temp");
 
     timeToTemp.setName("Time to temp");
-    timeToTemp.setUnitOfMeasurement("minutes");
+    timeToTemp.setUnitOfMeasurement("min");
     timeToTemp.setDeviceClass("duration");
     timeToTemp.setIcon("mdi:clock");
 
