@@ -7,10 +7,19 @@ int delayTime = 40;
 struct BalboaStatus {
     float power;
     String rawData;
+    String rawData2; // TODO: better name
+    String rawData3; // TODO: better name
+    String rawData7; // TODO: better name
     float targetTemp;
     float temp;
     float timeToTemp;
     int mode;
+    int pump1;
+    int pump2;
+    String time;
+    boolean heater;
+    boolean light;
+    String state;
 } status;
 
 
@@ -59,6 +68,10 @@ int msgLength = 0;
 
 void handleMessage();
 void sendCommand();
+String HexString2ASCIIString(String hexstring);
+void hexCharacterStringToBytes(byte* byteArray, const char* hexString);
+String HexString2TimeString(String hexstring);
+void telnetSend(String message);
 
 void handleBytes(size_t len, uint8_t buf[]) {
 
@@ -214,7 +227,7 @@ void handleMessage() {
                 } else {
                     timeString = "--:--";
                 }
-                status.haTime = timeString.c_str();
+                status.time = timeString.c_str();
 
                 // temp up - ff0100000000?? - end varies
 
@@ -238,7 +251,7 @@ void handleMessage() {
 
                 if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
                     lastRaw3 = cmd;
-                    rawData3.setValue(lastRaw3.c_str());
+                    status.rawData3 = lastRaw3.c_str();
                 }
 
                 if (result.substring(10, 12) == "43") {  // "C"
@@ -273,19 +286,19 @@ void handleMessage() {
                     telnetSend("non-temp " + result);
                 }
 
-                status.currentState = state.c_str();
+                status.state = state.c_str();
             }
         } else {
             // FA but not temp data
             lastRaw2 = result.substring(4, 28);
-            rawData2.setValue(lastRaw2.c_str());
+            status.rawData2 = lastRaw2.c_str();
         }
 
         if (result.length() >= 64) {  // "Long" messages only
             String tail = result.substring(46, 64);
             if (tail != lastRaw7) {
                 lastRaw7 = tail;
-                rawData7.setValue(lastRaw7.c_str());
+                status.rawData7 = lastRaw7.c_str();
             }
         }
 
@@ -304,17 +317,17 @@ void handleMessage() {
         if (result.substring(0, 6) == "ae0d01" && message != "ae0d010000000000000000000000005a") {
             if (!lastRaw4.equals(message)) {
                 lastRaw4 = message;
-                // rawData4.setValue(lastRaw4.c_str());
+                // status.rawData4 = lastRaw4.c_str();
             }
         } else if (result.substring(0, 6) == "ae0d02" && message != "ae0d02000000000000000000000000c3") {
             if (!lastRaw5.equals(message)) {
                 lastRaw5 = message;
-                // rawData5.setValue(lastRaw5.c_str());
+                // status.rawData5 = lastRaw5.c_str();
             }
         } else if (result.substring(0, 6) == "ae0d03" && message != "ae0d03000000000000000000000000b4") {
             if (!lastRaw6.equals(message)) {
                 lastRaw6 = message;
-                // rawData6.setValue(lastRaw6.c_str());
+                // status.rawData6 = lastRaw6.c_str();
             }
         }
         // end of AE 0D
