@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <ArduinoQueue.h>
 
 int delayTime = 40;

@@ -1,4 +1,3 @@
-#include "unity.h"
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
 // for each device in order to calculate tub power usage
@@ -18,54 +17,78 @@ const int MINUTES_PER_DEGC = 1;
 
 #include "balboaGL.h"
 
+void telnetSend(String message) {}
 
-void setUp(void) {
-  // set stuff up here
+#include <gtest/gtest.h>
+// uncomment line below if you plan to use GMock
+// #include <gmock/gmock.h>
+
+// TEST(...)
+// TEST_F(...)
+
+int test_send_command() {
+  sendCommand("test", 2);
+  int count = sendBuffer.itemCount();
+  sendBuffer.dequeue();
+  sendBuffer.dequeue();
+  return count;
 }
 
-void tearDown(void) {
-  // clean stuff up here
+BalboaStatus parse_status(String msg) {
+  result = msg;
+  handleMessage();
+  return status;
 }
 
-void test_function_should_doBlahAndBlah(void) {
-  // test stuff
+
+TEST(TestSuiteName, test_send_command) {
+  EXPECT_EQ(2, test_send_command());
 }
 
-void test_function_should_doAlsoDoBlah(void) {
-  // more test stuff
+TEST(TestSuiteName, test_heater_on) {
+  EXPECT_EQ(true, parse_status("fa142d2d2d2d0000040000008002ffffff000000000068").heater);
 }
 
-int runUnityTests(void) {
-  UNITY_BEGIN();
-  RUN_TEST(test_function_should_doBlahAndBlah);
-  RUN_TEST(test_function_should_doAlsoDoBlah);
-  return UNITY_END();
+TEST(TestSuiteName, test_light_on) {
+  EXPECT_EQ(true, parse_status("fa142d2d2d2d0000040000008002ffffff000000000068").light);
 }
 
-// WARNING!!! PLEASE REMOVE UNNECESSARY MAIN IMPLEMENTATIONS //
 
-/**
-  * For native dev-platform or for some embedded frameworks
-  */
-int main(void) {
-  return runUnityTests();
+#if defined(ARDUINO)
+#include <Arduino.h>
+
+void setup()
+{
+    // should be the same value as for the `test_speed` option in "platformio.ini"
+    // default value is test_speed=115200
+    Serial.begin(115200);
+
+    ::testing::InitGoogleTest();
+    // if you plan to use GMock, replace the line above with
+    // ::testing::InitGoogleMock();
 }
 
-/**
-  * For Arduino framework
-  */
-void setup() {
-  // Wait ~2 seconds before the Unity test runner
-  // establishes connection with a board Serial interface
-  delay(2000);
+void loop()
+{
+  // Run tests
+  if (RUN_ALL_TESTS())
+  ;
 
-  runUnityTests();
+  // sleep for 1 sec
+  delay(1000);
 }
-void loop() {}
 
-/**
-  * For ESP-IDF framework
-  */
-void app_main() {
-  runUnityTests();
+#else
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    // if you plan to use GMock, replace the line above with
+    // ::testing::InitGoogleMock(&argc, argv);
+
+    if (RUN_ALL_TESTS())
+    ;
+
+    // Always return zero-code and allow PlatformIO to parse results
+    return 0;
 }
+#endif
