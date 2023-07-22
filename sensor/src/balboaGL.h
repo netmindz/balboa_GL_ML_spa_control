@@ -1,21 +1,4 @@
-#ifdef ESP32
-#include <ESPmDNS.h>
-#include <WebServer.h>
-#include <WiFi.h>
-#include <WiFiAP.h>
-#include <esp_task_wdt.h>
-#else
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WiFiAP.h>
-#include <ESP8266mDNS.h>
-#include <SoftwareSerial.h>  // - https://github.com/plerup/espsoftwareserial
-#endif
-#include <ArduinoHA.h>
-#include <ArduinoOTA.h>
 #include <ArduinoQueue.h>
-#include <WebSocketsServer.h>
-#include <WiFiUdp.h>
 
 // ************************************************************************************************
 // Start of config
@@ -25,22 +8,6 @@
 
 // Should we run as AP if we can't connect to WIFI?
 // #define AP_FALLBACK
-
-#include "wifi_secrets.h"
-// Create file with the following
-// *************************************************************************
-// #define SECRET_SSID "";  /* Replace with your SSID */
-// #define SECRET_PSK "";   /* Replace with your WPA2 passphrase */
-// *************************************************************************
-
-const char ssid[] = SECRET_SSID;
-const char passphrase[] = SECRET_PSK;
-
-#define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server
-// #define BROKER_USERNAME "my-username"
-// #define BROKER_PASSWORD "my-password"
-
-byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
 // for each device in order to calculate tub power usage
@@ -56,68 +23,7 @@ const int MINUTES_PER_DEGC = 45;
 
 int delayTime = 40;
 
-#ifdef ESP32
-#define tub Serial2
-#define RX_PIN 19
-#define TX_PIN 23
-#define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 18
-#else
-SoftwareSerial tub;
-#define RX_PIN D6
-#define TX_PIN D7
-#define PIN_5_PIN D4
-#define RTS_PIN D1  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#endif
-
-// Uncomment if you have dual-speed pump
-// #define PUMP1_DUAL_SPEED
-// #define PUMP2_DUAL_SPEED
-
-// ************************************************************************************************
-// End of config
-// ************************************************************************************************
-
 #include "constants.h"
-
-WiFiClient clients[1];
-
-HADevice device(mac, sizeof(mac));
-HAMqtt mqtt(clients[0], device, 30);
-HASensorNumber temp("temp", HANumber::PrecisionP1);
-HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
-HASensorNumber timeToTemp("timeToTemp");
-HASensor currentState("status");
-HASensor haTime("time");
-HASensor rawData("raw");
-HASensor rawData2("raw2");
-HASensor rawData3("raw3");
-HASensor rawData7("raw7");
-HASelect tubMode("mode");
-HASensorNumber uptime("uptime");
-HASelect pump1("pump1");
-HASelect pump2("pump2");
-HABinarySensor heater("heater");
-HASwitch light("light");
-HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
-
-HAButton btnUp("up");
-HAButton btnDown("down");
-HAButton btnMode("btnMode");
-
-// Not really HVAC device, but only way to get controls to set
-HAHVAC hvac("temp", HAHVAC::TargetTemperatureFeature);
-
-#define MAX_SRV_CLIENTS 2
-WiFiServer server(23);
-WiFiClient serverClients[MAX_SRV_CLIENTS];
-
-WebSocketsServer webSocket = WebSocketsServer(81);
-#ifdef ESP32
-WebServer webserver(80);
-#else
-ESP8266WebServer webserver(80);
-#endif
 
 int pump1State = 0;
 int pump2State = 0;
