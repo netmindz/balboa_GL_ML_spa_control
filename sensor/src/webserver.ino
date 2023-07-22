@@ -45,5 +45,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 }
 
 String getStatusJSON() {
+  // TODO: just flip status struct to JSON
   return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(status.temp,1) + "\", \"heater\": " + (status.heater ? "true" : "false") + ", \"light\": " + (status.light ? "true" : "false") + ", \"mode\": \""+tubMode.getCurrentState()+"\", \"uptime\": " + lastUptime + ", \"state\": \"" + status.state + "\" } }";
 }
