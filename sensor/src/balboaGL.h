@@ -83,22 +83,23 @@ void handleBytes(size_t len, uint8_t buf[]) {
 
 void handleMessage() {
     
-    int pump1State = 0;
-    int pump2State = 0;
-    boolean heaterState = false;
-    boolean lightState = false;
-    float tubpowerCalc = 0;
-    double tubTemp = -1;
-    double tubTargetTemp = -1;
-    String state = "unknown";
-    String lastRaw = "";
-    String lastRaw2 = "";
-    String lastRaw3 = "";
-    String lastRaw4 = "";
-    String lastRaw5 = "";
-    String lastRaw6 = "";
-    String lastRaw7 = "";
-    String timeString = "";
+    // Set as static, so only allocating memory once, not per method call - as when was global
+    static int pump1State = 0;
+    static int pump2State = 0;
+    static boolean heaterState = false;
+    static boolean lightState = false;
+    static float tubpowerCalc = 0;
+    static double tubTemp = -1;
+    static double tubTargetTemp = -1;
+    static String state = "unknown";
+    static String lastRaw = "";
+    static String lastRaw2 = "";
+    static String lastRaw3 = "";
+    static String lastRaw4 = "";
+    static String lastRaw5 = "";
+    static String lastRaw6 = "";
+    static String lastRaw7 = "";
+    static String timeString = "";
 
     //      Serial.print("message = ");
     //      Serial.println(result);
