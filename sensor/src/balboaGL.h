@@ -23,14 +23,7 @@ struct BalboaStatus {
 } status;
 
 
-int pump1State = 0;
-int pump2State = 0;
-boolean heaterState = false;
-boolean lightState = false;
-float tubpowerCalc = 0;
-double tubTemp = -1;
-double tubTargetTemp = -1;
-String state = "unknown";
+
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
 
@@ -51,18 +44,7 @@ void setOption(int currentIndex, int targetIndex, int options, String command = 
 }
 
 
-
 String result = "";
-String lastRaw = "";
-String lastRaw2 = "";
-String lastRaw3 = "";
-String lastRaw4 = "";
-String lastRaw5 = "";
-String lastRaw6 = "";
-String lastRaw7 = "";
-String lastJSON = "";
-int lastUptime = 0;
-String timeString = "";
 int msgLength = 0;
 
 void handleMessage();
@@ -100,6 +82,24 @@ void handleBytes(size_t len, uint8_t buf[]) {
 }
 
 void handleMessage() {
+    
+    int pump1State = 0;
+    int pump2State = 0;
+    boolean heaterState = false;
+    boolean lightState = false;
+    float tubpowerCalc = 0;
+    double tubTemp = -1;
+    double tubTargetTemp = -1;
+    String state = "unknown";
+    String lastRaw = "";
+    String lastRaw2 = "";
+    String lastRaw3 = "";
+    String lastRaw4 = "";
+    String lastRaw5 = "";
+    String lastRaw6 = "";
+    String lastRaw7 = "";
+    String timeString = "";
+
     //      Serial.print("message = ");
     //      Serial.println(result);
 

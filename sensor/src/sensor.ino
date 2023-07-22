@@ -119,10 +119,13 @@ WebServer webserver(80);
 ESP8266WebServer webserver(80);
 #endif
 
+String lastJSON = "";
+int lastUptime = 0;
+
 
 void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
-    if (state != lightState) {
+    if (state != status.light) {
         Serial.println("Toggle");
         sendBuffer.enqueue(COMMAND_LIGHT);
     } else {
@@ -171,7 +174,7 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     Serial.print("Target temperature: ");
     Serial.println(temperatureFloat);
 
-    if (tubTargetTemp < 0) {
+    if (status.targetTemp <= 0) {
         Serial.print("ERROR: can't adjust target as current value not known");
         sendBuffer.enqueue(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
@@ -179,11 +182,11 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     }
 
     int target = temperatureFloat * 2;  // 0.5 inc so double
-    int current = tubTargetTemp * 2;
+    int current = status.targetTemp * 2;
     sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
     sendBuffer.enqueue(COMMAND_EMPTY);
 
-    if (temperatureFloat > tubTargetTemp) {
+    if (temperatureFloat > status.targetTemp) {
         for (int i = 0; i < (target - current); i++) {
             Serial.println("Raise the temp");
             sendBuffer.enqueue(COMMAND_UP);
@@ -415,7 +418,7 @@ void loop() {
             tubpower.setValue(status.power);
             rawData.setValue(status.rawData.c_str());
             haTime.setValue(status.time.c_str());
-            rawData3.setValue(lastRaw3.c_str());
+            rawData3.setValue(status.rawData3.c_str());
             targetTemp.setValue(status.targetTemp);
             temp.setValue(status.temp);
             timeToTemp.setValue(status.timeToTemp);
