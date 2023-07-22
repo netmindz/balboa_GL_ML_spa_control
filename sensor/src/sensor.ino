@@ -54,7 +54,6 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
-int delayTime = 40;
 
 #ifdef ESP32
 #define tub Serial2
@@ -120,25 +119,6 @@ WebServer webserver(80);
 ESP8266WebServer webserver(80);
 #endif
 
-int pump1State = 0;
-int pump2State = 0;
-boolean heaterState = false;
-boolean lightState = false;
-float tubpowerCalc = 0;
-double tubTemp = -1;
-double tubTargetTemp = -1;
-String state = "unknown";
-
-ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
-
-void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN) {
-    if (targetIndex > currentIndex) {
-        sendCommand(command, (targetIndex - currentIndex));
-    } else if (currentIndex != targetIndex) {
-        int presses = (options - currentIndex) + targetIndex;
-        sendCommand(command, presses);
-    }
-}
 
 void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
@@ -221,7 +201,6 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     // the control unit reports that assume our commands worked
 }
 
-boolean isConnected = false;
 void setup() {
     Serial.begin(115200);
     delay(1000);
@@ -395,7 +374,6 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-int msgLength = 0;
 
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
@@ -434,27 +412,31 @@ void loop() {
                 }
             }
 
-            tubpower.setValue(tubpowerCalc);
-            rawData.setValue(lastRaw.c_str());
-            haTime.setValue(timeString.c_str());
+            tubpower.setValue(status.power);
+            rawData.setValue(status.rawData.c_str());
+            haTime.setValue(status.time.c_str());
             rawData3.setValue(lastRaw3.c_str());
-            targetTemp.setValue((float)tubTargetTemp);
-            temp.setValue((float)tubTemp);
-            timeToTemp.setValue(timeToTempValue);
-            timeToTemp.setValue(0);
-            currentState.setValue(state.c_str());
-            rawData2.setValue(lastRaw2.c_str());
-            rawData7.setValue(lastRaw7.c_str());
+            targetTemp.setValue(status.targetTemp);
+            temp.setValue(status.temp);
+            timeToTemp.setValue(status.timeToTemp);
+            currentState.setValue(status.state.c_str());
+            rawData2.setValue(status.rawData2.c_str());
+            rawData7.setValue(status.rawData7.c_str());
             // rawData4.setValue(lastRaw4.c_str());
             // rawData5.setValue(lastRaw5.c_str());
             // rawData6.setValue(lastRaw6.c_str());
 
-            tubMode.setState(modeState);
+            if (sendBuffer.isEmpty()) {
+                hvac.setTargetTemperature(status.targetTemp);
+            }
+            hvac.setCurrentCurrentTemperature(status.temp);
 
-            pump1.setState(pump1State);
-            pump2.setState(pump2State);
-            heater.setState(heaterState);
-            light.setState(lightState);
+            tubMode.setState(status.mode);
+
+            pump1.setState(status.pump1);
+            pump2.setState(status.pump2);
+            heater.setState(status.heater);
+            light.setState(status.light);
 
         }
     }
