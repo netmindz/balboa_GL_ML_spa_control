@@ -4,6 +4,16 @@ int delayTime = 40;
 
 #include "constants.h"
 
+struct BalboaStatus {
+    float power;
+    String rawData;
+    float targetTemp;
+    float temp;
+    float timeToTemp;
+    int mode;
+} status;
+
+
 int pump1State = 0;
 int pump2State = 0;
 boolean heaterState = false;
@@ -144,7 +154,7 @@ void handleMessage() {
                 tubpowerCalc += POWER_HEATER;
             }
 
-            tubpower.setValue(tubpowerCalc);
+            status.power = tubpowerCalc;
 
             String light = result.substring(15, 16);
             if (light == "0") {
@@ -158,29 +168,29 @@ void handleMessage() {
             String newRaw = result.substring(17, 44);
             if (lastRaw != newRaw) {
                 lastRaw = newRaw;
-                rawData.setValue(lastRaw.c_str());
+                status.rawData = lastRaw.c_str();
 
                 String s = result.substring(17, 18);
                 if (s == "4") {
                     state = "Sleep";
-                    tubMode.setState(MODE_IDX_SLP);
+                    status.mode = MODE_IDX_SLP;
                 } else if (s == "9") {
                     state = "Circulation ?";
-                    tubMode.setState(MODE_IDX_STD);  // TODO: confirm
+                    status.mode = MODE_IDX_STD;  // TODO: confirm
                 } else if (s == "1") {
                     state = "Standard";
-                    tubMode.setState(MODE_IDX_STD);
+                    status.mode = MODE_IDX_STD;
                 } else if (s == "2") {
                     state = "Economy";
-                    tubMode.setState(MODE_IDX_ECO);
+                    status.mode = MODE_IDX_ECO;
                 } else if (s == "a") {
                     state = "Cleaning";  // TODO: can't tell our actual mode here - could be any of the 3 I think
                 } else if (s == "c") {
                     state = "Circulation in sleep?";
-                    tubMode.setState(MODE_IDX_SLP);
+                    status.mode = MODE_IDX_SLP;
                 } else if (s == "b" || s == "3") {
                     state = "Std in Eco";  // Was in eco, Swap to STD for 1 hour only
-                    tubMode.setState(MODE_IDX_STD);
+                    status.mode = MODE_IDX_STD;
                 } else {
                     state = "Unknown " + s;
                 }
@@ -204,7 +214,7 @@ void handleMessage() {
                 } else {
                     timeString = "--:--";
                 }
-                haTime.setValue(timeString.c_str());
+                status.haTime = timeString.c_str();
 
                 // temp up - ff0100000000?? - end varies
 
@@ -235,7 +245,7 @@ void handleMessage() {
                     double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
                     if (menu == "46") {
                         tubTargetTemp = tmp;
-                        targetTemp.setValue((float)tubTargetTemp);
+                        status.targetTemp = (float)tubTargetTemp;
                         if (sendBuffer.isEmpty()) {  // supress setting the target while we are changing the target
                             hvac.setTargetTemperature((float)tubTargetTemp);
                         }
@@ -243,16 +253,16 @@ void handleMessage() {
                     } else {
                         if (tubTemp != tmp) {
                             tubTemp = tmp;
-                            temp.setValue((float)tubTemp);
+                            status.temp = (float)tubTemp;
                             hvac.setCurrentCurrentTemperature((float)tubTemp);
                             Serial.printf("Sent temp data %f\n", tubTemp);
                         }
                         if (heaterState && (tubTemp < tubTargetTemp)) {
                             double tempDiff = (tubTargetTemp - tubTemp);
                             float timeToTempValue = (tempDiff * MINUTES_PER_DEGC);
-                            timeToTemp.setValue(timeToTempValue);
+                            status.timeToTemp = timeToTempValue;
                         } else {
-                            timeToTemp.setValue(0);
+                            status.timeToTemp = 0;
                         }
                     }
                 } else if (result.substring(10, 12) == "2d") {  // "-"
@@ -263,7 +273,7 @@ void handleMessage() {
                     telnetSend("non-temp " + result);
                 }
 
-                currentState.setValue(state.c_str());
+                status.currentState = state.c_str();
             }
         } else {
             // FA but not temp data
@@ -279,10 +289,10 @@ void handleMessage() {
             }
         }
 
-        pump1.setState(pump1State);
-        pump2.setState(pump2State);
-        heater.setState(heaterState);
-        light.setState(lightState);
+        status.pump1 = pump1State;
+        status.pump2 = pump2State;
+        status.heater = heaterState;
+        status.light = lightState;
 
         // end of FA14
     } else if (result.substring(0, 4) == "ae0d") {
