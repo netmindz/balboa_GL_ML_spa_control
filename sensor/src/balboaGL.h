@@ -51,7 +51,6 @@ void setOption(int currentIndex, int targetIndex, int options, String command = 
 }
 
 
-boolean isConnected = false;
 
 String result = "";
 String lastRaw = "";
@@ -259,15 +258,11 @@ void handleMessage() {
                     if (menu == "46") {
                         tubTargetTemp = tmp;
                         status.targetTemp = (float)tubTargetTemp;
-                        if (sendBuffer.isEmpty()) {  // supress setting the target while we are changing the target
-                            hvac.setTargetTemperature((float)tubTargetTemp);
-                        }
                         Serial.printf("Sent target temp data %f\n", tubTargetTemp);
                     } else {
                         if (tubTemp != tmp) {
                             tubTemp = tmp;
                             status.temp = (float)tubTemp;
-                            hvac.setCurrentCurrentTemperature((float)tubTemp);
                             Serial.printf("Sent temp data %f\n", tubTemp);
                         }
                         if (heaterState && (tubTemp < tubTargetTemp)) {
