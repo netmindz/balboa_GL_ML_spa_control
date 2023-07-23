@@ -414,6 +414,8 @@ int lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 
+void handleBytes(size_t len, uint8_t buf[]);
+
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
     if (tub.available() > 0) {
@@ -422,29 +424,7 @@ void loop() {
         uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
         tub.read(buf, len);
         if (panelSelect == LOW) {  // Only read data meant for us
-            for (int i = 0; i < len; i++) {
-                if (buf[i] < 0x10) {
-                    result += '0';
-                }
-                result += String(buf[i], HEX);
-            }
-            if (msgLength == 0 && result.length() == 2) {
-                String messageType = result.substring(0, 2);
-                if (messageType == "fa") {
-                    msgLength = 46;
-                } else if (messageType == "ae") {
-                    msgLength = 32;
-                } else {
-                    Serial.print("Unknown message length for ");
-                    Serial.println(messageType);
-                }
-            } else if (result.length() == msgLength) {
-                if (result.length() == 46) {
-                    sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
-                                    // say sending MQTT updates
-                }
-                handleMessage();
-            }
+            handleBytes(len, buf);
         } else {
             // Serial.print("H");
             result = "";
@@ -483,6 +463,32 @@ void loop() {
 #ifdef ESP32
     esp_task_wdt_reset();
 #endif
+}
+
+void handleBytes(size_t len, uint8_t buf[]) {
+    for (int i = 0; i < len; i++) {
+        if (buf[i] < 0x10) {
+            result += '0';
+        }
+        result += String(buf[i], HEX);
+    }
+    if (msgLength == 0 && result.length() == 2) {
+        String messageType = result.substring(0, 2);
+        if (messageType == "fa") {
+            msgLength = 46;
+        } else if (messageType == "ae") {
+            msgLength = 32;
+        } else {
+            Serial.print("Unknown message length for ");
+            Serial.println(messageType);
+        }
+    } else if (result.length() == msgLength) {
+        if (result.length() == 46) {
+            sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
+                            // say sending MQTT updates
+        }
+        handleMessage();
+    }
 }
 
 void handleMessage() {
