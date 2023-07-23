@@ -25,25 +25,25 @@ BalboaGL = cg.global_ns.class_(
 )
 
 
-def valid_uart(uart):
-    if CORE.is_esp32:
-        uarts = [ "UART1", "UART2"]
-    else:
-        raise NotImplementedError
-
-    return cv.one_of(*uarts, upper=True)(uart)
+#def valid_uart(uart):
+#    if CORE.is_esp32:
+#        uarts = [ "UART1", "UART2"]
+#    else:
+#        raise NotImplementedError
+#
+#    return cv.one_of(*uarts, upper=True)(uart)
 
 
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(BalboaGL),
-        cv.Optional(CONF_HARDWARE_UART, default="UART0"): valid_uart,
-        cv.Optional(CONF_BAUD_RATE): cv.positive_int,
+#        cv.Optional(CONF_HARDWARE_UART, default="UART0"): valid_uart,
+#        cv.Optional(CONF_BAUD_RATE): cv.positive_int,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
-        cv.Optional(CONF_UPDATE_INTERVAL, default="500ms"): cv.All(
-            cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
-        ),
+#        cv.Optional(CONF_UPDATE_INTERVAL, default="500ms"): cv.All(
+#            cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
+#        ),
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
@@ -61,11 +61,11 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
 
 @coroutine
 def to_code(config):
-    serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
+#    serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
-    if CONF_BAUD_RATE in config:
-        cg.add(var.set_baud_rate(config[CONF_BAUD_RATE]))
+#    if CONF_BAUD_RATE in config:
+#        cg.add(var.set_baud_rate(config[CONF_BAUD_RATE]))
 
     supports = config[CONF_SUPPORTS]
     traits = var.config_traits()
