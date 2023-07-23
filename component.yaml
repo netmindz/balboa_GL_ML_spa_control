@@ -1,6 +1,68 @@
+esphome:
+  name: hottub
+  friendly_name: Hottub
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
 external_components:
   - source:
       type: git
-      url: https://github.com/netmindz/balboa_GL_ML_spa_control
+      url: https://github.com/netmindz/balboa_GL_ML_spa_control.git
       ref: ESPHome
     refresh: 0s
+    components: [BalboaGL]
+
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "sUhVA1uqxqWBmBu6BGISQHfi7+9a0HXf+1WIcBYrnz0="
+
+ota:
+  password: "e82fe9bada398051d779151a591a1e2e"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Hottub Fallback Hotspot"
+    password: "tHV1HzrYNvGo"
+
+captive_portal:
+    
+# Text sensors with general information.
+text_sensor:
+  # Expose ESPHome version as sensor.
+  - platform: version
+    name: ${name} ESPHome Version
+  # Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: ${name} IP
+    ssid:
+      name: ${name} SSID
+    bssid:
+      name: ${name} BSSID
+
+# Sensors with general information.
+sensor:
+  # Uptime sensor.
+  - platform: uptime
+    name: ${name} Uptime
+
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: ${name} WiFi Signal
+    update_interval: 60s
+
+climate:
+  - platform: BalboaGL 
+    name: ${friendly_name}
