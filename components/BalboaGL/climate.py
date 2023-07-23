@@ -62,7 +62,7 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
 @coroutine
 def to_code(config):
 #    serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
-    var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
+#    var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
 #    if CONF_BAUD_RATE in config:
 #        cg.add(var.set_baud_rate(config[CONF_BAUD_RATE]))
