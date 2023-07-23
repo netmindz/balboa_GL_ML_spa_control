@@ -85,8 +85,8 @@ def to_code(config):
 
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
-#    cg.add_library(
-#        name="HeatPump",
-#        repository="https://github.com/SwiCago/HeatPump",
-#        version="d6a29134401d7caae1b8fca9c452c8eb92af60c5",
-#    )
+    cg.add_library(
+        name="balboa_GL_ML_spa_control",
+        repository="https://github.com/netmindz/balboa_GL_ML_spa_control",
+        version="library",
+    )

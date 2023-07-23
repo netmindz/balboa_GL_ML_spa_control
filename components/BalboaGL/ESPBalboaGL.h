@@ -1,5 +1,5 @@
 #include "esphome.h"
-#include "../../sensor/src/balboaGL.h"
+#include "./sensor/src/balboaGL.h"
 
 // using namespace esphome;
 
