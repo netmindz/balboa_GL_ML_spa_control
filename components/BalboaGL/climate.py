@@ -25,13 +25,13 @@ BalboaGL = cg.global_ns.class_(
 )
 
 
-#def valid_uart(uart):
-#    if CORE.is_esp32:
-#        uarts = [ "UART1", "UART2"]
-#    else:
-#        raise NotImplementedError
-#
-#    return cv.one_of(*uarts, upper=True)(uart)
+def valid_uart(uart):
+    if CORE.is_esp32:
+        uarts = [ "UART1", "UART2"]
+    else:
+        raise NotImplementedError
+
+    return cv.one_of(*uarts, upper=True)(uart)
 
 
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
