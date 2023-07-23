@@ -1,5 +1,5 @@
 #include "esphome.h"
-using namespace esphome;
+// using namespace esphome;
 
-class BalboaGL : public PollingComponent, public climate::Climate {
+class BalboaGL : public PollingComponent, public Climate {
 }
