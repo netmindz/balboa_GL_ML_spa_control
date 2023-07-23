@@ -472,7 +472,7 @@ void handleBytes(size_t len, uint8_t buf[]) {
         }
         result += String(buf[i], HEX);
     }
-    if (msgLength == 0 && result.length() == 2) {
+    if (msgLength == 0 && result.length() >= 2) {
         String messageType = result.substring(0, 2);
         if (messageType == "fa") {
             msgLength = 46;
@@ -482,8 +482,8 @@ void handleBytes(size_t len, uint8_t buf[]) {
             Serial.print("Unknown message length for ");
             Serial.println(messageType);
         }
-    } else if (result.length() == msgLength) {
-        if (result.length() == 46) {
+    } else if (result.length() >= msgLength) { // Shouldn't really be longer, but we might have been slow reading before pin5 HIGH
+        if (msgLength == 46) {
             sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
                             // say sending MQTT updates
         }
