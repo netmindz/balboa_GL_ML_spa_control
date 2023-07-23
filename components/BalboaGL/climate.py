@@ -37,7 +37,7 @@ def valid_uart(uart):
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(BalboaGL),
-#        cv.Optional(CONF_HARDWARE_UART, default="UART0"): valid_uart,
+        cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
 #        cv.Optional(CONF_BAUD_RATE): cv.positive_int,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
