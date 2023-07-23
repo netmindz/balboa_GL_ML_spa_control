@@ -377,6 +377,35 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
 }
 
+void updateHAStatus() {
+
+    tubpower.setValue(status.power);
+    rawData.setValue(status.rawData.c_str());
+    haTime.setValue(status.time.c_str());
+    rawData3.setValue(status.rawData3.c_str());
+    targetTemp.setValue(status.targetTemp);
+    temp.setValue(status.temp);
+    timeToTemp.setValue(status.timeToTemp);
+    currentState.setValue(status.state.c_str());
+    rawData2.setValue(status.rawData2.c_str());
+    rawData7.setValue(status.rawData7.c_str());
+    // rawData4.setValue(lastRaw4.c_str());
+    // rawData5.setValue(lastRaw5.c_str());
+    // rawData6.setValue(lastRaw6.c_str());
+
+    if (sendBuffer.isEmpty()) {
+        hvac.setTargetTemperature(status.targetTemp);
+    }
+    hvac.setCurrentCurrentTemperature(status.temp);
+
+    tubMode.setState(status.mode);
+
+    pump1.setState(status.pump1);
+    pump2.setState(status.pump2);
+    heater.setState(status.heater);
+    light.setState(status.light);
+
+}
 
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
@@ -396,6 +425,8 @@ void loop() {
 
     if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
 
+        updateHAStatus();
+
         mqtt.loop();
         ArduinoOTA.handle();
 
@@ -414,33 +445,6 @@ void loop() {
                     lastJSON = json;
                 }
             }
-
-            tubpower.setValue(status.power);
-            rawData.setValue(status.rawData.c_str());
-            haTime.setValue(status.time.c_str());
-            rawData3.setValue(status.rawData3.c_str());
-            targetTemp.setValue(status.targetTemp);
-            temp.setValue(status.temp);
-            timeToTemp.setValue(status.timeToTemp);
-            currentState.setValue(status.state.c_str());
-            rawData2.setValue(status.rawData2.c_str());
-            rawData7.setValue(status.rawData7.c_str());
-            // rawData4.setValue(lastRaw4.c_str());
-            // rawData5.setValue(lastRaw5.c_str());
-            // rawData6.setValue(lastRaw6.c_str());
-
-            if (sendBuffer.isEmpty()) {
-                hvac.setTargetTemperature(status.targetTemp);
-            }
-            hvac.setCurrentCurrentTemperature(status.temp);
-
-            tubMode.setState(status.mode);
-
-            pump1.setState(status.pump1);
-            pump2.setState(status.pump2);
-            heater.setState(status.heater);
-            light.setState(status.light);
-
         }
     }
 
