@@ -1,7 +1,7 @@
 #include "esphome.h"
 // using namespace esphome;
 
-class BalboaGL : public PollingComponent, public Climate {
+class BalboaGL : public Component, public Climate {
  public:
   void setup() override {
     // This will be called by App.setup()
