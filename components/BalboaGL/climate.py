@@ -16,20 +16,18 @@ from esphome.core import CORE, coroutine
 AUTO_LOAD = ["climate"]
 
 CONF_SUPPORTS = "supports"
-DEFAULT_CLIMATE_MODES = ["HEAT_COOL", "COOL", "HEAT", "DRY", "FAN_ONLY"]
-DEFAULT_FAN_MODES = ["AUTO", "DIFFUSE", "LOW", "MEDIUM", "MIDDLE", "HIGH"]
-DEFAULT_SWING_MODES = ["OFF", "VERTICAL"]
+DEFAULT_CLIMATE_MODES = ["HEAT"]
+DEFAULT_FAN_MODES = ["AUTO"]
+DEFAULT_SWING_MODES = ["OFF"]
 
-MitsubishiHeatPump = cg.global_ns.class_(
-    "MitsubishiHeatPump", climate.Climate, cg.PollingComponent
+BalboaGL = cg.global_ns.class_(
+    "BalboaGL", climate.Climate, cg.PollingComponent
 )
 
 
 def valid_uart(uart):
-    if CORE.is_esp8266:
-        uarts = ["UART0"]  # UART1 is tx-only
-    elif CORE.is_esp32:
-        uarts = ["UART0", "UART1", "UART2"]
+    if CORE.is_esp32:
+        uarts = [ "UART1", "UART2"]
     else:
         raise NotImplementedError
 
@@ -38,7 +36,7 @@ def valid_uart(uart):
 
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
-        cv.GenerateID(): cv.declare_id(MitsubishiHeatPump),
+        cv.GenerateID(): cv.declare_id(BalboaGL),
         cv.Optional(CONF_HARDWARE_UART, default="UART0"): valid_uart,
         cv.Optional(CONF_BAUD_RATE): cv.positive_int,
         # If polling interval is greater than 9 seconds, the HeatPump library
@@ -87,8 +85,8 @@ def to_code(config):
 
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
-    cg.add_library(
-        name="HeatPump",
-        repository="https://github.com/SwiCago/HeatPump",
-        version="d6a29134401d7caae1b8fca9c452c8eb92af60c5",
-    )
+#    cg.add_library(
+#        name="HeatPump",
+#        repository="https://github.com/SwiCago/HeatPump",
+#        version="d6a29134401d7caae1b8fca9c452c8eb92af60c5",
+#    )
