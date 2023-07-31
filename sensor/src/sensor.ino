@@ -71,7 +71,7 @@ SoftwareSerial tub;
 #endif
 
 // Uncomment if you have dual-speed pump
-// #define PUMP1_DUAL_SPEED
+#define PUMP1_DUAL_SPEED
 // #define PUMP2_DUAL_SPEED
 
 // ************************************************************************************************
