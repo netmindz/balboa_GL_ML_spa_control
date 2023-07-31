@@ -128,21 +128,24 @@ double tubTemp = -1;
 double tubTargetTemp = -1;
 String state = "unknown";
 
-ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+ArduinoQueue<String> sendBuffer(40);  // TODO: might be better bigger for large temp changes. Would need testing
 
-void sendCommand(String command, int count) {
-    Serial.printf("Sending %s - %u times\n", command.c_str(), count);
+void enqueueCommands(String command, int count) {
+    Serial.printf("Adding command to buffer %s - %u times\n", command.c_str(), count);
     for (int i = 0; i < count; i++) {
         sendBuffer.enqueue(command.c_str());
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_EMPTY);
+        sendBuffer.enqueue(COMMAND_EMPTY);
     }
 }
 
 void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN) {
     if (targetIndex > currentIndex) {
-        sendCommand(command, (targetIndex - currentIndex));
+        enqueueCommands(command, (targetIndex - currentIndex));
     } else if (currentIndex != targetIndex) {
         int presses = (options - currentIndex) + targetIndex;
-        sendCommand(command, presses);
+        enqueueCommands(command, presses);
     }
 }
 
@@ -173,8 +176,14 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     int currentIndex = sender->getCurrentState();
     int options = 3;
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
     setOption(currentIndex, index, options);
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
 }
 
 void onButtonPress(HAButton* sender) {
@@ -208,18 +217,24 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     int current = tubTargetTemp * 2;
     sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
     sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendBuffer.enqueue(COMMAND_EMPTY);
 
     if (temperatureFloat > tubTargetTemp) {
         for (int i = 0; i < (target - current); i++) {
             Serial.println("Raise the temp");
             sendBuffer.enqueue(COMMAND_UP);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
         }
     } else {
         for (int i = 0; i < (current - target); i++) {
             Serial.println("Lower the temp");
             sendBuffer.enqueue(COMMAND_DOWN);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
+            sendBuffer.enqueue(COMMAND_EMPTY);
         }
     }
 
@@ -547,6 +562,11 @@ void handleMessage() {
                 tubpowerCalc += POWER_PUMP2_HIGH;
             }
 
+            String aux = result.substring(12,13);
+            if(aux == "c"){
+                pump2State = 1; //SHould maybe add separate entity for tihs, but hack for now.
+            }
+
             String heater = result.substring(14, 15);
             if (heater == "0") {
                 heaterState = false;
@@ -572,7 +592,7 @@ void handleMessage() {
             String newRaw = result.substring(17, 44);
             if (lastRaw != newRaw) {
                 lastRaw = newRaw;
-                rawData.setValue(lastRaw.c_str());
+                // rawData.setValue(lastRaw.c_str());
 
                 String s = result.substring(17, 18);
                 if (s == "4") {
@@ -636,8 +656,8 @@ void handleMessage() {
                 }
                 if (!lastRaw3.equals(cmd)) {
                     // Controller responded to command
-                    sendBuffer.dequeue();
-                    Serial.printf("YAY: command response : %u\n", delayTime);
+                    // sendBuffer.dequeue();
+                    // Serial.printf("YAY: command response : %u\n", delayTime);
                 }
 
                 if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
@@ -653,7 +673,7 @@ void handleMessage() {
                         if (sendBuffer.isEmpty()) {  // supress setting the target while we are changing the target
                             hvac.setTargetTemperature((float)tubTargetTemp);
                         }
-                        Serial.printf("Sent target temp data %f\n", tubTargetTemp);
+                        Serial.printf("Got target temp data %f\n", tubTargetTemp);
                     } else {
                         if (tubTemp != tmp) {
                             tubTemp = tmp;
@@ -697,6 +717,7 @@ void handleMessage() {
         pump2.setState(pump2State);
         heater.setState(heaterState);
         light.setState(lightState);
+        rawData.setValue(result.c_str());
 
         // end of FA14
     } else if (result.substring(0, 4) == "ae0d") {
@@ -737,7 +758,9 @@ void sendCommand() {
         delayMicroseconds(delayTime);
         // Serial.println("Sending " + sendBuffer);
         byte byteArray[18] = {0};
-        hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
+        // hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
+        String queueCmd = sendBuffer.dequeue();
+        hexCharacterStringToBytes(byteArray, queueCmd.c_str());
         // if(digitalRead(PIN_5_PIN) != LOW) {
         //   Serial.println("ERROR: Pin5 went high before command before write");
         // }
@@ -750,7 +773,7 @@ void sendCommand() {
         // tub.flush(true);
         if (digitalRead(PIN_5_PIN) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
-            Serial.printf("message sent : %u\n", delayTime);
+            Serial.printf("Message sent: %s with %uus delay\n", queueCmd.c_str(), delayTime);
             // delayTime += 10;
         }
         // else {
