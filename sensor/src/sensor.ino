@@ -40,7 +40,7 @@ const char passphrase[] = SECRET_PSK;
 // #define BROKER_USERNAME "my-username"
 // #define BROKER_PASSWORD "my-password"
 
-byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
+// byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
 // for each device in order to calculate tub power usage
