@@ -36,7 +36,7 @@
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
 
-#define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server
+// #define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server
 // #define BROKER_USERNAME "my-username"
 // #define BROKER_PASSWORD "my-password"
 
