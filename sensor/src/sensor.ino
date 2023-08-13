@@ -77,7 +77,6 @@ SoftwareSerial tub;
 // End of config
 // ************************************************************************************************
 
-#include "constants.h"
 #include "balboaGL.h"
 
 WiFiClient clients[1];
@@ -405,6 +404,8 @@ void setup() {
 #endif
     Serial.println("End of setup");
     digitalWrite(LED_BUILTIN, LOW);
+
+    sendBuffer.enqueue(COMMAND_DOWN); // trigger set temp to capture target
 }
 
 void loop() {

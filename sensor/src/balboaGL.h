@@ -62,18 +62,18 @@ void handleBytes(size_t len, uint8_t buf[]) {
         }
         result += String(buf[i], HEX);
     }
-    if (msgLength == 0 && result.length() == 2) {
+    if (msgLength == 0 && result.length() >= 2) {
         String messageType = result.substring(0, 2);
         if (messageType == "fa") {
-            msgLength = 46;
+            msgLength = FA_MESSAGE_LENGTH;
         } else if (messageType == "ae") {
             msgLength = 32;
         } else {
             Serial.print("Unknown message length for ");
             Serial.println(messageType);
         }
-    } else if (result.length() == msgLength) {
-        if (result.length() == 46) {
+    } else if (result.length() >= msgLength) {
+        if (msgLength == FA_MESSAGE_LENGTH) {
             sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
                             // say sending MQTT updates
         }
@@ -349,7 +349,7 @@ void sendCommand() {
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
-            delayTime = 0;
+            // delayTime = 0;
             sendBuffer.dequeue();
         }
         // tub.flush(true);
