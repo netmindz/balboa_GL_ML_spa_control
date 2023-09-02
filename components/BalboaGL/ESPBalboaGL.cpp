@@ -9,7 +9,8 @@ using namespace esphome;
  *   poll_interval: polling interval in milliseconds
  */
 BalboaGL::BalboaGL(
-        HardwareSerial* hw_serial
+        HardwareSerial* hw_serial,
+        uint32_t poll_interval
 ) :
     PollingComponent{poll_interval}, // member initializers list
     hw_serial_{hw_serial}
