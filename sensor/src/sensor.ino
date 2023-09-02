@@ -205,6 +205,12 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 
 void updateHAStatus() {
 
+    static String lastRaw = "";
+    if(status.rawData == lastRaw) {
+        return;
+    }
+    lastRaw = status.rawData;
+
     tubpower.setValue(status.power);
     rawData.setValue(status.rawData.c_str());
     haTime.setValue(status.time.c_str());
