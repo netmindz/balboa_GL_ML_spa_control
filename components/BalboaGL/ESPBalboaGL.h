@@ -2,6 +2,10 @@
 #include "esphome/core/preferences.h"
 #include "esphome/components/climate/climate.h"
 
+
+#ifndef ESPMHP_H
+#define ESPMHP_H
+
 #include "constants.h"
 
 
@@ -51,3 +55,4 @@ class BalboaGL : public Component, public climate::Climate {
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
 };
+#endif
