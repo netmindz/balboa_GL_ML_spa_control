@@ -8,6 +8,7 @@
 
 #include "constants.h"
 
+static const char* TAG = "BalboaGL"; // Logging tag
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
 // for each device in order to calculate tub power usage
@@ -37,16 +38,9 @@ using namespace esphome;
 
 class BalboaGL : public PollingComponent, public climate::Climate {
  public:
-  // BalboaGL(
-  //           HardwareSerial* hw_serial,
-  //           uint32_t poll_interval=POLL_INTERVAL_DEFAULT
-  //       );
-  BalboaGL(
+      BalboaGL(
             HardwareSerial* hw_serial
         );
-
-        // // Set the baud rate. Must be called before setup() to have any effect.
-        // void set_baud_rate(int);
 
         // // print the current configuration
         // void dump_config() override;
