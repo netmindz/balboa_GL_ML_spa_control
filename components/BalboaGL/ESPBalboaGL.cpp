@@ -8,20 +8,20 @@ using namespace esphome;
  *   hw_serial: pointer to an Arduino HardwareSerial instance
  *   poll_interval: polling interval in milliseconds
  */
-BalboaGL::BalboaGL(
-        HardwareSerial* hw_serial,
-        uint32_t poll_interval
-) :
-    PollingComponent{poll_interval}, // member initializers list
-    hw_serial_{hw_serial}
-{
-    this->traits_.set_supports_action(true);
-    this->traits_.set_supports_current_temperature(true);
-    this->traits_.set_supports_two_point_target_temperature(false);
-    this->traits_.set_visual_min_temperature(26);
-    this->traits_.set_visual_max_temperature(40);
-    this->traits_.set_visual_temperature_step(0.5);
-}
+// BalboaGL::BalboaGL(
+//         HardwareSerial* hw_serial,
+//         uint32_t poll_interval
+// ) :
+//     PollingComponent{poll_interval}, // member initializers list
+//     hw_serial_{hw_serial}
+// {
+//     this->traits_.set_supports_action(true);
+//     this->traits_.set_supports_current_temperature(true);
+//     this->traits_.set_supports_two_point_target_temperature(false);
+//     this->traits_.set_visual_min_temperature(26);
+//     this->traits_.set_visual_max_temperature(40);
+//     this->traits_.set_visual_temperature_step(0.5);
+// }
 BalboaGL::BalboaGL(
         HardwareSerial* hw_serial
 ) :

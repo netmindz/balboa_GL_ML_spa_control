@@ -37,10 +37,10 @@ using namespace esphome;
 
 class BalboaGL : public PollingComponent, public climate::Climate {
  public:
-  BalboaGL(
-            HardwareSerial* hw_serial,
-            uint32_t poll_interval=POLL_INTERVAL_DEFAULT
-        );
+  // BalboaGL(
+  //           HardwareSerial* hw_serial,
+  //           uint32_t poll_interval=POLL_INTERVAL_DEFAULT
+  //       );
   BalboaGL(
             HardwareSerial* hw_serial
         );
