@@ -42,7 +42,11 @@ class BalboaGL : public Component, public climate::Climate {
 
         // Get a mutable reference to the traits that we support.
         climate::ClimateTraits& config_traits();
-        
+
+  protected:
+        // The ClimateTraits supported by this HeatPump.
+        climate::ClimateTraits traits_;
+
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
