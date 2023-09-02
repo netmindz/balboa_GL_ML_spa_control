@@ -20,11 +20,12 @@ const int MINUTES_PER_DEGC = 45;
 #define TX_PIN 23
 #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #define PIN_5_PIN 18
+#define LED_BUILTIN 2
 
 
 #include "balboaGL.h"
 
-// using namespace esphome;
+using namespace esphome;
 
 class BalboaGL : public Component, public Climate {
  public:
