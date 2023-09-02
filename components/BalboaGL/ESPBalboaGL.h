@@ -1,6 +1,6 @@
 #include "esphome.h"
-#include "balboaGL.h"
 #include "constants.h"
+#include "balboaGL.h"
 
 // using namespace esphome;
 
