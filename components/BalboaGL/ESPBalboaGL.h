@@ -14,6 +14,14 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
+
+#define tub Serial2
+#define RX_PIN 19
+#define TX_PIN 23
+#define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 18
+
+
 #include "balboaGL.h"
 
 // using namespace esphome;
