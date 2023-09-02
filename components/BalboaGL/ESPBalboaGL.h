@@ -34,9 +34,9 @@ class BalboaGL : public Component, public climate::Climate {
  public:
   BalboaGL(
             HardwareSerial* hw_serial,
-            uint32_t poll_interval=0
+            // uint32_t poll_interval=0
         );
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
-}
+};
