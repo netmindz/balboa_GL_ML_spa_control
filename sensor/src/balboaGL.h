@@ -1,4 +1,6 @@
-#pragma once
+
+#ifndef BALBOAGL_H
+#define BALBOAGL_H
 
 #include <ArduinoQueue.h>
 
@@ -438,3 +440,4 @@ void hexCharacterStringToBytes(byte* byteArray, const char* hexString) {
     }
 }
 
+#endif
