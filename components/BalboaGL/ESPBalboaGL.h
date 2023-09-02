@@ -1,5 +1,6 @@
 #include "esphome.h"
 #include "esphome/core/preferences.h"
+#include "esphome/components/climate/climate.h"
 
 #include "constants.h"
 
@@ -33,7 +34,7 @@ class BalboaGL : public Component, public climate::Climate {
  public:
   BalboaGL(
             HardwareSerial* hw_serial,
-            uint32_t poll_interval=ESPMHP_POLL_INTERVAL_DEFAULT
+            uint32_t poll_interval=0
         );
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
