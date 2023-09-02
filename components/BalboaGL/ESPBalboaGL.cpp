@@ -22,6 +22,18 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_max_temperature(40);
     this->traits_.set_visual_temperature_step(0.5);
 }
+BalboaGL::BalboaGL(
+        HardwareSerial* hw_serial
+) :
+    hw_serial_{hw_serial}
+{
+    this->traits_.set_supports_action(true);
+    this->traits_.set_supports_current_temperature(true);
+    this->traits_.set_supports_two_point_target_temperature(false);
+    this->traits_.set_visual_min_temperature(26);
+    this->traits_.set_visual_max_temperature(40);
+    this->traits_.set_visual_temperature_step(0.5);
+}
 
 // void BalboaGL::check_logger_conflict_() {
 // #ifdef USE_LOGGER

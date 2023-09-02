@@ -41,6 +41,9 @@ class BalboaGL : public PollingComponent, public climate::Climate {
             HardwareSerial* hw_serial,
             uint32_t poll_interval=POLL_INTERVAL_DEFAULT
         );
+  BalboaGL(
+            HardwareSerial* hw_serial
+        );
 
         // Configure the climate object with traits that we support.
         climate::ClimateTraits traits() override;
