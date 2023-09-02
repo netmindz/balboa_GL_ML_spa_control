@@ -46,7 +46,7 @@ BalboaGL::BalboaGL(
 // #endif
 // }
 
-// void BalboaGL::update() {
+void BalboaGL::update() {
 //     // This will be called every "update_interval" milliseconds.
 //     //this->dump_config();
 //     this->hp->sync();
@@ -55,7 +55,7 @@ BalboaGL::BalboaGL(
 //     heatpumpStatus currentStatus = hp->getStatus();
 //     this->hpStatusChanged(currentStatus);
 // #endif
-// }
+}
 
 // void BalboaGL::set_baud_rate(int baud) {
 //     this->baud_ = baud;
@@ -90,8 +90,8 @@ climate::ClimateTraits& BalboaGL::config_traits() {
 //  *
 //  * Maps HomeAssistant/ESPHome modes to Mitsubishi modes.
 //  */
-// void BalboaGL::control(const climate::ClimateCall &call) {
-//     ESP_LOGV(TAG, "Control called.");
+void BalboaGL::control(const climate::ClimateCall &call) {
+    ESP_LOGV(TAG, "Control called.");
 
 //     bool updated = false;
 //     bool has_mode = call.get_mode().has_value();
@@ -237,7 +237,7 @@ climate::ClimateTraits& BalboaGL::config_traits() {
 //     this->publish_state();
 //     // and the heat pump:
 //     hp->update();
-// }
+}
 
 // void BalboaGL::hpSettingsChanged() {
 //     heatpumpSettings currentSettings = hp->getSettings();
