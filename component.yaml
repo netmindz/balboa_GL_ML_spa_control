@@ -1,68 +1,72 @@
-esphome:
-  name: hottub
-  friendly_name: Hottub
+  esphome:
+    name: hottub
+    friendly_name: Hottub
+    libraries:
+      - balboa=https://github.com/netmindz/balboa_GL_ML_spa_control.git#library
+      - ArduinoQueue=https://github.com/EinarArnason/ArduinoQueue.git@^1.2.5
+      
 
-esp32:
-  board: esp32dev
-  framework:
-    type: arduino
+  esp32:
+    board: esp32dev
+    framework:
+      type: arduino
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/netmindz/balboa_GL_ML_spa_control.git
-      ref: ESPHome
-    refresh: 0s
-    components: [BalboaGL]
+  external_components:
+    - source:
+        type: git
+        url: https://github.com/netmindz/balboa_GL_ML_spa_control.git
+        ref: ESPHome
+      refresh: 0s
+      components: [BalboaGL]
 
 
-# Enable logging
-logger:
+  # Enable logging
+  logger:
 
-# Enable Home Assistant API
-api:
-  encryption:
-    key: "sUhVA1uqxqWBmBu6BGISQHfi7+9a0HXf+1WIcBYrnz0="
+  # Enable Home Assistant API
+  api:
+    encryption:
+      key: "sUhVA1uqxqWBmBu6BGISQHfi7+9a0HXf+1WIcBYrnz0="
 
-ota:
-  password: "e82fe9bada398051d779151a591a1e2e"
+  ota:
+    password: "e82fe9bada398051d779151a591a1e2e"
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  wifi:
+    ssid: !secret wifi_ssid
+    password: !secret wifi_password
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: "Hottub Fallback Hotspot"
-    password: "tHV1HzrYNvGo"
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+      ssid: "Hottub Fallback Hotspot"
+      password: "tHV1HzrYNvGo"
 
-captive_portal:
-    
-# Text sensors with general information.
-text_sensor:
-  # Expose ESPHome version as sensor.
-  - platform: version
-    name: ${name} ESPHome Version
-  # Expose WiFi information as sensors.
-  - platform: wifi_info
-    ip_address:
-      name: ${name} IP
-    ssid:
-      name: ${name} SSID
-    bssid:
-      name: ${name} BSSID
+  captive_portal:
+      
+  # Text sensors with general information.
+  text_sensor:
+    # Expose ESPHome version as sensor.
+    - platform: version
+      name: ${name} ESPHome Version
+    # Expose WiFi information as sensors.
+    - platform: wifi_info
+      ip_address:
+        name: ${name} IP
+      ssid:
+        name: ${name} SSID
+      bssid:
+        name: ${name} BSSID
 
-# Sensors with general information.
-sensor:
-  # Uptime sensor.
-  - platform: uptime
-    name: ${name} Uptime
+  # Sensors with general information.
+  sensor:
+    # Uptime sensor.
+    - platform: uptime
+      name: ${name} Uptime
 
-  # WiFi Signal sensor.
-  - platform: wifi_signal
-    name: ${name} WiFi Signal
-    update_interval: 60s
+    # WiFi Signal sensor.
+    - platform: wifi_signal
+      name: ${name} WiFi Signal
+      update_interval: 60s
 
-climate:
-  - platform: BalboaGL 
-    name: ${friendly_name}
+  climate:
+    - platform: BalboaGL 
+      name: ${friendly_name}
