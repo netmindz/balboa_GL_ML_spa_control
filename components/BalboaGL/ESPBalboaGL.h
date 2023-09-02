@@ -33,9 +33,16 @@ using namespace esphome;
 class BalboaGL : public Component, public climate::Climate {
  public:
   BalboaGL(
-            HardwareSerial* hw_serial,
+            HardwareSerial* hw_serial
             // uint32_t poll_interval=0
         );
+
+        // Configure the climate object with traits that we support.
+        climate::ClimateTraits traits() override;
+
+        // Get a mutable reference to the traits that we support.
+        climate::ClimateTraits& config_traits();
+        
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
