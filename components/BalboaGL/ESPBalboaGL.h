@@ -29,7 +29,7 @@ const int MINUTES_PER_DEGC = 45;
 
 using namespace esphome;
 
-class BalboaGL : public Component { // }, public climate::Climate {
+class BalboaGL : public Component, public climate::Climate {
  public:
   BalboaGL(
             HardwareSerial* hw_serial,
