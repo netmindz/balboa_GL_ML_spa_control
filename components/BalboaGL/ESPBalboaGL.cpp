@@ -17,9 +17,9 @@ BalboaGL::BalboaGL(
     this->traits_.set_supports_action(true);
     this->traits_.set_supports_current_temperature(true);
     this->traits_.set_supports_two_point_target_temperature(false);
-    this->traits_.set_visual_min_temperature(ESPMHP_MIN_TEMPERATURE);
-    this->traits_.set_visual_max_temperature(ESPMHP_MAX_TEMPERATURE);
-    this->traits_.set_visual_temperature_step(ESPMHP_TEMPERATURE_STEP);
+    this->traits_.set_visual_min_temperature(26);
+    this->traits_.set_visual_max_temperature(40);
+    this->traits_.set_visual_temperature_step(0.5);
 }
 
 // void BalboaGL::check_logger_conflict_() {
@@ -58,9 +58,9 @@ BalboaGL::BalboaGL(
 //  * Returns:
 //  *   This class' supported climate::ClimateTraits.
 //  */
-// climate::ClimateTraits BalboaGL::traits() {
-//     return traits_;
-// }
+climate::ClimateTraits BalboaGL::traits() {
+    return traits_;
+}
 
 // /**
 //  * Modify our supported traits.
