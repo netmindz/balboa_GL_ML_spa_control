@@ -45,11 +45,40 @@ class BalboaGL : public PollingComponent, public climate::Climate {
             HardwareSerial* hw_serial
         );
 
-        // Configure the climate object with traits that we support.
+        // // Set the baud rate. Must be called before setup() to have any effect.
+        // void set_baud_rate(int);
+
+        // // print the current configuration
+        // void dump_config() override;
+
+        // // handle a change in settings as detected by the HeatPump library.
+        // void hpSettingsChanged();
+
+        // // Handle a change in status as detected by the HeatPump library.
+        // void hpStatusChanged(heatpumpStatus currentStatus);
+
+        // // Set up the component, initializing the HeatPump object.
+        // void setup() override;
+
+        // // This is called every poll_interval.
+        void update() override;
+
+        // // Configure the climate object with traits that we support.
         climate::ClimateTraits traits() override;
 
-        // Get a mutable reference to the traits that we support.
+        // // Get a mutable reference to the traits that we support.
         climate::ClimateTraits& config_traits();
+
+        // Debugging function to print the object's state.
+        // void dump_state();
+
+        // Handle a request from the user to change settings.
+        void control(const climate::ClimateCall &call) override;
+
+        // // Use the temperature from an external sensor. Use
+        // // set_remote_temp(0) to switch back to the internal sensor.
+        // void set_remote_temperature(float);
+
 
   protected:
         // The ClimateTraits supported by this HeatPump.
