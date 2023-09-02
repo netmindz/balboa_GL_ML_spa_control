@@ -1,3 +1,6 @@
+#ifndef BALBOAGL_H
+#define BALBOAGL_H
+
 #include <ArduinoQueue.h>
 
 int delayTime = 40;
@@ -436,3 +439,4 @@ void hexCharacterStringToBytes(byte* byteArray, const char* hexString) {
     }
 }
 
+#endif
