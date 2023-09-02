@@ -1,4 +1,6 @@
 #include "esphome.h"
+#include "esphome/core/preferences.h"
+
 #include "constants.h"
 
 
@@ -27,7 +29,7 @@ const int MINUTES_PER_DEGC = 45;
 
 using namespace esphome;
 
-class BalboaGL : public Component, public Climate {
+class BalboaGL : public Component, public climate::Climate {
  public:
   void setup() override {
     // This will be called by App.setup()
