@@ -1,6 +1,5 @@
 #include "esphome.h"
 #include "constants.h"
-#include "balboaGL.h"
 
 
 // Perform measurements or read nameplate values on your tub to define the power [kW]
@@ -15,6 +14,7 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
+#include "balboaGL.h"
 
 // using namespace esphome;
 
