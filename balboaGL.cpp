@@ -1,5 +1,15 @@
 #include "balboaGL.h"
 
+int RTS_PIN;
+int PIN_5_PIN;
+
+String result = "";
+int msgLength = 0;
+
+ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+
+struct BalboaStatus status;
+
 int delayTime = 40;
 
 void sendCommand(String command, int count) {

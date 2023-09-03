@@ -7,11 +7,28 @@
 
 #include "constants.h"
 
-ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+// Perform measurements or read nameplate values on your tub to define the power [kW]
+// for each device in order to calculate tub power usage
+const float POWER_HEATER = 2.8;
+const float POWER_PUMP_CIRCULATION = 0.3;
+const float POWER_PUMP1_LOW = 0.31;
+const float POWER_PUMP1_HIGH = 1.3;
+const float POWER_PUMP2_LOW = 0.3;
+const float POWER_PUMP2_HIGH = 0.6;
 
-String result = "";
-int msgLength = 0;
+// Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
+const int MINUTES_PER_DEGC = 45;
 
+extern int RTS_PIN;
+extern int PIN_5_PIN;
+
+#define tub Serial2
+
+
+extern ArduinoQueue<String> sendBuffer;
+
+extern String result;
+extern int msgLength;
 
 struct BalboaStatus {
     float power;
@@ -29,7 +46,9 @@ struct BalboaStatus {
     boolean heater;
     boolean light;
     String state;
-} status;
+};
+
+extern struct BalboaStatus status;
 
 void sendCommand(String command, int count);
 
@@ -48,5 +67,7 @@ String HexString2ASCIIString(String hexstring);
 byte nibble(char c);
 
 void hexCharacterStringToBytes(byte* byteArray, const char* hexString);
+
+void telnetSend(String message);
 
 #endif
