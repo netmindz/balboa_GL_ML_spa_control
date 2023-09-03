@@ -2,6 +2,7 @@
 #ifndef BALBOAGL_H
 #define BALBOAGL_H
 
+#include <Arduino.h>
 #include <ArduinoQueue.h>
 
 #include "constants.h"
