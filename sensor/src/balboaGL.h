@@ -51,13 +51,6 @@ void setOption(int currentIndex, int targetIndex, int options, String command = 
 String result = "";
 int msgLength = 0;
 
-void handleMessage();
-void sendCommand();
-String HexString2ASCIIString(String hexstring);
-void hexCharacterStringToBytes(byte* byteArray, const char* hexString);
-String HexString2TimeString(String hexstring);
-void telnetSend(String message);
-
 void handleBytes(size_t len, uint8_t buf[]) {
 
     for (int i = 0; i < len; i++) {
