@@ -2,8 +2,8 @@
     name: hottub
     friendly_name: Hottub
     libraries:
-      - balboa=https://github.com/netmindz/balboa_GL_ML_spa_control.git#library
       - ArduinoQueue=https://github.com/EinarArnason/ArduinoQueue.git@^1.2.5
+      - balboaGL=https://github.com/netmindz/balboaGL.git#0145fe65e531b8d4baacbdd75adc4bf4dab97433
       
 
   esp32:
