@@ -1,10 +1,6 @@
-
+#include "balboaGL.h"
 
 int delayTime = 40;
-
-#include "constants.h"
-
-
 
 void sendCommand(String command, int count) {
     Serial.printf("Sending %s - %u times\n", command.c_str(), count);
@@ -13,7 +9,7 @@ void sendCommand(String command, int count) {
     }
 }
 
-void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN) {
+void setOption(int currentIndex, int targetIndex, int options, String command) {
     if (targetIndex > currentIndex) {
         sendCommand(command, (targetIndex - currentIndex));
     } else if (currentIndex != targetIndex) {

@@ -149,7 +149,7 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     int currentIndex = sender->getCurrentState();
     int options = 3;
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-    setOption(currentIndex, index, options);
+    setOption(currentIndex, index, options, COMMAND_DOWN);
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
 

@@ -33,7 +33,7 @@ struct BalboaStatus {
 
 void sendCommand(String command, int count);
 
-void setOption(int currentIndex, int targetIndex, int options, String command = COMMAND_DOWN);
+void setOption(int currentIndex, int targetIndex, int options, String command);
 
 void handleBytes(size_t len, uint8_t buf[]);
 
