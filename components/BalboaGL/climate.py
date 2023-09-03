@@ -85,8 +85,8 @@ def to_code(config):
 
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
-    cg.add_library(
-        name="balboa_GL_ML_spa_control",
-        repository="https://github.com/netmindz/balboa_GL_ML_spa_control",
-        version="library",
-    )
+#    cg.add_library(
+#        name="balboa_GL_ML_spa_control",
+#        repository="https://github.com/netmindz/balboa_GL_ML_spa_control",
+#        version="library",
+#    )
