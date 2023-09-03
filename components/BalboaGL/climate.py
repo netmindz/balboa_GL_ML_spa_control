@@ -85,8 +85,13 @@ def to_code(config):
 
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
-#    cg.add_library(
-#        name="balboa_GL_ML_spa_control",
-#        repository="https://github.com/netmindz/balboa_GL_ML_spa_control",
-#        version="library",
-#    )
+    cg.add_library(
+        name="ArduinoQueue",
+        repository="https://github.com/EinarArnason/ArduinoQueue.git",
+        version="1.2.5",
+    )
+    cg.add_library(
+        name="balboaGL",
+        repository="https://github.com/netmindz/balboaGL.git",
+        version="0145fe65e531b8d4baacbdd75adc4bf4dab97433",
+    )
