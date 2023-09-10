@@ -61,7 +61,7 @@ int delayTime = 40;
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 18
+#define PIN_5_PIN 22
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
