@@ -413,6 +413,7 @@ String lastJSON = "";
 int lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
+boolean panelDetected = false;
 
 void handleBytes(size_t len, uint8_t buf[]);
 
@@ -432,7 +433,15 @@ void loop() {
         }
     }
 
-    if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
+    if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
+
+        if(panelSelect == HIGH) {
+            panelDetected = true;
+        }
+        else {
+            state = "Panel select (pin5) not detected";
+            currentState.setValue(state.c_str());
+        }
 
         mqtt.loop();
         ArduinoOTA.handle();
