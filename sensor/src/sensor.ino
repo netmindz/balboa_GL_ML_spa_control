@@ -439,7 +439,8 @@ void loop() {
             panelDetected = true;
         }
         else {
-            currentState.setValue("Panel select (pin5) not detected");
+            state = "Panel select (pin5) not detected";
+            currentState.setValue(state.c_str());
         }
 
         mqtt.loop();
