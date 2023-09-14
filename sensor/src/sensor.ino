@@ -59,10 +59,14 @@ int delayTime = 40;
 
 #ifdef RSC3
 #define tub Serial1
-#define RX_PIN 10
-#define TX_PIN 3
+#define RX_PIN 3
+#define TX_PIN 10
 #define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #define PIN_5_PIN 6
+
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+
 #elif ESP32
 #define tub Serial2
 #define RX_PIN 19
@@ -234,13 +238,36 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     // the control unit reports that assume our commands worked
 }
 
+void setPixel(uint8_t color) {
+#ifdef RSC3
+    switch(color) {
+        case 0:
+            pixels.setPixelColor(0, pixels.Color(255,0,0));
+            break;
+        case 1:
+            pixels.setPixelColor(0, pixels.Color(0,255,0));
+            break;
+        case 2:
+            pixels.setPixelColor(0, pixels.Color(0,0,255));
+            break;
+    }     
+    pixels.show();
+#endif
+}
+
 boolean isConnected = false;
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
+#ifdef RSC3
+    pixels.begin();
+    pixels.setBrightness(255);
+    setPixel(STATUS_BOOT);
+#else    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
+#endif
 
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
@@ -267,6 +294,7 @@ void setup() {
             Serial.print(".");
         }
     }
+    setPixel(STATUS_WIFI);
 
     if (WiFi.status() != WL_CONNECTED) {
 #ifdef AP_FALLBACK
@@ -426,6 +454,7 @@ void handleBytes(size_t len, uint8_t buf[]);
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
     if (tub.available() > 0) {
+        setPixel(STATUS_OK);
         size_t len = tub.available();
         //    Serial.printf("bytes avail = %u\n", len);
         uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
