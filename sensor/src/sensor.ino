@@ -435,7 +435,12 @@ void loop() {
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
-        if(panelSelect == HIGH) panelDetected = true;
+        if(panelSelect == HIGH) {
+            panelDetected = true;
+        }
+        else {
+            currentState.setValue("Panel not detected");
+        }
 
         mqtt.loop();
         ArduinoOTA.handle();
