@@ -29,3 +29,5 @@
 #define STATUS_BOOT 0
 #define STATUS_WIFI 2
 #define STATUS_OK 1
+#define STATUS_WAITING_DATA 3
+#define STATUS_WAITING_PANEL 4

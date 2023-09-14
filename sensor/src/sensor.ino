@@ -250,6 +250,12 @@ void setPixel(uint8_t color) {
         case 2:
             pixels.setPixelColor(0, pixels.Color(0,0,255));
             break;
+        case 3:
+            pixels.setPixelColor(0, pixels.Color(255,255,0));
+            break;
+        case 4:
+            pixels.setPixelColor(0, pixels.Color(255,0,255));
+            break;
     }     
     pixels.show();
 #endif
@@ -468,6 +474,14 @@ void loop() {
             msgLength = 0;
         }
     }
+    else {
+        if(panelDetected) {
+            setPixel(STATUS_WAITING_DATA);
+        }
+        else {
+            setPixel(STATUS_WAITING_PANEL);
+        }
+    }
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
@@ -484,7 +498,7 @@ void loop() {
 
         telnetLoop();
 
-        if (sendBuffer.isEmpty()) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+        if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
                                      // can both block for a long time
 
             webserver.handleClient();
