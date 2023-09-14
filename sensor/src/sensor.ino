@@ -56,7 +56,14 @@ const int MINUTES_PER_DEGC = 45;
 
 int delayTime = 40;
 
-#ifdef ESP32
+
+#ifdef RSC3
+#define tub Serial1
+#define RX_PIN 10
+#define TX_PIN 3
+#define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 6
+#elif ESP32
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
@@ -410,7 +417,7 @@ String lastRaw5 = "";
 String lastRaw6 = "";
 String lastRaw7 = "";
 String lastJSON = "";
-int lastUptime = 0;
+uint32_t lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 
@@ -666,7 +673,7 @@ void handleMessage() {
                             float timeToTempValue = (tempDiff * MINUTES_PER_DEGC);
                             timeToTemp.setValue(timeToTempValue);
                         } else {
-                            timeToTemp.setValue(0);
+                            timeToTemp.setValue((float) 0);
                         }
                     }
                 } else if (result.substring(10, 12) == "2d") {  // "-"
