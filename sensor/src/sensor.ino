@@ -54,7 +54,8 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
-int delayTime = 40;
+#define DELAY_TIME_DEFAULT 40
+int delayTime = DELAY_TIME_DEFAULT;
 
 #ifdef ESP32
 #define tub Serial2
@@ -758,7 +759,7 @@ void sendCommand() {
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
-            delayTime = 0;
+            delayTime = DELAY_TIME_DEFAULT;
             sendBuffer.dequeue();
         }
         // tub.flush(true);
