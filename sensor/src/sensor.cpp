@@ -47,14 +47,14 @@ byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless 
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
-// #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-// #define PIN_5_PIN 18
+#define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
 #define TX_PIN D7
-// #define PIN_5_PIN D4
-// #define RTS_PIN D1  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN D4
+#define RTS_PIN D1  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
 #endif
 
 // Uncomment if you have dual-speed pump
@@ -67,6 +67,7 @@ SoftwareSerial tub;
 
 #include <balboaGL.h>
 
+balboaGL spa(RTS_PIN_DEF, PIN_5_PIN_DEF);
 
 WiFiClient clients[1];
 
@@ -132,7 +133,7 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
         command = COMMAND_JET2;
         options = PUMP2_STATE_HIGH + 1;
     }
-    setOption(currentIndex, index, options, command);
+    spa.setOption(currentIndex, index, options, command);
 }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
@@ -140,7 +141,7 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     int currentIndex = sender->getCurrentState();
     int options = 3;
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-    setOption(currentIndex, index, options, COMMAND_DOWN);
+    spa.setOption(currentIndex, index, options, COMMAND_DOWN);
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
 
@@ -234,10 +235,6 @@ void setup() {
     Serial.begin(115200);
     delay(1000);
 
-    PIN_5_PIN = 18;
-    RTS_PIN = 22;  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-
-
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
 
@@ -281,10 +278,6 @@ void setup() {
 #endif
     }
 
-    pinMode(RTS_PIN, OUTPUT);
-    Serial.printf("Setting pin %u LOW\n", RTS_PIN);
-    digitalWrite(RTS_PIN, LOW);
-    pinMode(PIN_5_PIN, INPUT);
 #ifdef ESP32
     Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
     tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -410,14 +403,14 @@ void setup() {
 }
 
 void loop() {
-    bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
+    bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
     if (tub.available() > 0) {
         size_t len = tub.available();
         //    Serial.printf("bytes avail = %u\n", len);
         uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
         tub.read(buf, len);
         if (panelSelect == LOW) {  // Only read data meant for us
-            handleBytes(len, buf);
+            spa.handleBytes(len, buf);
         } else {
             // Serial.print("H");
             result = "";
