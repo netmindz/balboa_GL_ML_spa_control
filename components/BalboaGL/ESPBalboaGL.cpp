@@ -455,6 +455,6 @@ class BalboaGLSensor : public PollingComponent {
   }
 
   void update() override {
-    status_sensor->publish_state(std::string(status.state));
+    status_sensor->publish_state(status.state.c_str());
   }
 };
