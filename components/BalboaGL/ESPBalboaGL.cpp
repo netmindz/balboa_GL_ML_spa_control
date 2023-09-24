@@ -38,6 +38,20 @@ void BalboaGL::update() {
     this->spa->readSerial();
     this->current_temperature = status.temp;
     this->target_temperature = status.targetTemp;
+    switch(status.mode) {
+        case MODE_IDX_STD:
+            this->custom_preset = "STD";
+            break;
+        case MODE_IDX_ECO:
+            this->custom_preset = "ECO";
+            break;
+        case MODE_IDX_SLP:
+            this->custom_preset = "Sleep";
+            break;
+        default:
+            this->custom_preset = "UNKNOWN";
+            break;
+    }
     this->custom_preset = status.mode;
     if(status.heater) {
         this->mode = climate::CLIMATE_MODE_HEAT;
