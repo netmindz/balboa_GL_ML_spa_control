@@ -443,6 +443,8 @@ void BalboaGL::setup() {
 //     ESP_LOGI(TAG, "HELLO");
 // }
 
+using namespace sensor;
+
 class BalboaGLSensor : public PollingComponent {
  public:
   Sensor *status_sensor = new Sensor();
