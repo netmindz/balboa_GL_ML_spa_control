@@ -447,7 +447,7 @@ class BalboaGLSensor : public PollingComponent {
  public:
   Sensor *status_sensor = new Sensor();
 
-  MyCustomSensor() : PollingComponent(15000) { }
+  BalboaGLSensor() : PollingComponent(15000) { }
 
   void setup() override {
   }
