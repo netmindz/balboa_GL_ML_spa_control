@@ -33,6 +33,7 @@ BalboaGL::BalboaGL(
 // }
 
 void BalboaGL::update() {
+    ESP_LOGV(TAG, "Update called.");
     this->spa->readSerial();
 //     // This will be called every "update_interval" milliseconds.
 //     //this->dump_config();
@@ -217,7 +218,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     ESP_LOGD(TAG, "control - Was HeatPump updated? %s", YESNO(updated));
 
 //     // send the update back to esphome:
-//     this->publish_state();
+    this->publish_state();
 //     // and the heat pump:
 //     hp->update();
 }
@@ -403,10 +404,10 @@ void BalboaGL::setup() {
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
     this->spa = new balboaGL(hw_serial_, 18, 22);
-//     this->current_temperature = NAN;
-//     this->target_temperature = NAN;
-//     this->fan_mode = climate::CLIMATE_FAN_OFF;
-//     this->swing_mode = climate::CLIMATE_SWING_OFF;
+    this->current_temperature = NAN;
+    this->target_temperature = NAN;
+    this->fan_mode = climate::CLIMATE_FAN_AUTO;
+    this->swing_mode = climate::CLIMATE_SWING_OFF;
 
 // #ifdef USE_CALLBACKS
 //     hp->setSettingsChangedCallback(
