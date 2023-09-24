@@ -44,7 +44,7 @@ void BalboaGL::update() {
             this->custom_preset = std::string("STD");
             break;
         case MODE_IDX_ECO:
-            this->custom_preset = std:string("ECO");
+            this->custom_preset = std::string("ECO");
             break;
         case MODE_IDX_SLP:
             this->custom_preset = std::string("Sleep");
