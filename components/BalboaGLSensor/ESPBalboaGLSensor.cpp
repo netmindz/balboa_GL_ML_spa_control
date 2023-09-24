@@ -1,4 +1,5 @@
 #include <string>
+#include "ESPBalboaGLSensor.h"
 
 using namespace text_sensor;
 
