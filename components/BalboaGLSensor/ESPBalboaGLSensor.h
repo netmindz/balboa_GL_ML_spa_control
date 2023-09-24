@@ -22,10 +22,10 @@ namespace esphome {
       }
 
   };
-  
+
   class BalboaGLRawSensor : public TextSensor, public PollingComponent {
     public:
-      BalboaGLStateSensor() : PollingComponent(15000) { }
+      BalboaGLRawSensor() : PollingComponent(15000) { }
       void setup();
       void update() {
         this->publish_state(status.rawData.c_str());
