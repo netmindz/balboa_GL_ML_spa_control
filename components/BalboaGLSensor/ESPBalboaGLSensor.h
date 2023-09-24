@@ -1,6 +1,6 @@
 #pragma once
 
-#include "esphome/core/component.h"
+#include "esphome/core/pollingcomponent.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
 namespace esphome {
@@ -8,7 +8,7 @@ namespace esphome {
 
   using namespace text_sensor;
 
-  class BalboaGLSensor : public TextSensor, public Component {
+  class BalboaGLSensor : public TextSensor, public PollingComponent {
     public:
       BalboaGLSensor() : PollingComponent(15000) { }
       void setup();
