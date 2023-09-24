@@ -388,19 +388,19 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 // }
 
 void BalboaGL::setup() {
-//     // This will be called by App.setup()
-//     this->banner();
-//     ESP_LOGCONFIG(TAG, "Setting up UART...");
-//     if (!this->get_hw_serial_()) {
-//         ESP_LOGCONFIG(
-//                 TAG,
-//                 "No HardwareSerial was provided. "
-//                 "Software serial ports are unsupported by this component."
-//         );
-//         this->mark_failed();
-//         return;
-//     }
-//     this->check_logger_conflict_();
+    // This will be called by App.setup()
+    this->banner();
+    ESP_LOGCONFIG(TAG, "Setting up UART...");
+    if (!this->get_hw_serial_()) {
+        ESP_LOGCONFIG(
+                TAG,
+                "No HardwareSerial was provided. "
+                "Software serial ports are unsupported by this component."
+        );
+        this->mark_failed();
+        return;
+    }
+    this->check_logger_conflict_();
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
     this->spa = new balboaGL(hw_serial_, 18, 22);
@@ -408,6 +408,7 @@ void BalboaGL::setup() {
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_AUTO;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
+    this->action = climate::CLIMATE_ACTION_HEATING;
 
 // #ifdef USE_CALLBACKS
 //     hp->setSettingsChangedCallback(
