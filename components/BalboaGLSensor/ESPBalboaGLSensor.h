@@ -11,13 +11,25 @@ namespace esphome {
 
   using namespace text_sensor;
 
-  class BalboaGLSensor : public TextSensor, public PollingComponent {
+  class BalboaGLStateSensor : public TextSensor, public PollingComponent {
     public:
-      BalboaGLSensor() : PollingComponent(15000) { }
+      BalboaGLStateSensor() : PollingComponent(15000) { }
       void setup();
-      void update();
-      TextSensor *status_sensor = new TextSensor();
-      TextSensor *raw_sensor = new TextSensor();
+      void update() {
+        std::string state = "test";
+        ESP_LOGD(TAG, status.state.c_str());
+        this->publish_state(state);
+      }
+
+  };
+  
+  class BalboaGLRawSensor : public TextSensor, public PollingComponent {
+    public:
+      BalboaGLStateSensor() : PollingComponent(15000) { }
+      void setup();
+      void update() {
+        this->publish_state(status.rawData.c_str());
+      }
 
   };
 
