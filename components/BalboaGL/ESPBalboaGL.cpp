@@ -165,43 +165,6 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //         updated = true;
 //     }
 
-//     //const char* FAN_MAP[6]         = {"AUTO", "QUIET", "1", "2", "3", "4"};
-//     if (call.get_fan_mode().has_value()) {
-//         ESP_LOGV("control", "Requested fan mode is %s", *call.get_fan_mode());
-//         this->fan_mode = *call.get_fan_mode();
-//         switch(*call.get_fan_mode()) {
-//             case climate::CLIMATE_FAN_OFF:
-//                 hp->setPowerSetting("OFF");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_DIFFUSE:
-//                 hp->setFanSpeed("QUIET");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_LOW:
-//                 hp->setFanSpeed("1");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_MEDIUM:
-//                 hp->setFanSpeed("2");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_MIDDLE:
-//                 hp->setFanSpeed("3");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_HIGH:
-//                 hp->setFanSpeed("4");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_FAN_ON:
-//             case climate::CLIMATE_FAN_AUTO:
-//             default:
-//                 hp->setFanSpeed("AUTO");
-//                 updated = true;
-//                 break;
-//         }
-//     }
 
 //     //const char* VANE_MAP[7]        = {"AUTO", "1", "2", "3", "4", "5", "SWING"};
 //     if (call.get_swing_mode().has_value()) {
