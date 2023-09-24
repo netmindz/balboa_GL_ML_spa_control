@@ -2,6 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import CONF_ID
+from esphome.core import coroutine
 
 CONF_STATE = "state"
 CONF_RAW = "raw"
