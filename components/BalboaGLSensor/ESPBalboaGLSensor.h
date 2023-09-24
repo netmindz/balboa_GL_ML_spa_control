@@ -1,6 +1,6 @@
 #pragma once
 
-#include "esphome/core/pollingcomponent.h"
+#include "esphome.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
 namespace esphome {
