@@ -10,7 +10,7 @@ using namespace esphome;
  */
 BalboaGL::BalboaGL(
         HardwareSerial* hw_serial
-) :
+) //:
     // hw_serial_{hw_serial}
 {
     this->hw_serial_ = hw_serial;
