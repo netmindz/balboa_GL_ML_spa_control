@@ -14,7 +14,7 @@ namespace esphome {
   class BalboaGLStateSensor : public TextSensor, public PollingComponent {
     public:
       BalboaGLStateSensor() : PollingComponent(15000) { }
-      void setup();
+      // void setup() {};
       void update() {
         std::string state = "test";
         ESP_LOGD(TAG, status.state.c_str());
@@ -26,7 +26,7 @@ namespace esphome {
   class BalboaGLRawSensor : public TextSensor, public PollingComponent {
     public:
       BalboaGLRawSensor() : PollingComponent(15000) { }
-      void setup();
+      // void setup() {};
       void update() {
         this->publish_state(status.rawData.c_str());
       }
