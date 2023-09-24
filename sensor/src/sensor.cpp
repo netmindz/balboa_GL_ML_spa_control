@@ -67,7 +67,7 @@ SoftwareSerial tub;
 
 #include <balboaGL.h>
 
-balboaGL spa(RTS_PIN_DEF, PIN_5_PIN_DEF);
+balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF);
 
 WiFiClient clients[1];
 
