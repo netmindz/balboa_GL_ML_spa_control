@@ -77,6 +77,15 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // The ClimateTraits supported by this HeatPump.
         climate::ClimateTraits traits_;
 
+        //Accessor method for the HardwareSerial pointer
+        HardwareSerial* get_hw_serial_() {
+            return this->hw_serial_;
+        }
+
+        //Print a warning message if we're using the sole hardware UART on an
+        //ESP8266 or UART0 on ESP32
+        void check_logger_conflict_();
+
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
