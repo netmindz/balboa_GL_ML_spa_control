@@ -40,16 +40,16 @@ void BalboaGL::update() {
     this->target_temperature = status.targetTemp;
     switch(status.mode) {
         case MODE_IDX_STD:
-            this->custom_preset = "STD";
+            this->custom_preset = "STD".c_str();
             break;
         case MODE_IDX_ECO:
-            this->custom_preset = "ECO";
+            this->custom_preset = "ECO".c_str();
             break;
         case MODE_IDX_SLP:
-            this->custom_preset = "Sleep";
+            this->custom_preset = "Sleep".c_str();
             break;
         default:
-            this->custom_preset = "UNKNOWN";
+            this->custom_preset = "UNKNOWN".c_str();
             break;
     }
 
