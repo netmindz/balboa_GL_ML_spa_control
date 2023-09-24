@@ -5,10 +5,14 @@
 
 namespace esphome {
 
-class BalboaGLSensor : public text_sensor::TextSensor, public Component {
+using namespace text_sensor;
+
+class BalboaGLSensor : public TextSensor, public Component {
  public:
   void setup() override;
   void update() override;
+  TextSensor *status_sensor = new TextSensor();
+
 };
 
 }  // namespace esphome

@@ -3,16 +3,11 @@
 
 using namespace text_sensor;
 
-class BalboaGLSensor : public PollingComponent {
- public:
-  TextSensor *status_sensor = new TextSensor();
+BalboaGLSensor::BalboaGLSensor() : PollingComponent(15000) { }
 
-  BalboaGLSensor() : PollingComponent(15000) { }
+void BalboaGLSensor::setup()  {
+}
 
-  void setup() override {
-  }
-
-  void update() override {
-    status_sensor->publish_state(status.state.c_str());
-  }
-};
+void BalboaGLSensor::update()  {
+  status_sensor->publish_state(status.state.c_str());
+}
