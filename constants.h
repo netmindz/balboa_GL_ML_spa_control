@@ -3,7 +3,7 @@
 #define COMMAND_UP          "fb0603450e0001fe66"
 #define COMMAND_DOWN        "fb0603450e0002fd50"
 //#define COMMAND_TOGGLE      "fb066666666609f6c2"
-// #define COMMAND_TIME        "fb066666666603fc76"
+#define COMMAND_TIME        "fb0664d4060003fc76"
 #define COMMAND_CHANGE_MODE "fb0603450e0004fb3c"
 // #define COMMAND_BLOWER      "fb06666666660af5f4"
 #define COMMAND_JET1        "fb060343060006f9a2" // TODO: fix me - swapped to tmjo's panel as mine was one char short in my notes

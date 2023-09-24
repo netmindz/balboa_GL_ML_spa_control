@@ -93,6 +93,7 @@ HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
 HAButton btnUp("up");
 HAButton btnDown("down");
 HAButton btnMode("btnMode");
+HAButton btnTime("btnTime");
 
 // Not really HVAC device, but only way to get controls to set
 HAHVAC hvac("temp", HAHVAC::TargetTemperatureFeature);
@@ -154,6 +155,8 @@ void onButtonPress(HAButton* sender) {
         sendBuffer.enqueue(COMMAND_DOWN);
     } else if (name == "Mode") {
         sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    } else if (name == "Time") {
+        sendBuffer.enqueue(COMMAND_TIME);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -307,7 +310,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.1");
+    device.setSoftwareVersion("0.2.3");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
@@ -372,10 +375,12 @@ void setup() {
     btnUp.setName("Up");
     btnDown.setName("Down");
     btnMode.setName("Mode");
+    btnTime.setName("Time");
 
     btnUp.onCommand(onButtonPress);
     btnDown.onCommand(onButtonPress);
     btnMode.onCommand(onButtonPress);
+    btnTime.onCommand(onButtonPress);
 
     hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
     hvac.setModes(HAHVAC::AutoMode);
@@ -402,13 +407,22 @@ void setup() {
     sendBuffer.enqueue(COMMAND_DOWN); // trigger set temp to capture target
 }
 
+boolean panelDetected = false;
 void loop() {
     
     spa.readSerial();
 
     bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
 
-    if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
+    if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
+
+        if(panelSelect == HIGH) {
+            panelDetected = true;
+        }
+        else {
+            state = "Panel select (pin5) not detected";
+            currentState.setValue(state.c_str());
+        }
 
         updateHAStatus();
 
