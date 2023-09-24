@@ -385,7 +385,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     this->hp->setRemoteTemperature(temp);
 // }
 
-// void BalboaGL::setup() {
+void BalboaGL::setup() {
 //     // This will be called by App.setup()
 //     this->banner();
 //     ESP_LOGCONFIG(TAG, "Setting up UART...");
@@ -400,8 +400,8 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     }
 //     this->check_logger_conflict_();
 
-//     ESP_LOGCONFIG(TAG, "Intializing new HeatPump object.");
-//     this->hp = new HeatPump();
+    ESP_LOGCONFIG(TAG, "Intializing new balboaGL object.");
+    this->spa = new balboaGL(18,22);
 //     this->current_temperature = NAN;
 //     this->target_temperature = NAN;
 //     this->fan_mode = climate::CLIMATE_FAN_OFF;
@@ -454,7 +454,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     auto_setpoint = load(auto_storage);
 
 //     this->dump_config();
-// }
+}
 
 // /**
 //  * The ESP only has a few bytes of rtc storage, so instead
