@@ -40,7 +40,7 @@ void BalboaGL::update() {
     this->target_temperature = status.targetTemp;
     switch(status.mode) {
         case MODE_IDX_STD:
-            this->custom_preset  string("STD");
+            this->custom_preset = string("STD");
             break;
         case MODE_IDX_ECO:
             this->custom_preset = string("ECO");
