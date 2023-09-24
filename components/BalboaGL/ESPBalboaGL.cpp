@@ -21,16 +21,16 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_temperature_step(0.5);
 }
 
-// void BalboaGL::check_logger_conflict_() {
-// #ifdef USE_LOGGER
-//     if (this->get_hw_serial_() == logger::global_logger->get_hw_serial()) {
-//         ESP_LOGW(TAG, "  You're using the same serial port for logging"
-//                 " and the BalboaGL component. Please disable"
-//                 " logging over the serial port by setting"
-//                 " logger:baud_rate to 0.");
-//     }
-// #endif
-// }
+void BalboaGL::check_logger_conflict_() {
+#ifdef USE_LOGGER
+    if (this->get_hw_serial_() == logger::global_logger->get_hw_serial()) {
+        ESP_LOGW(TAG, "  You're using the same serial port for logging"
+                " and the BalboaGL component. Please disable"
+                " logging over the serial port by setting"
+                " logger:baud_rate to 0.");
+    }
+#endif
+}
 
 void BalboaGL::update() {
     ESP_LOGV(TAG, "Update called.");
@@ -389,7 +389,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 
 void BalboaGL::setup() {
     // This will be called by App.setup()
-    this->banner();
+    // this->banner();
     ESP_LOGCONFIG(TAG, "Setting up UART...");
     if (!this->get_hw_serial_()) {
         ESP_LOGCONFIG(
