@@ -312,7 +312,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.1");
+    device.setSoftwareVersion("0.2.2");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
