@@ -4,7 +4,7 @@
 #include "esphome/components/text_sensor/text_sensor.h"
 
 namespace esphome {
-  namespace empty_text_sensor {
+  namespace balboa_sensor {
 
   using namespace text_sensor;
 

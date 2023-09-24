@@ -3,7 +3,7 @@
 #include "balboaGL.h"
 
 namespace esphome {
-  namespace empty_text_sensor {
+  namespace balboa_sensor {
 
 //    BalboaGLSensor::BalboaGLSensor() : PollingComponent(15000) { }
 
