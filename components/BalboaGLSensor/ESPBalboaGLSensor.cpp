@@ -10,6 +10,7 @@ namespace esphome {
 
     void BalboaGLSensor::update()  {
       std::string state = "test";
+      ESP_LOGD(TAG, "status.state = " + status.state);
       status_sensor->publish_state(state);
     }
   }

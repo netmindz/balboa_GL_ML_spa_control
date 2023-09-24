@@ -3,6 +3,8 @@
 #include "esphome.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
+static const char* TAG = "BalboaGLSensor"; // Logging tag
+
 namespace esphome {
   namespace balboa_sensor {
 
