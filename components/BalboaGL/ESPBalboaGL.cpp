@@ -166,26 +166,6 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     }
 
 
-//     //const char* VANE_MAP[7]        = {"AUTO", "1", "2", "3", "4", "5", "SWING"};
-//     if (call.get_swing_mode().has_value()) {
-//         ESP_LOGV(TAG, "control - requested swing mode is %s",
-//                 *call.get_swing_mode());
-
-//         this->swing_mode = *call.get_swing_mode();
-//         switch(*call.get_swing_mode()) {
-//             case climate::CLIMATE_SWING_OFF:
-//                 hp->setVaneSetting("AUTO");
-//                 updated = true;
-//                 break;
-//             case climate::CLIMATE_SWING_VERTICAL:
-//                 hp->setVaneSetting("SWING");
-//                 updated = true;
-//                 break;
-//             default:
-//                 ESP_LOGW(TAG, "control - received unsupported swing mode request.");
-
-//         }
-//     }
 //     ESP_LOGD(TAG, "control - Was HeatPump updated? %s", YESNO(updated));
 
     // send the update back to esphome:
