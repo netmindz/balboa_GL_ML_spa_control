@@ -27,3 +27,5 @@
 #else
 #define PUMP2_STATE_HIGH 1
 #endif 
+
+#define FA_MESSAGE_LENGTH 46

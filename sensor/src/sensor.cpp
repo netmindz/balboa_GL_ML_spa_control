@@ -42,25 +42,13 @@ const char passphrase[] = SECRET_PSK;
 
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
 
-// Perform measurements or read nameplate values on your tub to define the power [kW]
-// for each device in order to calculate tub power usage
-const float POWER_HEATER = 2.8;
-const float POWER_PUMP_CIRCULATION = 0.3;
-const float POWER_PUMP1_LOW = 0.31;
-const float POWER_PUMP1_HIGH = 1.3;
-const float POWER_PUMP2_LOW = 0.3;
-const float POWER_PUMP2_HIGH = 0.6;
-
-// Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
-const int MINUTES_PER_DEGC = 45;
-
 
 #ifdef ESP32
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
-#define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 18
+#define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -77,8 +65,9 @@ SoftwareSerial tub;
 // End of config
 // ************************************************************************************************
 
-#include "constants.h"
-#include "balboaGL.h"
+#include <balboaGL.h>
+
+balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF);
 
 WiFiClient clients[1];
 
@@ -122,6 +111,8 @@ ESP8266WebServer webserver(80);
 String lastJSON = "";
 int lastUptime = 0;
 
+#include "telnet.h"
+#include "webstatus.h"
 
 void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
@@ -142,7 +133,7 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
         command = COMMAND_JET2;
         options = PUMP2_STATE_HIGH + 1;
     }
-    setOption(currentIndex, index, options, command);
+    spa.setOption(currentIndex, index, options, command);
 }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
@@ -150,7 +141,7 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     int currentIndex = sender->getCurrentState();
     int options = 3;
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-    setOption(currentIndex, index, options);
+    spa.setOption(currentIndex, index, options, COMMAND_DOWN);
     sendBuffer.enqueue(COMMAND_CHANGE_MODE);
 }
 
@@ -205,6 +196,12 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 }
 
 void updateHAStatus() {
+
+    static String lastRaw = "";
+    if(status.rawData == lastRaw) {
+        return;
+    }
+    lastRaw = status.rawData;
 
     tubpower.setValue(status.power);
     rawData.setValue(status.rawData.c_str());
@@ -281,10 +278,6 @@ void setup() {
 #endif
     }
 
-    pinMode(RTS_PIN, OUTPUT);
-    Serial.printf("Setting pin %u LOW\n", RTS_PIN);
-    digitalWrite(RTS_PIN, LOW);
-    pinMode(PIN_5_PIN, INPUT);
 #ifdef ESP32
     Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
     tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -405,23 +398,15 @@ void setup() {
 #endif
     Serial.println("End of setup");
     digitalWrite(LED_BUILTIN, LOW);
+
+    sendBuffer.enqueue(COMMAND_DOWN); // trigger set temp to capture target
 }
 
 void loop() {
-    bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
-    if (tub.available() > 0) {
-        size_t len = tub.available();
-        //    Serial.printf("bytes avail = %u\n", len);
-        uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
-        tub.read(buf, len);
-        if (panelSelect == LOW) {  // Only read data meant for us
-            handleBytes(len, buf);
-        } else {
-            // Serial.print("H");
-            result = "";
-            msgLength = 0;
-        }
-    }
+    
+    spa.readSerial();
+
+    bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
 
     if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
 
