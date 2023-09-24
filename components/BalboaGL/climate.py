@@ -64,9 +64,6 @@ def to_code(config):
     serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
-#    if CONF_BAUD_RATE in config:
-#        cg.add(var.set_baud_rate(config[CONF_BAUD_RATE]))
-
     supports = config[CONF_SUPPORTS]
     traits = var.config_traits()
 
@@ -93,5 +90,5 @@ def to_code(config):
     cg.add_library(
         name="balboaGL",
         repository="https://github.com/netmindz/balboaGL.git",
-        version="d015e1ae014f7f2e0df1fc24d65e1cfcb66ed1cb",
+        version="d05f8e83f500e9a85670766165a561eb277f7086",
     )

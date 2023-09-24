@@ -33,6 +33,7 @@ BalboaGL::BalboaGL(
 // }
 
 void BalboaGL::update() {
+    this->spa->readSerial();
 //     // This will be called every "update_interval" milliseconds.
 //     //this->dump_config();
 //     this->hp->sync();
@@ -400,8 +401,8 @@ void BalboaGL::setup() {
 //     }
 //     this->check_logger_conflict_();
 
-    ESP_LOGCONFIG(TAG, "Intializing new balboaGL object.");
-    this->spa = new balboaGL(18,22);
+    ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
+    this->spa = new balboaGL(hw_serial_, 18,22);
 //     this->current_temperature = NAN;
 //     this->target_temperature = NAN;
 //     this->fan_mode = climate::CLIMATE_FAN_OFF;
