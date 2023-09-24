@@ -45,12 +45,6 @@ void BalboaGL::update() {
         this->mode = climate::CLIMATE_MODE_AUTO;
     }
     this->publish_state();
-//     //this->dump_config();
-// #ifndef USE_CALLBACKS
-//     this->hpSettingsChanged();
-//     heatpumpStatus currentStatus = hp->getStatus();
-//     this->hpStatusChanged(currentStatus);
-// #endif
 }
 
 // /**
