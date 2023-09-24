@@ -36,6 +36,8 @@ void BalboaGL::update() {
     // This will be called every "update_interval" milliseconds.
     ESP_LOGI(TAG, "Update called.");
     this->spa->readSerial();
+    this->current_temperature = status.temp;
+    this->target_temperature = status.targetTemp;
 //     //this->dump_config();
 // #ifndef USE_CALLBACKS
 //     this->hpSettingsChanged();
