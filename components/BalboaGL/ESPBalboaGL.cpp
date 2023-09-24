@@ -33,11 +33,10 @@ void BalboaGL::check_logger_conflict_() {
 }
 
 void BalboaGL::update() {
-    ESP_LOGV(TAG, "Update called.");
+    // This will be called every "update_interval" milliseconds.
+    ESP_LOGI(TAG, "Update called.");
     this->spa->readSerial();
-//     // This will be called every "update_interval" milliseconds.
 //     //this->dump_config();
-//     this->hp->sync();
 // #ifndef USE_CALLBACKS
 //     this->hpSettingsChanged();
 //     heatpumpStatus currentStatus = hp->getStatus();
@@ -217,7 +216,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     }
 //     ESP_LOGD(TAG, "control - Was HeatPump updated? %s", YESNO(updated));
 
-//     // send the update back to esphome:
+    // send the update back to esphome:
     this->publish_state();
 //     // and the heat pump:
 //     hp->update();

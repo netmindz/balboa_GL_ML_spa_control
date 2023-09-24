@@ -38,12 +38,11 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(BalboaGL),
         cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
-#        cv.Optional(CONF_BAUD_RATE): cv.positive_int,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
-#        cv.Optional(CONF_UPDATE_INTERVAL, default="500ms"): cv.All(
-#            cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
-#        ),
+       cv.Optional(CONF_UPDATE_INTERVAL, default="500ms"): cv.All(
+           cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
+       ),
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
