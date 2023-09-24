@@ -31,7 +31,6 @@ const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 // #define PIN_5_PIN 18
 #define LED_BUILTIN 2
 
-
 #include "balboaGL.h"
 
 using namespace esphome;
@@ -51,8 +50,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // // Handle a change in status as detected by the HeatPump library.
         // void hpStatusChanged(heatpumpStatus currentStatus);
 
-        // // Set up the component, initializing the HeatPump object.
-        // void setup() override;
+        // // Set up the component, initializing the balboaGL object.
+        void setup() override;
 
         // // This is called every poll_interval.
         void update() override;
