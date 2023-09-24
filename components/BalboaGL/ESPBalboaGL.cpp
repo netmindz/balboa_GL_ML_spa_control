@@ -442,3 +442,17 @@ void BalboaGL::setup() {
 //     LOG_CLIMATE("", "BalboaGL Climate", this);
 //     ESP_LOGI(TAG, "HELLO");
 // }
+
+class BalboaGLSensor : public PollingComponent {
+ public:
+  Sensor *status_sensor = new Sensor();
+
+  MyCustomSensor() : PollingComponent(15000) { }
+
+  void setup() override {
+  }
+
+  void update() override {
+    status_sensor->publish_state(status.state);
+  }
+};
