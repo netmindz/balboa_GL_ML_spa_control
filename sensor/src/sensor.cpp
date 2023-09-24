@@ -420,8 +420,7 @@ void loop() {
             panelDetected = true;
         }
         else {
-            state = "Panel select (pin5) not detected";
-            currentState.setValue(state.c_str());
+            status.state = "Panel select (pin5) not detected";
         }
 
         updateHAStatus();
