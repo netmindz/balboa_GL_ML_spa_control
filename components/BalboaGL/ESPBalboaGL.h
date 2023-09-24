@@ -24,12 +24,11 @@ static const char* TAG = "BalboaGL"; // Logging tag
 
 const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
-#define tub Serial2
-#define RX_PIN 19
-#define TX_PIN 23
-// #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-// #define PIN_5_PIN 18
-#define LED_BUILTIN 2
+// TODO: hard coded values for T-RSC3
+#define RX_PIN_DEF 3
+#define TX_PIN_DEF 10
+#define RTS_PIN_DEF 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 6
 
 #include "balboaGL.h"
 

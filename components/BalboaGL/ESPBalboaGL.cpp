@@ -405,7 +405,10 @@ void BalboaGL::setup() {
     this->check_logger_conflict_();
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
-    this->spa = new balboaGL(hw_serial_, 18, 22);
+
+    hw_serial_.begin(115200, SERIAL_8N1, RX_PIN_DEF, TX_PIN_DEF);
+
+    this->spa = new balboaGL(hw_serial_, RTS_PIN_DEF, PIN_5_PIN_DEF); 
     this->current_temperature = NAN;
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_AUTO;
