@@ -38,6 +38,7 @@ void BalboaGL::update() {
     this->spa->readSerial();
     this->current_temperature = status.temp;
     this->target_temperature = status.targetTemp;
+    this->publish_state();
 //     //this->dump_config();
 // #ifndef USE_CALLBACKS
 //     this->hpSettingsChanged();
