@@ -52,7 +52,7 @@ void BalboaGL::update() {
             this->custom_preset = "UNKNOWN";
             break;
     }
-    this->custom_preset = status.mode;
+
     if(status.heater) {
         this->mode = climate::CLIMATE_MODE_HEAT;
     }
