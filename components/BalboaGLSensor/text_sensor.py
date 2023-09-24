@@ -25,6 +25,14 @@ CONFIG_SCHEMA = cv.Schema({
     }),
 })
 
+@coroutine
+def setup_conf(config, key):
+    if key in config:
+        conf = config[key]
+        var = cg.new_Pvariable(conf[CONF_ID])
+        yield cg.register_component(var, conf)
+        yield text_sensor.register_text_sensor(var, conf)
+        
 def to_code(config):
     yield setup_conf(config, CONF_STATE)
     yield setup_conf(config, CONF_RAW)
