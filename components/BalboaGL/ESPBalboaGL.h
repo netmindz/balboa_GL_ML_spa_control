@@ -1,5 +1,6 @@
 #include "esphome.h"
 #include "esphome/core/preferences.h"
+#include "esphome/components/sensor/sensor.h"
 #include "esphome/components/climate/climate.h"
 
 
