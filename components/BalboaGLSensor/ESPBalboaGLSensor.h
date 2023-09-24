@@ -17,6 +17,7 @@ namespace esphome {
       void setup();
       void update();
       TextSensor *status_sensor = new TextSensor();
+      TextSensor *raw_sensor = new TextSensor();
 
   };
 

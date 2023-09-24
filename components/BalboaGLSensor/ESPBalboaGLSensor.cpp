@@ -12,6 +12,7 @@ namespace esphome {
       std::string state = "test";
       ESP_LOGD(TAG, status.state.c_str());
       status_sensor->publish_state(state);
+      raw_sensor->publish_state(status.rawData.c_str());
     }
   }
 }
