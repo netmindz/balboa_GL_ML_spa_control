@@ -364,19 +364,6 @@ void BalboaGL::setup() {
     this->swing_mode = climate::CLIMATE_SWING_OFF;
     this->action = climate::CLIMATE_ACTION_HEATING;
 
-// #ifdef USE_CALLBACKS
-//     hp->setSettingsChangedCallback(
-//             [this]() {
-//                 this->hpSettingsChanged();
-//             }
-//     );
-
-//     hp->setStatusChangedCallback(
-//             [this](heatpumpStatus currentStatus) {
-//                 this->hpStatusChanged(currentStatus);
-//             }
-//     );
-// #endif
 
 //     ESP_LOGCONFIG(
 //             TAG,
