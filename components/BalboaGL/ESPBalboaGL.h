@@ -6,7 +6,7 @@
 #ifndef ESPMHP_H
 #define ESPMHP_H
 
-#include "constants.h"
+#include "balboaGL.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
 
