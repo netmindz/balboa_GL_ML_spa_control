@@ -81,6 +81,6 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 
 
-        balboaGL spa;
+        balboaGL* spa;
 };
 #endif

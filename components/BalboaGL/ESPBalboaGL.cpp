@@ -10,10 +10,9 @@ using namespace esphome;
  */
 BalboaGL::BalboaGL(
         HardwareSerial* hw_serial
-) //:
-    // hw_serial_{hw_serial}
+) :
+    hw_serial_{hw_serial}
 {
-    this->hw_serial_ = hw_serial;
     this->traits_.set_supports_action(true);
     this->traits_.set_supports_current_temperature(true);
     this->traits_.set_supports_two_point_target_temperature(false);
