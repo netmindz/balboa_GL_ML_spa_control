@@ -5,7 +5,7 @@
 namespace esphome {
   namespace empty_text_sensor {
 
-    BalboaGLSensor::BalboaGLSensor() : PollingComponent(15000) { }
+//    BalboaGLSensor::BalboaGLSensor() : PollingComponent(15000) { }
 
     void BalboaGLSensor::setup()  {
     }
