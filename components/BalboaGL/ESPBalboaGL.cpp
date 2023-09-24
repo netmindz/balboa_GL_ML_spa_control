@@ -1,3 +1,4 @@
+#include <string>
 #include "ESPBalboaGL.h"
 using namespace esphome;
 
@@ -40,16 +41,16 @@ void BalboaGL::update() {
     this->target_temperature = status.targetTemp;
     switch(status.mode) {
         case MODE_IDX_STD:
-            this->custom_preset = string("STD");
+            this->custom_preset = std::string("STD");
             break;
         case MODE_IDX_ECO:
-            this->custom_preset = string("ECO");
+            this->custom_preset = std:string("ECO");
             break;
         case MODE_IDX_SLP:
-            this->custom_preset = string("Sleep");
+            this->custom_preset = std::string("Sleep");
             break;
         default:
-            this->custom_preset = string("UNKNOWN");
+            this->custom_preset = std::string("UNKNOWN");
             break;
     }
 
