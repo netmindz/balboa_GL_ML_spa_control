@@ -406,7 +406,7 @@ void BalboaGL::setup() {
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
 
-    hw_serial_.begin(115200, SERIAL_8N1, RX_PIN_DEF, TX_PIN_DEF);
+    hw_serial_->begin(115200, SERIAL_8N1, RX_PIN_DEF, TX_PIN_DEF);
 
     this->spa = new balboaGL(hw_serial_, RTS_PIN_DEF, PIN_5_PIN_DEF); 
     this->current_temperature = NAN;
