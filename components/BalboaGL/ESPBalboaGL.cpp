@@ -38,6 +38,12 @@ void BalboaGL::update() {
     this->spa->readSerial();
     this->current_temperature = status.temp;
     this->target_temperature = status.targetTemp;
+    if(status.heater) {
+        this->mode = climate::CLIMATE_MODE_HEAT;
+    }
+    else {
+        this->mode = climate::CLIMATE_MODE_AUTO;
+    }
     this->publish_state();
 //     //this->dump_config();
 // #ifndef USE_CALLBACKS
