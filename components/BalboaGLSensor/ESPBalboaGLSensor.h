@@ -10,6 +10,7 @@ namespace esphome {
 
   class BalboaGLSensor : public TextSensor, public Component {
     public:
+      BalboaGLSensor::BalboaGLSensor() : PollingComponent(15000) { }
       void setup();
       void update();
       TextSensor *status_sensor = new TextSensor();
