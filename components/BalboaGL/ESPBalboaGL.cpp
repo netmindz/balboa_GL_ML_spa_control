@@ -37,7 +37,7 @@ void BalboaGL::update() {
     // This will be called every "update_interval" milliseconds.
     ESP_LOGI(TAG, "Update called.");
     size_t len = this->spa->readSerial();
-    ESP_LOGD(TAG, "Read %u bytes", len);
+    ESP_LOGV(TAG, "Read %u bytes", len);
     bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
     if(panelSelect == HIGH) {
         ESP_LOGD(TAG, "PanelSelect == HIGH");
@@ -47,6 +47,8 @@ void BalboaGL::update() {
         ESP_LOGD(TAG, "PanelSelect == LOw");
     }
 
+    ESP_LOGD(TAG, "Current Temp: %f", status.temp);
+    ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
     this->current_temperature = status.temp;
     this->target_temperature = status.targetTemp;
     switch(status.mode) {
