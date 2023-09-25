@@ -16,8 +16,8 @@ namespace esphome {
       BalboaGLStateSensor() : PollingComponent(15000) { }
       // void setup() {};
       void update() {
-        std::string state = "test";
-        ESP_LOGD(TAG, status.state.c_str());
+        std::string state = status.state.c_str();
+        ESP_LOGD(TAG, state);
         this->publish_state(state);
       }
 
