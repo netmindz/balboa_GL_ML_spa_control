@@ -70,7 +70,7 @@ void BalboaGL::update() {
         this->mode = climate::CLIMATE_MODE_AUTO;
     }
 
-    static String lastRaw = "";
+    static String lastRaw = "0";
     if(status.rawData != lastRaw) {
         lastRaw = status.rawData;
         this->publish_state();
