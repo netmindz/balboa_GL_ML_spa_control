@@ -16,8 +16,8 @@ from esphome.core import CORE, coroutine
 AUTO_LOAD = ["climate"]
 
 CONF_SUPPORTS = "supports"
-DEFAULT_CLIMATE_MODES = ["HEAT"]
-DEFAULT_FAN_MODES = ["AUTO"]
+DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
+DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
 BalboaGL = cg.global_ns.class_(

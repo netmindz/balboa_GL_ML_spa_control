@@ -388,9 +388,9 @@ void BalboaGL::setup() {
     this->spa = new balboaGL(hw_serial_, RTS_PIN_DEF, PIN_5_PIN_DEF); 
     this->current_temperature = NAN;
     this->target_temperature = NAN;
-    this->fan_mode = climate::CLIMATE_FAN_AUTO;
+    this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
-    this->action = climate::CLIMATE_ACTION_HEATING;
+    this->action = climate::CLIMATE_ACTION_AUTO;
 
 
 //     ESP_LOGCONFIG(
