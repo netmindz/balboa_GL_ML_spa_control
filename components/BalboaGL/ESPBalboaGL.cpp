@@ -68,7 +68,13 @@ void BalboaGL::update() {
     else {
         this->mode = climate::CLIMATE_MODE_AUTO;
     }
-    this->publish_state();
+
+    static String lastRaw = "";
+    if(status.rawData != lastRaw) {
+        lastRaw = status.rawData;
+        this->publish_state();
+    }
+
 }
 
 // /**
