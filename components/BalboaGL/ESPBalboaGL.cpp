@@ -41,6 +41,7 @@ void BalboaGL::update() {
     bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
     if(panelSelect == HIGH) {
         ESP_LOGD(TAG, "PanelSelect == HIGH");
+        return;
     }
     else {
         ESP_LOGD(TAG, "PanelSelect == LOw");
