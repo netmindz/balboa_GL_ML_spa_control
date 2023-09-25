@@ -17,8 +17,8 @@ namespace esphome {
       // void setup() {};
       void update() {
         std::string state = status.state.c_str();
-        ESP_LOGD(TAG, state);
-        this->publish_state(state);
+        ESP_LOGD(TAG, state.c_str());
+        this->publish_state(state.c_str());
       }
 
   };
