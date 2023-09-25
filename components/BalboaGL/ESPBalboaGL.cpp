@@ -71,10 +71,10 @@ void BalboaGL::update() {
     }
 
     static String lastRaw = "0";
-    if(status.rawData != lastRaw) {
+    // if(status.rawData != lastRaw) {
         lastRaw = status.rawData;
         this->publish_state();
-    }
+    // }
 
 }
 
