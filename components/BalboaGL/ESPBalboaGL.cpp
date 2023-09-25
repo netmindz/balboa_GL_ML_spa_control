@@ -390,7 +390,7 @@ void BalboaGL::setup() {
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
-    this->action = climate::CLIMATE_ACTION_AUTO;
+    this->action = climate::CLIMATE_ACTION_FAN;
 
 
 //     ESP_LOGCONFIG(
