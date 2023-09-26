@@ -1,7 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import select
-from esphome.const import CONF_ID
+from esphome.const import (
+    CONF_ID,
+    CONF_OPTIONS,
+)
 
 select_ns = cg.esphome_ns.namespace('balboa_select')
 Pump1Select = select_ns.class_('BalboaGLPump1Select', select.Select, cg.Component)
@@ -13,4 +16,4 @@ CONFIG_SCHEMA = select.SELECT_SCHEMA.extend({
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
-    yield select.register_select(var, config, options={"OFF", "HIGH"})
+    yield select.register_select(var, config, options=config[CONF_OPTIONS])
