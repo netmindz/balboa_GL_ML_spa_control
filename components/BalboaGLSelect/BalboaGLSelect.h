@@ -9,5 +9,10 @@ namespace esphome {
             
         };
 
+    class BalboaGLPump2Select : public Component, public select::Select {
+            public:
+            
+        };
+
     }
 }
