@@ -1,5 +1,8 @@
-#include "esphome.h"
+#include "esphome/core/component.h"
+#include "esphome/components/switch/switch.h"
 
+namespace esphome {
+    namespace balboa_switch {
 
 class BalboaGLLightSwitch : public Component, public switch_::Switch {
  public:
@@ -16,3 +19,6 @@ class BalboaGLLightSwitch : public Component, public switch_::Switch {
     // publish_state(state);
   }
 };
+
+    }
+}
