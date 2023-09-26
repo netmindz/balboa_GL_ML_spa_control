@@ -1,6 +1,7 @@
 #include "esphome.h"
 
-class BalboaGLLightSwitch : public Component, public Switch {
+
+class BalboaGLLightSwitch : public Component, public switch_::Switch {
  public:
   void setup() override {
     // This will be called by App.setup()
