@@ -37,7 +37,7 @@ def setup_conf(config, key):
         conf = config[key]
         var = cg.new_Pvariable(conf[CONF_ID])
         yield cg.register_component(var, conf)
-        yield select.register_select(var, config, options=conf[CONF_OPTIONS])
+        yield select.register_select(var, config, options=list())
 
 def to_code(config):
     yield setup_conf(config, CONF_PUMP1)
