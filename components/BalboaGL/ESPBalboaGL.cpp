@@ -85,35 +85,35 @@ void BalboaGL::update() {
 
 }
 
-// /**
-//  * Get our supported traits.
-//  *
-//  * Note:
-//  * Many of the following traits are only available in the 1.5.0 dev train of
-//  * ESPHome, particularly the Dry operation mode, and several of the fan modes.
-//  *
-//  * Returns:
-//  *   This class' supported climate::ClimateTraits.
-//  */
+/**
+ * Get our supported traits.
+ *
+ * Note:
+ * Many of the following traits are only available in the 1.5.0 dev train of
+ * ESPHome, particularly the Dry operation mode, and several of the fan modes.
+ *
+ * Returns:
+ *   This class' supported climate::ClimateTraits.
+ */
 climate::ClimateTraits BalboaGL::traits() {
     return traits_;
 }
 
-// /**
-//  * Modify our supported traits.
-//  *
-//  * Returns:
-//  *   A reference to this class' supported climate::ClimateTraits.
-//  */
+/**
+ * Modify our supported traits.
+ *
+ * Returns:
+ *   A reference to this class' supported climate::ClimateTraits.
+ */
 climate::ClimateTraits& BalboaGL::config_traits() {
     return traits_;
 }
 
-// /**
-//  * Implement control of a BalboaGL.
-//  *
-//  * Maps HomeAssistant/ESPHome modes to Mitsubishi modes.
-//  */
+/**
+ * Implement control of a BalboaGL.
+ *
+ * Maps HomeAssistant/ESPHome modes to Mitsubishi modes.
+ */
 void BalboaGL::control(const climate::ClimateCall &call) {
     ESP_LOGV(TAG, "Control called.");
 
