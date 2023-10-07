@@ -2,6 +2,9 @@
 #include "ESPBalboaGL.h"
 using namespace esphome;
 
+void telnetSend(String msg) {
+    ESP_LOGI(TAG, msg);
+}
 /**
  * Create a new BalboaGL object
  *
