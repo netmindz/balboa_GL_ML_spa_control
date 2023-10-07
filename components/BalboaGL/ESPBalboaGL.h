@@ -42,8 +42,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
             HardwareSerial* hw_serial
         );
 
-        // // print the current configuration
-        // void dump_config() override;
+        // print the current configuration
+        void dump_config() override;
 
         // // handle a change in settings as detected by the HeatPump library.
         // void hpSettingsChanged();
@@ -51,16 +51,16 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // // Handle a change in status as detected by the HeatPump library.
         // void hpStatusChanged(heatpumpStatus currentStatus);
 
-        // // Set up the component, initializing the balboaGL object.
+        // Set up the component, initializing the balboaGL object.
         void setup() override;
 
-        // // This is called every poll_interval.
+        // This is called every poll_interval.
         void update() override;
 
-        // // Configure the climate object with traits that we support.
+        // Configure the climate object with traits that we support.
         climate::ClimateTraits traits() override;
 
-        // // Get a mutable reference to the traits that we support.
+        // Get a mutable reference to the traits that we support.
         climate::ClimateTraits& config_traits();
 
         // Debugging function to print the object's state.
@@ -73,6 +73,9 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // // set_remote_temp(0) to switch back to the internal sensor.
         // void set_remote_temperature(float);
 
+        void set_rx_pin(int pin);
+
+        void set_tx_pin(int pin);
 
   protected:
         // The ClimateTraits supported by this HeatPump.
@@ -86,6 +89,9 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         //Print a warning message if we're using the sole hardware UART on an
         //ESP8266 or UART0 on ESP32
         void check_logger_conflict_();
+
+        int rx_pin;
+        int tx_pin;
 
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.

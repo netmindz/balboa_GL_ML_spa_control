@@ -447,17 +447,26 @@ void BalboaGL::setup() {
 //     return ESPMHP_MIN_TEMPERATURE + (steps * ESPMHP_TEMPERATURE_STEP);
 // }
 
-// void BalboaGL::dump_config() {
-//     this->banner();
+void BalboaGL::dump_config() {
+    // this->banner();
+    ESP_LOGI(TAG, " rx,tx = %u,%u", this->rx_pin, this->tx_pin);
 //     ESP_LOGI(TAG, "  Supports HEAT: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports COOL: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports AWAY mode: %s", YESNO(false));
 //     ESP_LOGI(TAG, "  Saved heat: %.1f", heat_setpoint.value_or(-1));
 //     ESP_LOGI(TAG, "  Saved cool: %.1f", cool_setpoint.value_or(-1));
 //     ESP_LOGI(TAG, "  Saved auto: %.1f", auto_setpoint.value_or(-1));
-// }
+}
 
 // void BalboaGL::dump_state() {
 //     LOG_CLIMATE("", "BalboaGL Climate", this);
 //     ESP_LOGI(TAG, "HELLO");
 // }
+
+void void BalboaGL::set_rx_pin(int pin) {
+    this->rx_pin = pin;
+}
+
+void void BalboaGL::set_tx_pin(int pin) {
+    this->tx_pin = pin;
+}
