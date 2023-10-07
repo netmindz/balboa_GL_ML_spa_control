@@ -416,17 +416,17 @@ void setup() {
     sendBuffer.enqueue(COMMAND_DOWN); // trigger set temp to capture target
 }
 
-boolean panelDetected = false;
+boolean panelSelectDetected = false;
 void loop() {
     
     spa.readSerial();
 
     bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
 
-    if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
+    if (panelSelect == HIGH || !panelSelectDetected) {  // Controller talking to other topside panels - we are in effect idle
 
         if(panelSelect == HIGH) {
-            panelDetected = true;
+            panelSelectDetected = true;
         }
         else {
             status.state = "Panel select (pin5) not detected";
@@ -439,7 +439,7 @@ void loop() {
 
         telnetLoop();
 
-        if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+        if (sendBuffer.isEmpty() || !panelSelectDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
                                      // can both block for a long time
 
             webserver.handleClient();
