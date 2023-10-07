@@ -47,7 +47,7 @@ void BalboaGL::update() {
         return;
     }
     else {
-        ESP_LOGD(TAG, "PanelSelect == LOw");
+        ESP_LOGD(TAG, "PanelSelect == LOW");
     }
 
     ESP_LOGD(TAG, "Current Temp: %f", status.temp);
@@ -78,6 +78,7 @@ void BalboaGL::update() {
 
     static String lastRaw = "0";
     // if(status.rawData != lastRaw) {
+        ESP_LOGD(TAG, "Raw: %f", status.rawData.c_str());
         lastRaw = status.rawData;
         this->publish_state();
     // }
