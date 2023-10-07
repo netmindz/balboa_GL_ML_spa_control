@@ -86,6 +86,12 @@ def to_code(config):
         repository="https://github.com/EinarArnason/ArduinoQueue.git",
         version="1.2.5",
     )
+    
+    cg.add_library(
+        name="CircularBuffer", # TODO: should really pull in a dep of balboaGL
+        repository="https://github.com/rlogiacco/CircularBuffer.git",
+        version="1.3.3",
+    )
     cg.add_library(
         name="balboaGL",
         repository="https://github.com/netmindz/balboaGL.git",
