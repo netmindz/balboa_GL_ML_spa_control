@@ -119,7 +119,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 
 //     bool updated = false;
 //     bool has_mode = call.get_mode().has_value();
-//     bool has_temp = call.get_target_temperature().has_value();
+    bool has_temp = call.get_target_temperature().has_value();
 //     if (has_mode){
 //         this->mode = *call.get_mode();
 //     }
@@ -187,23 +187,20 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //             break;
 //     }
 
-//     if (has_temp){
-//         ESP_LOGV(
-//             "control", "Sending target temp: %.1f",
-//             *call.get_target_temperature()
-//         );
-//         hp->setTemperature(*call.get_target_temperature());
-//         this->target_temperature = *call.get_target_temperature();
-//         updated = true;
-//     }
+    if (has_temp){
+        ESP_LOGV(
+            "control", "Sending target temp: %.1f",
+            *call.get_target_temperature()
+        );
+        this->spa->setTemp(*call.get_target_temperature());
+        updated = true;
+    }
 
 
-//     ESP_LOGD(TAG, "control - Was HeatPump updated? %s", YESNO(updated));
+//     ESP_LOGD(TAG, "control - Was SPA updated? %s", YESNO(updated));
 
     // send the update back to esphome:
     this->publish_state();
-//     // and the heat pump:
-//     hp->update();
 }
 
 // void BalboaGL::hpSettingsChanged() {
