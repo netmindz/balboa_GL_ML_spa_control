@@ -117,7 +117,7 @@ climate::ClimateTraits& BalboaGL::config_traits() {
 void BalboaGL::control(const climate::ClimateCall &call) {
     ESP_LOGV(TAG, "Control called.");
 
-//     bool updated = false;
+    bool updated = false;
 //     bool has_mode = call.get_mode().has_value();
     bool has_temp = call.get_target_temperature().has_value();
 //     if (has_mode){
