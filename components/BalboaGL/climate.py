@@ -5,11 +5,12 @@ from esphome.components.logger import HARDWARE_UART_TO_SERIAL
 from esphome.const import (
     CONF_ID,
     CONF_HARDWARE_UART,
-    CONF_BAUD_RATE,
     CONF_UPDATE_INTERVAL,
     CONF_MODE,
     CONF_FAN_MODE,
     CONF_SWING_MODE,
+    CONF_RX_PIN,
+    CONF_TX_PIN,
 )
 from esphome.core import CORE, coroutine
 
@@ -52,6 +53,8 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
                     cv.ensure_list(climate.validate_climate_fan_mode),
                 cv.Optional(CONF_SWING_MODE, default=DEFAULT_SWING_MODES):
                     cv.ensure_list(climate.validate_climate_swing_mode),
+                cv.Required(CONF_RX_PIN): cv.int_range(),
+                cv.Required(CONF_TX_PIN): cv.int_range(),
             }
         ),
     }
