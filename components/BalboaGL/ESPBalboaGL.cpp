@@ -463,10 +463,10 @@ void BalboaGL::dump_config() {
 //     ESP_LOGI(TAG, "HELLO");
 // }
 
-void void BalboaGL::set_rx_pin(int pin) {
+void BalboaGL::set_rx_pin(int pin) {
     this->rx_pin = pin;
 }
 
-void void BalboaGL::set_tx_pin(int pin) {
+void BalboaGL::set_tx_pin(int pin) {
     this->tx_pin = pin;
 }
