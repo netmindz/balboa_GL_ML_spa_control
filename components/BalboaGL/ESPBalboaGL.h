@@ -90,8 +90,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         //ESP8266 or UART0 on ESP32
         void check_logger_conflict_();
 
-        int rx_pin;
-        int tx_pin;
+        int rx_pin = -1;
+        int tx_pin = -1;
 
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
