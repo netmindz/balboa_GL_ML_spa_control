@@ -44,6 +44,8 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
        cv.Optional(CONF_UPDATE_INTERVAL, default="100ms"): cv.All(
            cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
        ),
+        cv.Required(CONF_RX_PIN): cv.int_range(),
+        cv.Required(CONF_TX_PIN): cv.int_range(),
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
@@ -53,8 +55,6 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
                     cv.ensure_list(climate.validate_climate_fan_mode),
                 cv.Optional(CONF_SWING_MODE, default=DEFAULT_SWING_MODES):
                     cv.ensure_list(climate.validate_climate_swing_mode),
-                cv.Required(CONF_RX_PIN): cv.int_range(),
-                cv.Required(CONF_TX_PIN): cv.int_range(),
             }
         ),
     }
