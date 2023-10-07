@@ -3,7 +3,7 @@
 using namespace esphome;
 
 void telnetSend(String msg) {
-    ESP_LOGI(TAG, msg);
+    ESP_LOGI(TAG, msg.c_str());
 }
 /**
  * Create a new BalboaGL object
