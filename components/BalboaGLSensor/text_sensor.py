@@ -6,11 +6,13 @@ from esphome.core import coroutine
 
 CONF_STATE = "state"
 CONF_RAW = "raw"
+CONF_LCD = "lcd"
 
 
 balboa_sensor_ns = cg.esphome_ns.namespace('balboa_sensor')
 StateInfo = balboa_sensor_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
 RawInfo = balboa_sensor_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
+LCDInfo = balboa_sensor_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
 
 CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_STATE): text_sensor.TEXT_SENSOR_SCHEMA.extend({
@@ -18,6 +20,9 @@ CONFIG_SCHEMA = cv.Schema({
     }),
     cv.Optional(CONF_RAW): text_sensor.TEXT_SENSOR_SCHEMA.extend({
         cv.GenerateID(): cv.declare_id(RawInfo),
+    }),
+    cv.Optional(CONF_LCD): text_sensor.TEXT_SENSOR_SCHEMA.extend({
+        cv.GenerateID(): cv.declare_id(LCDInfo),
     }),
 })
 
@@ -32,4 +37,4 @@ def setup_conf(config, key):
 def to_code(config):
     yield setup_conf(config, CONF_STATE)
     yield setup_conf(config, CONF_RAW)
-    
+    yield setup_conf(config, CONF_LCD)

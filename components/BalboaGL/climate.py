@@ -89,5 +89,5 @@ def to_code(config):
     cg.add_library(
         name="balboaGL",
         repository="https://github.com/netmindz/balboaGL.git",
-        version="99e703abd8c418a2d470bf8076f8d88a41fae7c8",
+        version="ec30c86f8100fb8cd6562ba4e333cda527b62704",
     )

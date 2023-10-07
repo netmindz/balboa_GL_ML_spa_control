@@ -33,5 +33,15 @@ namespace esphome {
 
   };
 
+  class BalboaGLLCDSensor : public TextSensor, public PollingComponent {
+    public:
+      BalboaGLLCDSensor() : PollingComponent(15000) { }
+      // void setup() {};
+      void update() {
+        this->publish_state(status.lcd);
+      }
+
+  };
+
   }
 }  
