@@ -40,7 +40,7 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
         cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
-       cv.Optional(CONF_UPDATE_INTERVAL, default="500ms"): cv.All(
+       cv.Optional(CONF_UPDATE_INTERVAL, default="100ms"): cv.All(
            cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
        ),
         # Optionally override the supported ClimateTraits.

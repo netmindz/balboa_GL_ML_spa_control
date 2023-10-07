@@ -43,7 +43,7 @@ void BalboaGL::update() {
     ESP_LOGV(TAG, "Read %u bytes", len);
     bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
     if(panelSelect == HIGH) {
-        ESP_LOGD(TAG, "PanelSelect == HIGH");
+        ESP_LOGV(TAG, "PanelSelect == HIGH");
         return;
     }
     else {
