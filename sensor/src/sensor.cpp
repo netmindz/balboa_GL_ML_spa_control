@@ -74,9 +74,11 @@ WiFiClient clients[1];
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 30);
 HASensorNumber temp("temp", HANumber::PrecisionP1);
+HASensorNumber tempFromF("tempFromF", HANumber::PrecisionP1);
 HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
 HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
+HASensor lcd("lcd");
 HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
@@ -212,8 +214,10 @@ void updateHAStatus() {
     rawData3.setValue(status.rawData3.c_str());
     targetTemp.setValue(status.targetTemp);
     temp.setValue(status.temp);
+    tempFromF.setValue(status.tempFromF);
     timeToTemp.setValue(status.timeToTemp);
     currentState.setValue(status.state.c_str());
+    lcd.setValue(status.lcd);
     rawData2.setValue(status.rawData2.c_str());
     rawData7.setValue(status.rawData7.c_str());
     // rawData4.setValue(lastRaw4.c_str());
@@ -319,6 +323,10 @@ void setup() {
     temp.setDeviceClass("temperature");
     temp.setName("Tub temperature");
 
+    tempFromF.setUnitOfMeasurement("°C");
+    tempFromF.setDeviceClass("temperature");
+    tempFromF.setName("Tub temperature from F");
+
     targetTemp.setUnitOfMeasurement("°C");
     targetTemp.setDeviceClass("temperature");
     targetTemp.setName("Target Tub temp");
@@ -329,6 +337,7 @@ void setup() {
     timeToTemp.setIcon("mdi:clock");
 
     currentState.setName("Status");
+    lcd.setName("LCD");
 
     pump1.setName("Pump1");
 #ifdef PUMP1_DUAL_SPEED
