@@ -21,6 +21,9 @@ DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
 DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
+CONF_ENABLE_PIN = "enable_pin"
+CONF_PANEL_SELECT_PIN = "panel_select_pin"
+
 BalboaGL = cg.global_ns.class_(
     "BalboaGL", climate.Climate, cg.PollingComponent
 )
@@ -46,6 +49,8 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
        ),
         cv.Required(CONF_RX_PIN): cv.int_range(),
         cv.Required(CONF_TX_PIN): cv.int_range(),
+        cv.Required(CONF_PANEL_SELECT_PIN): cv.int_range(),
+        cv.Optional(CONF_ENABLE_PIN): cv.int_range(),
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
