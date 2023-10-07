@@ -40,7 +40,7 @@ void BalboaGL::update() {
     // This will be called every "update_interval" milliseconds.
     ESP_LOGV(TAG, "Update called.");
     size_t len = this->spa->readSerial();
-    ESP_LOGV(TAG, "Read %u bytes", len);
+    ESP_LOGD(TAG, "Read %u bytes", len);
     bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
     if(panelSelect == HIGH) {
         ESP_LOGV(TAG, "PanelSelect == HIGH");
