@@ -12,10 +12,11 @@
 #include <SoftwareSerial.h>  // - https://github.com/plerup/espsoftwareserial
 #endif
 #include <ArduinoHA.h>
-#include <ArduinoOTA.h>
 #include <ArduinoQueue.h>
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
+#include <WebOTA.h>
+
 
 // ************************************************************************************************
 // Start of config
@@ -74,9 +75,11 @@ WiFiClient clients[1];
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 30);
 HASensorNumber temp("temp", HANumber::PrecisionP1);
+HASensorNumber tempFromF("tempFromF", HANumber::PrecisionP1);
 HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
 HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
+HASensor lcd("lcd");
 HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
@@ -93,6 +96,7 @@ HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
 HAButton btnUp("up");
 HAButton btnDown("down");
 HAButton btnMode("btnMode");
+HAButton btnTime("btnTime");
 
 // Not really HVAC device, but only way to get controls to set
 HAHVAC hvac("temp", HAHVAC::TargetTemperatureFeature);
@@ -149,6 +153,8 @@ void onButtonPress(HAButton* sender) {
         sendBuffer.enqueue(COMMAND_DOWN);
     } else if (name == "Mode") {
         sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    } else if (name == "Time") {
+        sendBuffer.enqueue(COMMAND_TIME);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -180,8 +186,10 @@ void updateHAStatus() {
     rawData3.setValue(status.rawData3.c_str());
     targetTemp.setValue(status.targetTemp);
     temp.setValue(status.temp);
+    tempFromF.setValue(status.tempFromF);
     timeToTemp.setValue(status.timeToTemp);
     currentState.setValue(status.state.c_str());
+    lcd.setValue(status.lcd);
     rawData2.setValue(status.rawData2.c_str());
     rawData7.setValue(status.rawData7.c_str());
     // rawData4.setValue(lastRaw4.c_str());
@@ -261,9 +269,8 @@ void setup() {
     tub.updateBaudRate(115200);
 #endif
 
-    ArduinoOTA.setHostname("hottub-sensor");
-
-    ArduinoOTA.begin();
+    init_wifi(ssid, passphrase, "hottub-sensor");
+    webota.init(8080, "/update");
 
     // start telnet server
     server.begin();
@@ -278,7 +285,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.1");
+    device.setSoftwareVersion("0.2.3");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
@@ -286,6 +293,10 @@ void setup() {
     temp.setUnitOfMeasurement("°C");
     temp.setDeviceClass("temperature");
     temp.setName("Tub temperature");
+
+    tempFromF.setUnitOfMeasurement("°C");
+    tempFromF.setDeviceClass("temperature");
+    tempFromF.setName("Tub temperature from F");
 
     targetTemp.setUnitOfMeasurement("°C");
     targetTemp.setDeviceClass("temperature");
@@ -297,6 +308,7 @@ void setup() {
     timeToTemp.setIcon("mdi:clock");
 
     currentState.setName("Status");
+    lcd.setName("LCD");
 
     pump1.setName("Pump1");
 #ifdef PUMP1_DUAL_SPEED
@@ -343,14 +355,16 @@ void setup() {
     btnUp.setName("Up");
     btnDown.setName("Down");
     btnMode.setName("Mode");
+    btnTime.setName("Time");
 
     btnUp.onCommand(onButtonPress);
     btnDown.onCommand(onButtonPress);
     btnMode.onCommand(onButtonPress);
+    btnTime.onCommand(onButtonPress);
 
     hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
     hvac.setModes(HAHVAC::AutoMode);
-    hvac.setMode(HAHVAC::AutoMode);
+    hvac.setMode(HAHVAC::AutoMode, true);
     hvac.setName("Target Temp");
     hvac.setMinTemp(26);
     hvac.setMaxTemp(40);
@@ -373,22 +387,31 @@ void setup() {
     sendBuffer.enqueue(COMMAND_DOWN); // trigger set temp to capture target
 }
 
+boolean panelSelectDetected = false;
 void loop() {
     
     spa.readSerial();
 
     bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
 
-    if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
+    if (panelSelect == HIGH || !panelSelectDetected) {  // Controller talking to other topside panels - we are in effect idle
+
+        if(panelSelect == HIGH) {
+            panelSelectDetected = true;
+        }
+        else {
+            status.state = "Panel select (pin5) not detected";
+        }
 
         updateHAStatus();
 
         mqtt.loop();
-        ArduinoOTA.handle();
+        
+        webota.handle();
 
         telnetLoop();
 
-        if (sendBuffer.isEmpty()) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+        if (sendBuffer.isEmpty() || !panelSelectDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
                                      // can both block for a long time
 
             webserver.handleClient();
