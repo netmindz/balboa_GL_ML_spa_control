@@ -12,10 +12,11 @@
 #include <SoftwareSerial.h>  // - https://github.com/plerup/espsoftwareserial
 #endif
 #include <ArduinoHA.h>
-#include <ArduinoOTA.h>
 #include <ArduinoQueue.h>
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
+#include <WebOTA.h>
+
 
 // ************************************************************************************************
 // Start of config
@@ -297,9 +298,8 @@ void setup() {
     tub.updateBaudRate(115200);
 #endif
 
-    ArduinoOTA.setHostname("hottub-sensor");
-
-    ArduinoOTA.begin();
+    init_wifi(ssid, passphrase, "hottub-sensor");
+    webota.init(8080, "/update");
 
     // start telnet server
     server.begin();
@@ -435,7 +435,8 @@ void loop() {
         updateHAStatus();
 
         mqtt.loop();
-        ArduinoOTA.handle();
+        
+        webota.handle();
 
         telnetLoop();
 
