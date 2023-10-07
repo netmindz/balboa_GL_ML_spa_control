@@ -393,7 +393,7 @@ void setup() {
 
     hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
     hvac.setModes(HAHVAC::AutoMode);
-    hvac.setMode(HAHVAC::AutoMode);
+    hvac.setMode(HAHVAC::AutoMode, true);
     hvac.setName("Target Temp");
     hvac.setMinTemp(26);
     hvac.setMaxTemp(40);
@@ -439,7 +439,7 @@ void loop() {
 
         telnetLoop();
 
-        if (sendBuffer.isEmpty()) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+        if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
                                      // can both block for a long time
 
             webserver.handleClient();
