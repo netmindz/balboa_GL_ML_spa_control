@@ -8,6 +8,12 @@
 #ifndef ESPMHP_H
 #define ESPMHP_H
 
+
+#define LOGGER_PRINT ESP_LOGD
+#define LOGGER_PRINTLN ESP_LOGD
+#define LOGGER_PRINTF ESP_LOGD
+
+
 #include "balboaGL.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
