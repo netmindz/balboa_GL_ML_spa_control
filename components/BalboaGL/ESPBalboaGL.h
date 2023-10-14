@@ -77,6 +77,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
 
         void set_tx_pin(int pin);
 
+        float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
+
   protected:
         // The ClimateTraits supported by this HeatPump.
         climate::ClimateTraits traits_;
