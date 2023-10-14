@@ -78,7 +78,7 @@ void BalboaGL::update() {
 
     static String lastRaw = "0";
     // if(status.rawData != lastRaw) {
-        ESP_LOGD(TAG, "Raw: %f", status.rawData.c_str());
+        ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         lastRaw = status.rawData;
         this->publish_state();
     // }
