@@ -87,6 +87,12 @@ def to_code(config):
             climate.CLIMATE_SWING_MODES[mode]
         ))
 
+    if CONF_RX_PIN in config:
+        cg.add(var.set_rx_pin(config[CONF_RX_PIN]))
+
+    if CONF_TX_PIN in config:
+        cg.add(var.set_tx_pin(config[CONF_TX_PIN]))
+
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
     cg.add_library(
