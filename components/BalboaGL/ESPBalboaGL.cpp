@@ -17,7 +17,7 @@ BalboaGL::BalboaGL(
 ) :
     hw_serial_{hw_serial}
 {
-    this->traits_.set_supports_action(true);
+    this->traits_.set_supports_action(false);
     this->traits_.set_supports_current_temperature(true);
     this->traits_.set_supports_two_point_target_temperature(false);
     this->traits_.set_visual_min_temperature(26);
@@ -188,7 +188,7 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     }
 
     if (has_temp){
-        ESP_LOGV(
+        ESP_LOGI(
             "control", "Sending target temp: %.1f",
             *call.get_target_temperature()
         );
