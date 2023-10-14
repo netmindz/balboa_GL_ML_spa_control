@@ -384,9 +384,9 @@ void BalboaGL::setup() {
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
 
-    hw_serial_->begin(115200, SERIAL_8N1, RX_PIN_DEF, TX_PIN_DEF);
+    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
 
-    this->spa = new balboaGL(hw_serial_, RTS_PIN_DEF, PIN_5_PIN_DEF); 
+    this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin); 
     this->current_temperature = NAN;
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_OFF;
@@ -450,6 +450,8 @@ void BalboaGL::setup() {
 void BalboaGL::dump_config() {
     // this->banner();
     ESP_LOGI(TAG, " rx,tx = %u,%u", this->rx_pin, this->tx_pin);
+    ESP_LOGI(TAG, " rts_pin = %u", this->rts_pin);
+    ESP_LOGI(TAG, " panel_select_pin = %u", this->panel_select_pin);
 //     ESP_LOGI(TAG, "  Supports HEAT: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports COOL: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports AWAY mode: %s", YESNO(false));
@@ -469,4 +471,11 @@ void BalboaGL::set_rx_pin(int pin) {
 
 void BalboaGL::set_tx_pin(int pin) {
     this->tx_pin = pin;
+}
+void set_rts_pin(int pin) {
+    this->rts_pin = pin;
+}
+
+void set_panel_select_pin(int pin) {
+    this->panel_select_pin = pin;
 }

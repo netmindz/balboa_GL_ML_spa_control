@@ -24,12 +24,6 @@ static const char* TAG = "BalboaGL"; // Logging tag
 
 const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
-// TODO: hard coded values for T-RSC3
-#define RX_PIN_DEF 3
-#define TX_PIN_DEF 10
-#define RTS_PIN_DEF 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN_DEF 6
-
 #include "balboaGL.h"
 
 using namespace esphome;
@@ -75,6 +69,10 @@ class BalboaGL : public PollingComponent, public climate::Climate {
 
         void set_tx_pin(int pin);
 
+        void set_rts_pin(int pin);
+
+        void set_panel_select_pin(int pin);
+
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
   protected:
@@ -92,6 +90,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
 
         int rx_pin = -1;
         int tx_pin = -1;
+        int rts_pin = -1
+        int panel_select_pin = -1;
 
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.

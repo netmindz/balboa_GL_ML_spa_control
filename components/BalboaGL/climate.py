@@ -93,6 +93,13 @@ def to_code(config):
     if CONF_TX_PIN in config:
         cg.add(var.set_tx_pin(config[CONF_TX_PIN]))
 
+    if CONF_ENABLE_PIN in config:
+        cg.add(var.set_rts_pin(config[CONF_ENABLE_PIN]))
+
+    if CONF_PANEL_SELECT_PIN in config:
+        cg.add(var.set_panel_select_pin(config[CONF_PANEL_SELECT_PIN]))
+
+
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
     cg.add_library(
