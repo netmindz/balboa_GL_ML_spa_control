@@ -8,8 +8,6 @@
 #ifndef ESPMHP_H
 #define ESPMHP_H
 
-#include "balboaGL.h"
-
 static const char* TAG = "BalboaGL"; // Logging tag
 
 // // Perform measurements or read nameplate values on your tub to define the power [kW]
