@@ -90,7 +90,7 @@ class BalboaGL : public PollingComponent, public climate::Climate {
 
         int rx_pin = -1;
         int tx_pin = -1;
-        int rts_pin = -1
+        int rts_pin = -1;
         int panel_select_pin = -1;
 
   private:
