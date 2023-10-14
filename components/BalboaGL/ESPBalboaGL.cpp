@@ -472,10 +472,10 @@ void BalboaGL::set_rx_pin(int pin) {
 void BalboaGL::set_tx_pin(int pin) {
     this->tx_pin = pin;
 }
-void set_rts_pin(int pin) {
+void BalboaGL::set_rts_pin(int pin) {
     this->rts_pin = pin;
 }
 
-void set_panel_select_pin(int pin) {
+void BalboaGL::set_panel_select_pin(int pin) {
     this->panel_select_pin = pin;
 }
