@@ -150,7 +150,13 @@ ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large 
 // clears serial receive buffer
 void IRAM_ATTR clearRXBuffer() {
     // clear the rx buffer
+    #if defined(ESP32) || defined(RSC3)
     uart_flush(tubUART);
+    #else
+    // not tested but according to the code flush clears the buffer
+    // https://github.com/plerup/espsoftwareserial/blob/main/src/SoftwareSerial.cpp#L434
+    tub.flush();
+    #endif
 }
 
 void sendCommand(String command, int count) {
@@ -344,10 +350,10 @@ void setup() {
     Serial.printf("Set serial port as pins %u, %u\n", RX_PIN,
                   TX_PIN);  // added here to see if line about was where the hang was
     tub.updateBaudRate(115200);
+#endif
     // enable interrupt for pin5 falling level change so we can clear the rx buffer
     // everytime our panel is selected
     attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearRXBuffer, FALLING);
-#endif
 
     ArduinoOTA.setHostname("hottub-sensor");
 
@@ -474,36 +480,38 @@ uint32_t lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 boolean panelDetected = false;
+const unsigned long readBytesTimeout = 2500; // Timeout in microseconds (2.5 ms)
 
-// waitforGLBytes checks the first byte in the serial buffer
-// since we've cleared the serial buffer when pin5 went low
-// there will only be data meant for our panel in the buffer.
-// Depending on the message type, wait for the expected number
-// of bytes to be available with a timeout of 2ms
-// returns number of bytes to read
+/*
+ * waitforGLBytes checks the first byte in the serial buffer
+ * since we've cleared the serial buffer when pin5 went low
+ * there will only be data meant for our panel in the buffer.
+ * Depending on the message type, wait for the expected number
+ * of bytes to be available with a timeout of 2ms
+ * returns number of bytes to read
+ */
 int waitforGLBytes() {
     int msgLength = 0;
     setPixel(STATUS_OK);
     // define message length from starting Byte
     switch (tub.peek()) {
-        case 0xFA:
-            msgLength = 23;
-            break;
-        case 0xAE:
-            msgLength = 16;
-            break;
-        default:
-            Serial.print("Unknown message start Byte: ");
-            int peekedByte = tub.peek();
-            Serial.println(peekedByte, HEX);
-            return 0;
+    case 0xFA:
+        msgLength = 23;
+        break;
+    case 0xAE:
+        msgLength = 16;
+        break;
+    default:
+        Serial.print("Unknown message start Byte: ");
+        int peekedByte = tub.peek();
+        Serial.println(peekedByte, HEX);
+        return 0;
     }
-    // we'll wait here for up to 2ms until the expected number of bytes are available
-    unsigned long startTime = millis(); // Get the current time
+    // we'll wait here for up to 2.5ms until the expected number of bytes are available
+    unsigned long startTime = micros();
     while (tub.available() < msgLength) {
-        if (millis() - startTime >= 2) {
-            // Timeout occurred (2 ms elapsed)
-            Serial.printf("Timeout: %u bytes not available in 2 ms\n", msgLength);
+        if (micros() - startTime >= readBytesTimeout) {
+            Serial.printf("Timeout: %u bytes not available in 2.5ms\n", msgLength);
             return 0;
         }
     }
@@ -514,7 +522,6 @@ void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
     // is data available and we are selected
     if ((tub.available() > 0) && (panelSelect == LOW)) {
-        // lets get our message
         int msgLength = waitforGLBytes();
         // only do something if we've got a message
         if (msgLength > 0) {
