@@ -3,7 +3,8 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/climate/climate.h"
-
+#include "esphome/core/log.h"
+#include "esp_log.h"
 
 #ifndef ESPMHP_H
 #define ESPMHP_H
