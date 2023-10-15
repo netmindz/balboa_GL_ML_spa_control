@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <esp_task_wdt.h>
+#include <driver/uart.h>
 #else
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -60,6 +61,7 @@ int delayTime = DELAY_TIME_DEFAULT;
 
 #ifdef RSC3
 #define tub Serial1
+#define tubUART UART_NUM_1
 #define RX_PIN 3
 #define TX_PIN 10
 #define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
@@ -70,6 +72,7 @@ Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
 #define tub Serial2
+#define tubUART UART_NUM_2
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
@@ -142,6 +145,19 @@ double tubTargetTemp = -1;
 String state = "unknown";
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+
+// Triggered when pin5 falling - ie our panel is selected
+// clears serial receive buffer
+void IRAM_ATTR clearRXBuffer() {
+    // clear the rx buffer
+    #if defined(ESP32) || defined(RSC3)
+    uart_flush(tubUART);
+    #else
+    // not tested but according to the code flush clears the buffer
+    // https://github.com/plerup/espsoftwareserial/blob/main/src/SoftwareSerial.cpp#L434
+    tub.flush();
+    #endif
+}
 
 void sendCommand(String command, int count) {
     Serial.printf("Sending %s - %u times\n", command.c_str(), count);
@@ -335,6 +351,9 @@ void setup() {
                   TX_PIN);  // added here to see if line about was where the hang was
     tub.updateBaudRate(115200);
 #endif
+    // enable interrupt for pin5 falling level change so we can clear the rx buffer
+    // everytime our panel is selected
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearRXBuffer, FALLING);
 
     ArduinoOTA.setHostname("hottub-sensor");
 
@@ -461,23 +480,54 @@ uint32_t lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
 boolean panelDetected = false;
+const unsigned long readBytesTimeout = 2500; // Timeout in microseconds (2.5 ms)
 
-void handleBytes(size_t len, uint8_t buf[]);
+/*
+ * waitforGLBytes checks the first byte in the serial buffer
+ * since we've cleared the serial buffer when pin5 went low
+ * there will only be data meant for our panel in the buffer.
+ * Depending on the message type, wait for the expected number
+ * of bytes to be available with a timeout of 2ms
+ * returns number of bytes to read
+ */
+int waitforGLBytes() {
+    int msgLength = 0;
+    setPixel(STATUS_OK);
+    // define message length from starting Byte
+    switch (tub.peek()) {
+    case 0xFA:
+        msgLength = 23;
+        break;
+    case 0xAE:
+        msgLength = 16;
+        break;
+    default:
+        Serial.print("Unknown message start Byte: ");
+        int peekedByte = tub.peek();
+        Serial.println(peekedByte, HEX);
+        return 0;
+    }
+    // we'll wait here for up to 2.5ms until the expected number of bytes are available
+    unsigned long startTime = micros();
+    while (tub.available() < msgLength) {
+        if (micros() - startTime >= readBytesTimeout) {
+            Serial.printf("Timeout: %u bytes not available in 2.5ms\n", msgLength);
+            return 0;
+        }
+    }
+    return msgLength;
+}
 
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
-    if (tub.available() > 0) {
-        setPixel(STATUS_OK);
-        size_t len = tub.available();
-        //    Serial.printf("bytes avail = %u\n", len);
-        uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
-        tub.read(buf, len);
-        if (panelSelect == LOW) {  // Only read data meant for us
-            handleBytes(len, buf);
-        } else {
-            // Serial.print("H");
-            result = "";
-            msgLength = 0;
+    // is data available and we are selected
+    if ((tub.available() > 0) && (panelSelect == LOW)) {
+        int msgLength = waitforGLBytes();
+        // only do something if we've got a message
+        if (msgLength > 0) {
+            uint8_t buf[msgLength];
+            tub.read(buf, msgLength);
+            handleMessage(msgLength, buf);
         }
     }
     else {
@@ -530,36 +580,20 @@ void loop() {
 #endif
 }
 
-void handleBytes(size_t len, uint8_t buf[]) {
+void handleMessage(size_t len, uint8_t buf[]) {
+    //      Serial.print("message = ");
+    //      Serial.println(result);
+    // check if we need to send command first
+    if (buf[0] == 0xFA) {
+        sendCommand();
+    }
+    result = "";
     for (int i = 0; i < len; i++) {
         if (buf[i] < 0x10) {
             result += '0';
         }
         result += String(buf[i], HEX);
     }
-    if (msgLength == 0 && result.length() == 2) {
-        String messageType = result.substring(0, 2);
-        if (messageType == "fa") {
-            msgLength = 46;
-        } else if (messageType == "ae") {
-            msgLength = 32;
-        } else {
-            Serial.print("Unknown message length for ");
-            Serial.println(messageType);
-        }
-    } else if (result.length() == msgLength) {
-        if (result.length() == 46) {
-            sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
-                            // say sending MQTT updates
-        }
-        handleMessage();
-    }
-}
-
-void handleMessage() {
-    //      Serial.print("message = ");
-    //      Serial.println(result);
-
     if (result.substring(0, 4) == "fa14") {
         // Serial.println("FA 14");
         // telnetSend(result);
