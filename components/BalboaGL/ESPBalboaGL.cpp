@@ -77,11 +77,21 @@ void BalboaGL::update() {
     }
 
     static String lastRaw = "0";
-    // if(status.rawData != lastRaw) {
+    if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         lastRaw = status.rawData;
+
+        // this->pump1->publish_state(pump_mode[status.pump1]);
+        // this->pump2->publish_state(pump_mode[status.pump2]);
+
+        this->lightSwitch->publish_state(status.light);
+
+        this->stateSensor->update();
+        this->rawSensor->update();
+        this->lcdSensor->update();
+        
         this->publish_state();
-    // }
+    }
 
 }
 
