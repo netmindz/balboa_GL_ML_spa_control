@@ -1,3 +1,6 @@
+#ifndef ESPMHP_H
+#define ESPMHP_H
+
 #include "esphome.h"
 #include "esphome/core/preferences.h"
 // #include "esphome/components/sensor/sensor.h"
@@ -6,8 +9,10 @@
 #include "esphome/core/log.h"
 #include "esp_log.h"
 
-#ifndef ESPMHP_H
-#define ESPMHP_H
+#include "BalboaGLSelect.h"
+#include "BalboaGLSwitch.h"
+#include "ESPBalboaGL.h"
+#include "ESPBalboaGLSensor.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
 
@@ -88,6 +93,13 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         //Print a warning message if we're using the sole hardware UART on an
         //ESP8266 or UART0 on ESP32
         void check_logger_conflict_();
+
+        BalboaGLPump1Select pump1;
+        BalboaGLPump2Select pump2;
+        BalboaGLLightSwitch lightSwitch;
+        BalboaGLStateSensor stateSensor;
+        BalboaGLRawSensor rawSensor;
+        BalboaGLLCDSensor lcdSensor;
 
         int rx_pin = -1;
         int tx_pin = -1;
