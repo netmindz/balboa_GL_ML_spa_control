@@ -94,12 +94,12 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         //ESP8266 or UART0 on ESP32
         void check_logger_conflict_();
 
-        BalboaGLPump1Select pump1;
-        BalboaGLPump2Select pump2;
-        BalboaGLLightSwitch lightSwitch;
-        BalboaGLStateSensor stateSensor;
-        BalboaGLRawSensor rawSensor;
-        BalboaGLLCDSensor lcdSensor;
+      //   esphome::balboa_select::BalboaGLPump1Select pump1;
+      //   esphome::balboa_select::BalboaGLPump2Select pump2;
+        esphome::balboa_switch::BalboaGLLightSwitch lightSwitch;
+        esphome::balboa_sensor::BalboaGLStateSensor stateSensor;
+        esphome::balboa_sensor::BalboaGLRawSensor rawSensor;
+        esphome::balboa_sensor::BalboaGLLCDSensor lcdSensor;
 
         int rx_pin = -1;
         int tx_pin = -1;

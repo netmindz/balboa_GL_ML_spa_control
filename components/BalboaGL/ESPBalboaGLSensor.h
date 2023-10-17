@@ -2,7 +2,10 @@
 
 #include "esphome.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esp_log.h"
+#include "balboaGL.h"
 
+extern struct BalboaStatus status;
 
 namespace esphome {
   namespace balboa_sensor {
