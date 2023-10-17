@@ -24,7 +24,7 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_max_temperature(40);
     this->traits_.set_visual_temperature_step(0.5);
 
-    this->lightSwitch->setSpa(spa);
+    // this->lightSwitch->setSpa(spa);
 }
 
 void BalboaGL::check_logger_conflict_() {
@@ -86,11 +86,11 @@ void BalboaGL::update() {
         // this->pump1->publish_state(pump_mode[status.pump1]);
         // this->pump2->publish_state(pump_mode[status.pump2]);
 
-        this->lightSwitch->publish_state(status.light);
+        // this->lightSwitch->publish_state(status.light);
 
-        this->stateSensor->update();
-        this->rawSensor->update();
-        this->lcdSensor->update();
+        // this->stateSensor->update();
+        // this->rawSensor->update();
+        // this->lcdSensor->update();
         
         this->publish_state();
     }
@@ -439,7 +439,8 @@ void BalboaGL::setup() {
 //     heat_setpoint = load(heat_storage);
 //     auto_setpoint = load(auto_storage);
 
-//     this->dump_config();
+    ESP_LOGCONFIG(TAG, "End of seutp");
+    this->dump_config();
 }
 
 // /**
