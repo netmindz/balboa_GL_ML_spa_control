@@ -5,57 +5,12 @@ external_components:
         url: https://github.com/netmindz/balboa_GL_ML_spa_control.git
         ref: ESPHome
       refresh: 0s
-  #    components: [BalboaGL,BalboaGLSensor]
-      
-  # Text sensors with general information.
-text_sensor:
-    # Expose ESPHome version as sensor.
-    - platform: version
-      name: ESPHome Version
-    # Expose WiFi information as sensors.
-    - platform: wifi_info
-      ip_address:
-        name: IP
-      ssid:
-        name: SSID
-      bssid:
-        name: BSSID
 
-    - platform: BalboaGLSensor
-      state:
-        name: State
-      raw:
-        name: Raw Data
-      lcd:
-        name: LCD Display
-
-# Sensors with general information.
-sensor:
-  # Uptime sensor.
-  - platform: uptime
-    name: Uptime
-
-  # WiFi Signal sensor.
-  - platform: wifi_signal
-    name: WiFi Signal
-    update_interval: 60s
-
-switch:
-  - platform: BalboaGLSwitch
-    name: Light
-
-# select:
-#   - platform: BalboaGLSelect
-#     pump1:
-#       name: Pump1
-#       options: "HIGH"
-
-climate:
-  - platform: BalboaGL 
-    name: Temp
-    hardware_uart: UART1
-    rx_pin: 3
-    tx_pin: 10
-    enable_pin: 5
-    panel_select_pin: 6
-    update_interval: 1000ms
+BalboaGL:
+  name: Temp
+  hardware_uart: UART1
+  rx_pin: 3
+  tx_pin: 10
+  enable_pin: 5
+  panel_select_pin: 6
+  update_interval: 220ms         
