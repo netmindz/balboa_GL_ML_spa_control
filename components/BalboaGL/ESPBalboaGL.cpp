@@ -23,6 +23,8 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_min_temperature(26);
     this->traits_.set_visual_max_temperature(40);
     this->traits_.set_visual_temperature_step(0.5);
+
+    this->lightSwitch->setSpa(spa);
 }
 
 void BalboaGL::check_logger_conflict_() {
