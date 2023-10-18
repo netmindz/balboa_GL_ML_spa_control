@@ -101,7 +101,7 @@ class BalboaGL : public PollingComponent, public climate::Climate {
 
         esphome::text_sensor::TextSensor* stateSensor;
         esphome::text_sensor::TextSensor* rawSensor;
-        esphome::text_sensor::TextSensor* lcdSensor;
+      //   esphome::text_sensor::TextSensor* lcdSensor;
 
         int rx_pin = -1;
         int tx_pin = -1;

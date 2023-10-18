@@ -25,6 +25,7 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_temperature_step(0.5);
 
     this->rawSensor = new text_sensor::TextSensor();
+    this->stateSensor = new text_sensor::TextSensor();
 
     // this->lightSwitch->setSpa(spa);
 }
@@ -81,7 +82,7 @@ void BalboaGL::update() {
     }
 
     static String lastRaw = "0";
-    if(status.rawData != lastRaw) {
+    // if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         lastRaw = status.rawData;
 
@@ -90,12 +91,12 @@ void BalboaGL::update() {
 
         // this->lightSwitch->publish_state(status.light);
 
-        // this->stateSensor->update();
-        // this->rawSensor->update();
+        this->stateSensor->publish_state("testing"); // status.state.c_str());
+        this->rawSensor->publish_state(status.rawData.c_str());
         // this->lcdSensor->update();
         
         this->publish_state();
-    }
+    // }
 
 }
 
@@ -400,7 +401,6 @@ void BalboaGL::setup() {
 
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
-
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin); 
     this->current_temperature = NAN;
     this->target_temperature = NAN;
