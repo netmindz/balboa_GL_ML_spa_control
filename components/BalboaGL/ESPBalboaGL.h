@@ -8,8 +8,8 @@
 #include "esphome/core/log.h"
 #include "esp_log.h"
 
-#include "BalboaGLSelect.h"
-#include "BalboaGLSwitch.h"
+// #include "BalboaGLSelect.h"
+// #include "BalboaGLSwitch.h"
 #include "ESPBalboaGL.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
@@ -77,13 +77,13 @@ class BalboaGL : public PollingComponent {
         //ESP8266 or UART0 on ESP32
         void check_logger_conflict_();
 
-        esphome::balboa_select::BalboaGLPump1Select* pump1;
-        esphome::balboa_select::BalboaGLPump2Select* pump2;
+      //   esphome::balboa_select::BalboaGLPump1Select* pump1;
+      //   esphome::balboa_select::BalboaGLPump2Select* pump2;
         
-        esphome::balboa_switch::BalboaGLLightSwitch* lightSwitch;
+      //   esphome::balboa_switch::BalboaGLLightSwitch* lightSwitch;
 
-        esphome::text_sensor::TextSensor* stateSensor;
-        esphome::text_sensor::TextSensor* rawSensor;
+      //   esphome::text_sensor::TextSensor* stateSensor;
+      //   esphome::text_sensor::TextSensor* rawSensor;
       //   esphome::text_sensor::TextSensor* lcdSensor;
 
         int rx_pin = -1;

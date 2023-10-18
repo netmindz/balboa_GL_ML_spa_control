@@ -17,17 +17,11 @@ BalboaGL::BalboaGL(
 ) :
     hw_serial_{hw_serial}
 {
-    this->traits_.set_supports_action(false);
-    this->traits_.set_supports_current_temperature(true);
-    this->traits_.set_supports_two_point_target_temperature(false);
-    this->traits_.set_visual_min_temperature(26);
-    this->traits_.set_visual_max_temperature(40);
-    this->traits_.set_visual_temperature_step(0.5);
+    
+    // this->rawSensor = new text_sensor::TextSensor();
+    // this->stateSensor = new text_sensor::TextSensor();
 
-    this->rawSensor = new text_sensor::TextSensor();
-    this->stateSensor = new text_sensor::TextSensor();
-
-    this->lightSwitch = new balboa_switch::BalboaGLLightSwitch();
+    // this->lightSwitch = new balboa_switch::BalboaGLLightSwitch();
 
     // this->pump1 = new balboa_select::BalboaGLPump1Select();
     // this->pump2 = new balboa_select::BalboaGLPump12elect();
@@ -60,29 +54,23 @@ void BalboaGL::update() {
 
     ESP_LOGD(TAG, "Current Temp: %f", status.temp);
     ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
-    this->current_temperature = status.temp;
-    this->target_temperature = status.targetTemp;
-    switch(status.mode) {
-        case MODE_IDX_STD:
-            this->custom_preset = std::string("STD");
-            break;
-        case MODE_IDX_ECO:
-            this->custom_preset = std::string("ECO");
-            break;
-        case MODE_IDX_SLP:
-            this->custom_preset = std::string("Sleep");
-            break;
-        default:
-            this->custom_preset = std::string("UNKNOWN");
-            break;
-    }
+    // this->current_temperature = status.temp;
+    // this->target_temperature = status.targetTemp;
+    // switch(status.mode) {
+    //     case MODE_IDX_STD:
+    //         this->custom_preset = std::string("STD");
+    //         break;
+    //     case MODE_IDX_ECO:
+    //         this->custom_preset = std::string("ECO");
+    //         break;
+    //     case MODE_IDX_SLP:
+    //         this->custom_preset = std::string("Sleep");
+    //         break;
+    //     default:
+    //         this->custom_preset = std::string("UNKNOWN");
+    //         break;
+    // }
 
-    if(status.heater) {
-        this->mode = climate::CLIMATE_MODE_HEAT;
-    }
-    else {
-        this->mode = climate::CLIMATE_MODE_AUTO;
-    }
 
     static String lastRaw = "0";
     if(status.rawData != lastRaw) {
@@ -92,133 +80,15 @@ void BalboaGL::update() {
         // this->pump1->publish_state(pump_mode[status.pump1]);
         // this->pump2->publish_state(pump_mode[status.pump2]);
 
-        this->lightSwitch->publish_state(status.light);
+        // this->lightSwitch->publish_state(status.light);
 
-        this->stateSensor->publish_state("testing"); // status.state.c_str());
-        this->rawSensor->publish_state(status.rawData.c_str());
+        // this->stateSensor->publish_state("testing"); // status.state.c_str());
+        // this->rawSensor->publish_state(status.rawData.c_str());
         // this->lcdSensor->update();
         
-        this->publish_state();
+        // this->publish_state();
     }
 
-}
-
-/**
- * Get our supported traits.
- *
- * Note:
- * Many of the following traits are only available in the 1.5.0 dev train of
- * ESPHome, particularly the Dry operation mode, and several of the fan modes.
- *
- * Returns:
- *   This class' supported climate::ClimateTraits.
- */
-climate::ClimateTraits BalboaGL::traits() {
-    return traits_;
-}
-
-/**
- * Modify our supported traits.
- *
- * Returns:
- *   A reference to this class' supported climate::ClimateTraits.
- */
-climate::ClimateTraits& BalboaGL::config_traits() {
-    return traits_;
-}
-
-/**
- * Implement control of a BalboaGL.
- *
- * Maps HomeAssistant/ESPHome modes to Mitsubishi modes.
- */
-void BalboaGL::control(const climate::ClimateCall &call) {
-    ESP_LOGV(TAG, "Control called.");
-
-    bool updated = false;
-//     bool has_mode = call.get_mode().has_value();
-    bool has_temp = call.get_target_temperature().has_value();
-//     if (has_mode){
-//         this->mode = *call.get_mode();
-//     }
-//     switch (this->mode) {
-//         case climate::CLIMATE_MODE_COOL:
-//             hp->setModeSetting("COOL");
-//             hp->setPowerSetting("ON");
-
-//             if (has_mode){
-//                 if (cool_setpoint.has_value() && !has_temp) {
-//                     hp->setTemperature(cool_setpoint.value());
-//                     this->target_temperature = cool_setpoint.value();
-//                 }
-//                 this->action = climate::CLIMATE_ACTION_IDLE;
-//                 updated = true;
-//             }
-//             break;
-//         case climate::CLIMATE_MODE_HEAT:
-//             hp->setModeSetting("HEAT");
-//             hp->setPowerSetting("ON");
-//             if (has_mode){
-//                 if (heat_setpoint.has_value() && !has_temp) {
-//                     hp->setTemperature(heat_setpoint.value());
-//                     this->target_temperature = heat_setpoint.value();
-//                 }
-//                 this->action = climate::CLIMATE_ACTION_IDLE;
-//                 updated = true;
-//             }
-//             break;
-//         case climate::CLIMATE_MODE_DRY:
-//             hp->setModeSetting("DRY");
-//             hp->setPowerSetting("ON");
-//             if (has_mode){
-//                 this->action = climate::CLIMATE_ACTION_DRYING;
-//                 updated = true;
-//             }
-//             break;
-//         case climate::CLIMATE_MODE_HEAT_COOL:
-//             hp->setModeSetting("AUTO");
-//             hp->setPowerSetting("ON");
-//             if (has_mode){
-//                 if (auto_setpoint.has_value() && !has_temp) {
-//                     hp->setTemperature(auto_setpoint.value());
-//                     this->target_temperature = auto_setpoint.value();
-//                 }
-//                 this->action = climate::CLIMATE_ACTION_IDLE;
-//             }
-//             updated = true;
-//             break;
-//         case climate::CLIMATE_MODE_FAN_ONLY:
-//             hp->setModeSetting("FAN");
-//             hp->setPowerSetting("ON");
-//             if (has_mode){
-//                 this->action = climate::CLIMATE_ACTION_FAN;
-//                 updated = true;
-//             }
-//             break;
-//         case climate::CLIMATE_MODE_OFF:
-//         default:
-//             if (has_mode){
-//                 hp->setPowerSetting("OFF");
-//                 this->action = climate::CLIMATE_ACTION_OFF;
-//                 updated = true;
-//             }
-//             break;
-//     }
-
-    if (has_temp){
-        ESP_LOGI(
-            "control", "Sending target temp: %.1f",
-            *call.get_target_temperature()
-        );
-        this->spa->setTemp(*call.get_target_temperature());
-        updated = true;
-    }
-
-
-//     ESP_LOGD(TAG, "control - Was SPA updated? %s", YESNO(updated));
-
-    // send the update back to esphome:
-    this->publish_state();
 }
 
 // void BalboaGL::hpSettingsChanged() {
@@ -405,13 +275,10 @@ void BalboaGL::setup() {
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin); 
-    this->current_temperature = NAN;
-    this->target_temperature = NAN;
-    this->fan_mode = climate::CLIMATE_FAN_OFF;
-    this->swing_mode = climate::CLIMATE_SWING_OFF;
-    this->action = climate::CLIMATE_ACTION_FAN;
+    // this->current_temperature = NAN;
+    // this->target_temperature = NAN;
 
-    this->lightSwitch->setSpa(spa);
+    // this->lightSwitch->setSpa(spa);
 
     // this->pump1->setSpa(spa);
     // this->pump2->setSpa(spa);
