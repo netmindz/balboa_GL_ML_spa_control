@@ -24,6 +24,8 @@ BalboaGL::BalboaGL(
     this->traits_.set_visual_max_temperature(40);
     this->traits_.set_visual_temperature_step(0.5);
 
+    this->rawSensor = new text_sensor::TextSensor();
+
     // this->lightSwitch->setSpa(spa);
 }
 

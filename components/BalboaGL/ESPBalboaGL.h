@@ -4,7 +4,7 @@
 #include "esphome.h"
 #include "esphome/core/preferences.h"
 // #include "esphome/components/sensor/sensor.h"
-// #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/climate/climate.h"
 #include "esphome/core/log.h"
 #include "esp_log.h"
@@ -99,9 +99,9 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         
       //   esphome::balboa_switch::BalboaGLLightSwitch* lightSwitch;
 
-        esphome::balboa_sensor::BalboaGLStateSensor* stateSensor;
-        esphome::balboa_sensor::BalboaGLRawSensor* rawSensor;
-        esphome::balboa_sensor::BalboaGLLCDSensor* lcdSensor;
+        esphome::text_sensor::TextSensor* stateSensor;
+        esphome::text_sensor::TextSensor* rawSensor;
+        esphome::text_sensor::TextSensor* lcdSensor;
 
         int rx_pin = -1;
         int tx_pin = -1;
