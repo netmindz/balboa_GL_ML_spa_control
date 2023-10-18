@@ -2,49 +2,8 @@
 #include "ESPBalboaGL.h"
 using namespace esphome;
 
-void telnetSend(String msg) {
-    ESP_LOGI(TAG, msg.c_str());
-}
-/**
- * Create a new BalboaGL object
- *
- * Args:
- *   hw_serial: pointer to an Arduino HardwareSerial instance
- *   poll_interval: polling interval in milliseconds
- */
-BalboaGL::BalboaGL(
-        HardwareSerial* hw_serial
-) :
-    hw_serial_{hw_serial}
-{
-    this->traits_.set_supports_action(false);
-    this->traits_.set_supports_current_temperature(true);
-    this->traits_.set_supports_two_point_target_temperature(false);
-    this->traits_.set_visual_min_temperature(26);
-    this->traits_.set_visual_max_temperature(40);
-    this->traits_.set_visual_temperature_step(0.5);
 
-    this->rawSensor = new text_sensor::TextSensor();
-    this->stateSensor = new text_sensor::TextSensor();
-
-    this->lightSwitch = new balboa_switch::BalboaGLLightSwitch();
-
-    // this->pump1 = new balboa_select::BalboaGLPump1Select();
-    // this->pump2 = new balboa_select::BalboaGLPump12elect();
-}
-
-void BalboaGL::check_logger_conflict_() {
-#ifdef USE_LOGGER
-    if (this->get_hw_serial_() == logger::global_logger->get_hw_serial()) {
-        ESP_LOGW(TAG, "  You're using the same serial port for logging"
-                " and the BalboaGL component. Please disable"
-                " logging over the serial port by setting"
-                " logger:baud_rate to 0.");
-    }
-#endif
-}
-
-void BalboaGL::update() {
+void BalboaGLClimate::update() {
     // This will be called every "update_interval" milliseconds.
     ESP_LOGV(TAG, "Update called.");
     size_t len = this->spa->readSerial();
@@ -132,7 +91,7 @@ climate::ClimateTraits& BalboaGL::config_traits() {
  *
  * Maps HomeAssistant/ESPHome modes to Mitsubishi modes.
  */
-void BalboaGL::control(const climate::ClimateCall &call) {
+void BalboaGLClimate::control(const climate::ClimateCall &call) {
     ESP_LOGV(TAG, "Control called.");
 
     bool updated = false;
@@ -385,34 +344,17 @@ void BalboaGL::control(const climate::ClimateCall &call) {
 //     this->hp->setRemoteTemperature(temp);
 // }
 
-void BalboaGL::setup() {
+void BalboaGLClimate::setup() {
     // This will be called by App.setup()
     // this->banner();
-    ESP_LOGCONFIG(TAG, "Setting up UART...");
-    if (!this->get_hw_serial_()) {
-        ESP_LOGCONFIG(
-                TAG,
-                "No HardwareSerial was provided. "
-                "Software serial ports are unsupported by this component."
-        );
-        this->mark_failed();
-        return;
-    }
-    this->check_logger_conflict_();
+    
+    ESP_LOGCONFIG(TAG, "Initialize new balboaGLCliamte object.");
 
-    ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
-
-    ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
-    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
-    this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin); 
     this->current_temperature = NAN;
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
     this->action = climate::CLIMATE_ACTION_FAN;
-
-    this->lightSwitch->setSpa(spa);
-
 
 //     ESP_LOGCONFIG(
 //             TAG,
@@ -468,11 +410,8 @@ void BalboaGL::setup() {
 //     return ESPMHP_MIN_TEMPERATURE + (steps * ESPMHP_TEMPERATURE_STEP);
 // }
 
-void BalboaGL::dump_config() {
+void BalboaGLClimate::dump_config() {
     // this->banner();
-    ESP_LOGI(TAG, " rx,tx = %u,%u", this->rx_pin, this->tx_pin);
-    ESP_LOGI(TAG, " rts_pin = %u", this->rts_pin);
-    ESP_LOGI(TAG, " panel_select_pin = %u", this->panel_select_pin);
 //     ESP_LOGI(TAG, "  Supports HEAT: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports COOL: %s", YESNO(true));
 //     ESP_LOGI(TAG, "  Supports AWAY mode: %s", YESNO(false));
@@ -485,18 +424,3 @@ void BalboaGL::dump_config() {
 //     LOG_CLIMATE("", "BalboaGL Climate", this);
 //     ESP_LOGI(TAG, "HELLO");
 // }
-
-void BalboaGL::set_rx_pin(int pin) {
-    this->rx_pin = pin;
-}
-
-void BalboaGL::set_tx_pin(int pin) {
-    this->tx_pin = pin;
-}
-void BalboaGL::set_rts_pin(int pin) {
-    this->rts_pin = pin;
-}
-
-void BalboaGL::set_panel_select_pin(int pin) {
-    this->panel_select_pin = pin;
-}

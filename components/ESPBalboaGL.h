@@ -5,7 +5,6 @@
 #include "esphome/core/preferences.h"
 // #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
-#include "esphome/components/climate/climate.h"
 #include "esphome/core/log.h"
 #include "esp_log.h"
 
@@ -33,7 +32,7 @@ const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
 using namespace esphome;
 
-class BalboaGL : public PollingComponent, public climate::Climate {
+class BalboaGL : public PollingComponent {
  public:
       BalboaGL(
             HardwareSerial* hw_serial
@@ -54,21 +53,8 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // This is called every poll_interval.
         void update() override;
 
-        // Configure the climate object with traits that we support.
-        climate::ClimateTraits traits() override;
-
-        // Get a mutable reference to the traits that we support.
-        climate::ClimateTraits& config_traits();
-
         // Debugging function to print the object's state.
         // void dump_state();
-
-        // Handle a request from the user to change settings.
-        void control(const climate::ClimateCall &call) override;
-
-        // // Use the temperature from an external sensor. Use
-        // // set_remote_temp(0) to switch back to the internal sensor.
-        // void set_remote_temperature(float);
 
         void set_rx_pin(int pin);
 
@@ -81,9 +67,7 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
   protected:
-        // The ClimateTraits supported by this HeatPump.
-        climate::ClimateTraits traits_;
-
+        
         //Accessor method for the HardwareSerial pointer
         HardwareSerial* get_hw_serial_() {
             return this->hw_serial_;

@@ -9,10 +9,6 @@
 #include "esphome/core/log.h"
 #include "esp_log.h"
 
-#include "BalboaGLSelect.h"
-#include "BalboaGLSwitch.h"
-#include "ESPBalboaGL.h"
-
 static const char* TAG = "BalboaGL"; // Logging tag
 
 // // Perform measurements or read nameplate values on your tub to define the power [kW]
@@ -33,11 +29,8 @@ const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
 using namespace esphome;
 
-class BalboaGL : public PollingComponent, public climate::Climate {
+class BalboaGLClimate : public PollingComponent, public climate::Climate {
  public:
-      BalboaGL(
-            HardwareSerial* hw_serial
-        );
 
         // print the current configuration
         void dump_config() override;
@@ -70,47 +63,11 @@ class BalboaGL : public PollingComponent, public climate::Climate {
         // // set_remote_temp(0) to switch back to the internal sensor.
         // void set_remote_temperature(float);
 
-        void set_rx_pin(int pin);
-
-        void set_tx_pin(int pin);
-
-        void set_rts_pin(int pin);
-
-        void set_panel_select_pin(int pin);
-
-        float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
-
   protected:
         // The ClimateTraits supported by this HeatPump.
         climate::ClimateTraits traits_;
 
-        //Accessor method for the HardwareSerial pointer
-        HardwareSerial* get_hw_serial_() {
-            return this->hw_serial_;
-        }
-
-        //Print a warning message if we're using the sole hardware UART on an
-        //ESP8266 or UART0 on ESP32
-        void check_logger_conflict_();
-
-        esphome::balboa_select::BalboaGLPump1Select* pump1;
-        esphome::balboa_select::BalboaGLPump2Select* pump2;
-        
-        esphome::balboa_switch::BalboaGLLightSwitch* lightSwitch;
-
-        esphome::text_sensor::TextSensor* stateSensor;
-        esphome::text_sensor::TextSensor* rawSensor;
-      //   esphome::text_sensor::TextSensor* lcdSensor;
-
-        int rx_pin = -1;
-        int tx_pin = -1;
-        int rts_pin = -1;
-        int panel_select_pin = -1;
-
   private:
-        // Retrieve the HardwareSerial pointer from friend and subclasses.
-        HardwareSerial *hw_serial_; 
-
         balboaGL* spa;
 };
 #endif
