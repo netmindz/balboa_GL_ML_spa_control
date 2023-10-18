@@ -27,7 +27,10 @@ BalboaGL::BalboaGL(
     this->rawSensor = new text_sensor::TextSensor();
     this->stateSensor = new text_sensor::TextSensor();
 
-    // this->lightSwitch->setSpa(spa);
+    this->lightSwitch = new balboa_switch::BalboaGLLightSwitch();
+
+    // this->pump1 = new balboa_select::BalboaGLPump1Select();
+    // this->pump2 = new balboa_select::BalboaGLPump12elect();
 }
 
 void BalboaGL::check_logger_conflict_() {
@@ -82,21 +85,21 @@ void BalboaGL::update() {
     }
 
     static String lastRaw = "0";
-    // if(status.rawData != lastRaw) {
+    if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         lastRaw = status.rawData;
 
         // this->pump1->publish_state(pump_mode[status.pump1]);
         // this->pump2->publish_state(pump_mode[status.pump2]);
 
-        // this->lightSwitch->publish_state(status.light);
+        this->lightSwitch->publish_state(status.light);
 
         this->stateSensor->publish_state("testing"); // status.state.c_str());
         this->rawSensor->publish_state(status.rawData.c_str());
         // this->lcdSensor->update();
         
         this->publish_state();
-    // }
+    }
 
 }
 
@@ -407,6 +410,8 @@ void BalboaGL::setup() {
     this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
     this->action = climate::CLIMATE_ACTION_FAN;
+
+    this->lightSwitch->setSpa(spa);
 
 
 //     ESP_LOGCONFIG(
