@@ -1,14 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import climate
 from esphome.components.logger import HARDWARE_UART_TO_SERIAL
 from esphome.const import (
     CONF_ID,
     CONF_HARDWARE_UART,
     CONF_UPDATE_INTERVAL,
-    CONF_MODE,
-    CONF_FAN_MODE,
-    CONF_SWING_MODE,
     CONF_RX_PIN,
     CONF_TX_PIN,
 )
@@ -17,15 +13,12 @@ from esphome.core import CORE, coroutine
 AUTO_LOAD = ["climate","switch","select","sensor","text_sensor"]
 
 CONF_SUPPORTS = "supports"
-DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
-DEFAULT_FAN_MODES = ["OFF"]
-DEFAULT_SWING_MODES = ["OFF"]
 
 CONF_ENABLE_PIN = "enable_pin"
 CONF_PANEL_SELECT_PIN = "panel_select_pin"
 
 BalboaGL = cg.global_ns.class_(
-    "BalboaGL", climate.Climate, cg.PollingComponent
+    "BalboaGL", cg.PollingComponent
 )
 
 
@@ -38,7 +31,8 @@ def valid_uart(uart):
     return cv.one_of(*uarts, upper=True)(uart)
 
 
-CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
+CONFIG_SCHEMA = (
+    cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(BalboaGL),
         cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
@@ -54,15 +48,9 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
-                cv.Optional(CONF_MODE, default=DEFAULT_CLIMATE_MODES):
-                    cv.ensure_list(climate.validate_climate_mode),
-                cv.Optional(CONF_FAN_MODE, default=DEFAULT_FAN_MODES):
-                    cv.ensure_list(climate.validate_climate_fan_mode),
-                cv.Optional(CONF_SWING_MODE, default=DEFAULT_SWING_MODES):
-                    cv.ensure_list(climate.validate_climate_swing_mode),
             }
         ),
-    }
+    })
 ).extend(cv.COMPONENT_SCHEMA)
 
 
@@ -73,19 +61,6 @@ def to_code(config):
 
     supports = config[CONF_SUPPORTS]
     traits = var.config_traits()
-
-    for mode in supports[CONF_MODE]:
-        if mode == "OFF":
-            continue
-        cg.add(traits.add_supported_mode(climate.CLIMATE_MODES[mode]))
-
-    for mode in supports[CONF_FAN_MODE]:
-        cg.add(traits.add_supported_fan_mode(climate.CLIMATE_FAN_MODES[mode]))
-
-    for mode in supports[CONF_SWING_MODE]:
-        cg.add(traits.add_supported_swing_mode(
-            climate.CLIMATE_SWING_MODES[mode]
-        ))
 
     if CONF_RX_PIN in config:
         cg.add(var.set_rx_pin(config[CONF_RX_PIN]))
@@ -101,7 +76,7 @@ def to_code(config):
 
 
     yield cg.register_component(var, config)
-    yield climate.register_climate(var, config)
+
     cg.add_library(
         name="ArduinoQueue",
         repository="https://github.com/EinarArnason/ArduinoQueue.git",
