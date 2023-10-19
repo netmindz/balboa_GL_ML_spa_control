@@ -7,46 +7,36 @@ using namespace esphome;
 void BalboaGLClimate::update() {
     // This will be called every "update_interval" milliseconds.
     ESP_LOGV(TAG, "Update called.");
-    size_t len = this->spa->readSerial();
-    ESP_LOGV(TAG, "Read %u bytes", len);
-    bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
-    if(panelSelect == HIGH) {
-        ESP_LOGV(TAG, "PanelSelect == HIGH");
-        return;
-    }
-    else {
-        ESP_LOGD(TAG, "PanelSelect == LOW");
-    }
-
-    ESP_LOGD(TAG, "Current Temp: %f", status.temp);
-    ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
-    this->current_temperature = status.temp;
-    this->target_temperature = status.targetTemp;
-    switch(status.mode) {
-        case MODE_IDX_STD:
-            this->custom_preset = std::string("STD");
-            break;
-        case MODE_IDX_ECO:
-            this->custom_preset = std::string("ECO");
-            break;
-        case MODE_IDX_SLP:
-            this->custom_preset = std::string("Sleep");
-            break;
-        default:
-            this->custom_preset = std::string("UNKNOWN");
-            break;
-    }
-
-    if(status.heater) {
-        this->mode = climate::CLIMATE_MODE_HEAT;
-    }
-    else {
-        this->mode = climate::CLIMATE_MODE_AUTO;
-    }
 
     static String lastRaw = "0";
     if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
+        ESP_LOGD(TAG, "Current Temp: %f", status.temp);
+        ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
+        this->current_temperature = status.temp;
+        this->target_temperature = status.targetTemp;
+        switch(status.mode) {
+            case MODE_IDX_STD:
+                this->custom_preset = std::string("STD");
+                break;
+            case MODE_IDX_ECO:
+                this->custom_preset = std::string("ECO");
+                break;
+            case MODE_IDX_SLP:
+                this->custom_preset = std::string("Sleep");
+                break;
+            default:
+                this->custom_preset = std::string("UNKNOWN");
+                break;
+        }
+
+        if(status.heater) {
+            this->mode = climate::CLIMATE_MODE_HEAT;
+        }
+        else {
+            this->mode = climate::CLIMATE_MODE_AUTO;
+        }
+
         lastRaw = status.rawData;        
         this->publish_state();
     }
