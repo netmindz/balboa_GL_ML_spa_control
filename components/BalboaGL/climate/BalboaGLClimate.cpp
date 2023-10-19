@@ -1,5 +1,6 @@
 #include <string>
 #include "BalboaGLClimate.h"
+#include "../ESPBalboaGL.h"
 using namespace esphome;
 
 
