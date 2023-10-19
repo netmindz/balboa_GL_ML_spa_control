@@ -10,7 +10,7 @@ from esphome.const import (
     CONF_FAN_MODE,
     CONF_SWING_MODE,
 )
-from esphome.core import CORE, coroutine
+from esphome.core import CORE
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
 AUTO_LOAD = ["climate"]
@@ -23,7 +23,7 @@ DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
 DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
-BalboaGL = balboagl_ns.class_(
+BalboaGLClimate = balboagl_ns.class_(
     "BalboaGLClimate", climate.Climate, cg.PollingComponent
 )
 
@@ -39,7 +39,7 @@ def valid_uart(uart):
 
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
-        cv.GenerateID(): cv.declare_id(BalboaGL),
+        cv.GenerateID(): cv.declare_id(BalboaGLClimate),
         cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
