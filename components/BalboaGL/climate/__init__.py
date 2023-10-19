@@ -22,7 +22,7 @@ DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
 DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
-BalboaGLClimate = balboagl_ns.class_(
+BalboaGLClimate = cg.esphome_ns.class_(
     "BalboaGLClimate", climate.Climate, cg.PollingComponent
 )
 
