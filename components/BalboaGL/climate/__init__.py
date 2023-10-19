@@ -11,6 +11,7 @@ from esphome.const import (
     CONF_SWING_MODE,
 )
 from esphome.core import CORE, coroutine
+from .. import balboa_ns, CONF_BALBOA_ID, BalboaGL
 
 AUTO_LOAD = ["climate"]
 
@@ -23,7 +24,7 @@ DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
 BalboaGL = cg.global_ns.class_(
-    "BalboaGL", climate.Climate, cg.PollingComponent
+    "BalboaGLClimate", climate.Climate, cg.PollingComponent
 )
 
 
@@ -60,8 +61,7 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
 ).extend(cv.COMPONENT_SCHEMA)
 
 
-@coroutine
-def to_code(config):
+async def to_code(config):
     serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
@@ -85,3 +85,6 @@ def to_code(config):
 
     yield cg.register_component(var, config)
     yield climate.register_climate(var, config)
+
+    paren = await cg.get_variable(config[CONF_BALBOA_ID])
+    cg.add(var.set_balboa_parent(paren))

@@ -3,8 +3,6 @@
 
 #include "esphome.h"
 #include "esphome/core/preferences.h"
-// #include "esphome/components/sensor/sensor.h"
-#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/climate/climate.h"
 #include "esphome/core/log.h"
 #include "esp_log.h"
@@ -31,7 +29,12 @@ using namespace esphome;
 
 class BalboaGLClimate : public PollingComponent, public climate::Climate {
  public:
-
+      void set_balboa_parent(BalboaGL* balboaGL) {
+            this->spa = balboaGL->get_spa();
+      }
+      void setSpa(balboaGL* spa) {
+            this->spa = spa;
+      }
         // print the current configuration
         void dump_config() override;
 

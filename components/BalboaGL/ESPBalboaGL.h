@@ -66,6 +66,10 @@ class BalboaGL : public PollingComponent {
 
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
+        balboaGL* get_spa() {
+            return spa;
+        }
+
   protected:
         
         //Accessor method for the HardwareSerial pointer
