@@ -11,7 +11,7 @@ from esphome.const import (
     CONF_SWING_MODE,
 )
 from esphome.core import CORE, coroutine
-from .. import balboa_ns, CONF_BALBOA_ID, BalboaGL
+from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
 AUTO_LOAD = ["climate"]
 
@@ -23,7 +23,7 @@ DEFAULT_CLIMATE_MODES = ["HEAT","AUTO"]
 DEFAULT_FAN_MODES = ["OFF"]
 DEFAULT_SWING_MODES = ["OFF"]
 
-BalboaGL = balboa_ns.class_(
+BalboaGL = balboagl_ns.class_(
     "BalboaGLClimate", climate.Climate, cg.PollingComponent
 )
 
