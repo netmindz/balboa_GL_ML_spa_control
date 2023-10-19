@@ -3,14 +3,26 @@ import esphome.config_validation as cv
 from esphome.components import switch
 from esphome.const import CONF_ID
 
-empty_switch_ns = cg.esphome_ns.namespace('balboa_switch')
-LightSwitch = empty_switch_ns.class_('BalboaGLLightSwitch', switch.Switch, cg.Component)
+from .. import balboa_ns, CONF_BALBOA_ID, BalboaGL
 
-CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend({
-    cv.GenerateID(): cv.declare_id(LightSwitch)
-}).extend(cv.COMPONENT_SCHEMA)
+DEPENDENCIES = ["BalboaGL"]
 
-def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
-    yield cg.register_component(var, config)
-    yield switch.register_switch(var, config)
+LightSwitch = balboa_ns.class_('LightSwitch', switch.Switch, cg.Component)
+
+CONFIG_SCHEMA = (
+    switch.switch_schema(LightSwitch)
+    .extend(
+        {
+            cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+)
+
+async def to_code(config):
+    var = await switch.new_switch(config)
+    await cg.register_component(var, config)
+
+    paren = await cg.get_variable(config[CONF_BALBOA_ID])
+    cg.add(var.set_balboa_parent(paren))
+

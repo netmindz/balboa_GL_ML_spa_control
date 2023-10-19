@@ -12,11 +12,14 @@ from esphome.core import CORE, coroutine
 
 AUTO_LOAD = ["climate","switch","select","sensor","text_sensor"]
 
+CODEOWNERS = ["@netmindz"]
+
 CONF_SUPPORTS = "supports"
 
 CONF_ENABLE_PIN = "enable_pin"
 CONF_PANEL_SELECT_PIN = "panel_select_pin"
 
+balboagl_ns = cg.esphome_ns.namespace("balboagl")
 BalboaGL = cg.global_ns.class_(
     "BalboaGL", cg.PollingComponent
 )
@@ -30,6 +33,8 @@ def valid_uart(uart):
 
     return cv.one_of(*uarts, upper=True)(uart)
 
+
+CONF_BALBOA_ID = "balboa_id"
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -58,9 +63,6 @@ CONFIG_SCHEMA = (
 def to_code(config):
     serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
-
-    supports = config[CONF_SUPPORTS]
-    traits = var.config_traits()
 
     if CONF_RX_PIN in config:
         cg.add(var.set_rx_pin(config[CONF_RX_PIN]))
