@@ -6,7 +6,6 @@
 #include "esp_log.h"
 #include "../ESPBalboaGL.h"
 
-static const char* TAG = "BalboaGL"; // Logging tag
 
 // // Perform measurements or read nameplate values on your tub to define the power [kW]
 // // for each device in order to calculate tub power usage
@@ -20,7 +19,6 @@ static const char* TAG = "BalboaGL"; // Logging tag
 // // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 // const int MINUTES_PER_DEGC = 45;
 
-const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
 #include "balboaGL.h"
 
