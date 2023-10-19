@@ -1,3 +1,5 @@
+#ifndef GLCLIMATE_H
+#define GLCLIMATE_H
 
 #include "esphome.h"
 #include "esphome/core/preferences.h"
@@ -70,3 +72,5 @@ class BalboaGLClimate : public PollingComponent, public climate::Climate {
   private:
         balboaGL* spa;
 };
+
+#endif
