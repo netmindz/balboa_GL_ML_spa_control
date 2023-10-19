@@ -146,10 +146,8 @@ String state = "unknown";
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
 
-// Triggered when pin5 falling - ie our panel is selected
-// clears serial receive buffer
-void IRAM_ATTR clearRXBuffer() {
-    // clear the rx buffer
+void clearRXbuffer(void) {
+        // clear the rx buffer
     #if defined(ESP32) || defined(RSC3)
     uart_flush(tubUART);
     #else
@@ -157,6 +155,12 @@ void IRAM_ATTR clearRXBuffer() {
     // https://github.com/plerup/espsoftwareserial/blob/main/src/SoftwareSerial.cpp#L434
     tub.flush();
     #endif
+}
+
+// Triggered when pin5 falling - ie our panel is selected
+// clears serial receive buffer
+void IRAM_ATTR panelSelect() {
+    clearRXbuffer();
 }
 
 void sendCommand(String command, int count) {
@@ -353,7 +357,7 @@ void setup() {
 #endif
     // enable interrupt for pin5 falling level change so we can clear the rx buffer
     // everytime our panel is selected
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearRXBuffer, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelect, FALLING);
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
@@ -851,6 +855,8 @@ void sendCommand() {
             Serial.printf("message sent : %u\n", delayTime);
             // delayTime += 10;
         }
+        //clear the RX buffer since it will have the FB command we just sent
+        clearRXbuffer();
         // else {
         //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         // }
