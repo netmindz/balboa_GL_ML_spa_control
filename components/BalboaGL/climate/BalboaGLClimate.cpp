@@ -47,17 +47,7 @@ void BalboaGLClimate::update() {
     static String lastRaw = "0";
     if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
-        lastRaw = status.rawData;
-
-        // this->pump1->publish_state(pump_mode[status.pump1]);
-        // this->pump2->publish_state(pump_mode[status.pump2]);
-
-        this->lightSwitch->publish_state(status.light);
-
-        this->stateSensor->publish_state("testing"); // status.state.c_str());
-        this->rawSensor->publish_state(status.rawData.c_str());
-        // this->lcdSensor->update();
-        
+        lastRaw = status.rawData;        
         this->publish_state();
     }
 
