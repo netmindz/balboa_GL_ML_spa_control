@@ -1,5 +1,3 @@
-#ifndef ESPMHP_H
-#define ESPMHP_H
 
 #include "esphome.h"
 #include "esphome/core/preferences.h"
@@ -74,4 +72,3 @@ class BalboaGLClimate : public PollingComponent, public climate::Climate {
   private:
         balboaGL* spa;
 };
-#endif
