@@ -4,7 +4,6 @@ from esphome.components import climate
 from esphome.components.logger import HARDWARE_UART_TO_SERIAL
 from esphome.const import (
     CONF_ID,
-    CONF_HARDWARE_UART,
     CONF_UPDATE_INTERVAL,
     CONF_MODE,
     CONF_FAN_MODE,
@@ -28,20 +27,10 @@ BalboaGLClimate = balboagl_ns.class_(
 )
 
 
-def valid_uart(uart):
-    if CORE.is_esp32:
-        uarts = [ "UART1", "UART2"]
-    else:
-        raise NotImplementedError
-
-    return cv.one_of(*uarts, upper=True)(uart)
-
-
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(BalboaGLClimate),
         cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
-        cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
        cv.Optional(CONF_UPDATE_INTERVAL, default="100ms"): cv.All(
@@ -63,8 +52,7 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
 
 
 async def to_code(config):
-    serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
-    var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
+    var = cg.new_Pvariable(config[CONF_ID])
 
     supports = config[CONF_SUPPORTS]
     traits = var.config_traits()
