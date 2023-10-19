@@ -6,6 +6,7 @@
 #include "esphome/components/climate/climate.h"
 #include "esphome/core/log.h"
 #include "esp_log.h"
+#include "../ESPBalboaGL.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
 
@@ -29,9 +30,9 @@ using namespace esphome;
 
 class BalboaGLClimate : public PollingComponent, public climate::Climate {
  public:
-      void set_balboa_parent(BalboaGL* balboaGL) {
-            this->spa = balboaGL->get_spa();
-      }
+      // void set_balboa_parent(BalboaGL* balboaGL) {
+      //       this->spa = balboaGL->get_spa();
+      // }
       void setSpa(balboaGL* spa) {
             this->spa = spa;
       }

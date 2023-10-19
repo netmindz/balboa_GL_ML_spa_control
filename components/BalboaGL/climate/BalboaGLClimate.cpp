@@ -63,7 +63,7 @@ void BalboaGLClimate::update() {
  * Returns:
  *   This class' supported climate::ClimateTraits.
  */
-climate::ClimateTraits BalboaGL::traits() {
+climate::ClimateTraits BalboaGLClimate::traits() {
     return traits_;
 }
 
@@ -73,7 +73,7 @@ climate::ClimateTraits BalboaGL::traits() {
  * Returns:
  *   A reference to this class' supported climate::ClimateTraits.
  */
-climate::ClimateTraits& BalboaGL::config_traits() {
+climate::ClimateTraits& BalboaGLClimate::config_traits() {
     return traits_;
 }
 
