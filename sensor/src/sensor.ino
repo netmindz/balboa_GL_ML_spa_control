@@ -506,7 +506,7 @@ int waitforGLBytes() {
         break;
     default:
         Serial.print("Unknown message start Byte: ");
-        int peekedByte = tub.peek();
+        int peekedByte = tub.read();
         Serial.println(peekedByte, HEX);
         return 0;
     }
@@ -856,7 +856,7 @@ void sendCommand() {
             Serial.printf("message sent : %u\n", delayTime);
             // delayTime += 10;
         }
-        delay(10);
+        //delay(10);
         digitalWrite(RTS_PIN, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
