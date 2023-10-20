@@ -1,0 +1,21 @@
+title: Hottub
+type: entities
+entities:
+  - entity: sensor.status
+  - entity: select.mode
+  - entity: climate.target_temp
+  - entity: sensor.tub_temperature
+  - entity: sensor.target_tub_temp
+  - entity: binary_sensor.heater
+  - entity: switch.light
+  - entity: select.pump1
+  - entity: select.pump2
+  - entity: button.mode
+  - entity: button.up
+  - entity: button.down
+  - entity: sensor.post_temp
+  - entity: sensor.raw_data
+  - entity: sensor.cmd
+  - entity: sensor.tub_power
+  - entity: sensor.time
+  - entity: button.time
