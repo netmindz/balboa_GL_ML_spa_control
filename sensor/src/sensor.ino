@@ -54,7 +54,7 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
-#define DELAY_TIME_DEFAULT 40
+#define DELAY_TIME_DEFAULT 20
 int delayTime = DELAY_TIME_DEFAULT;
 
 
@@ -811,7 +811,7 @@ void sendCommand() {
             delayTime = DELAY_TIME_DEFAULT;
             sendBuffer.dequeue();
         }
-        // tub.flush(true);
+        tub.flush(true);
         if (digitalRead(PIN_5_PIN) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
             Serial.printf("message sent : %u\n", delayTime);
@@ -820,6 +820,7 @@ void sendCommand() {
         // else {
         //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         // }
+        delay(10);
         digitalWrite(RTS_PIN, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
