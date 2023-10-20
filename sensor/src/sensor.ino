@@ -504,10 +504,16 @@ int waitforGLBytes() {
     case 0xAE:
         msgLength = 16;
         break;
+    case 0xFB:
+        msgLength = 9;
+        break;
     default:
         Serial.print("Unknown message start Byte: ");
         int peekedByte = tub.peek();
         Serial.println(peekedByte, HEX);
+        Serial.printf("%u bytes in buffer\n", tub.available());
+        clearRXbuffer();
+        Serial.printf("%u bytes in buffer after clear\n", tub.available());
         return 0;
     }
     // we'll wait here for up to 2.5ms until the expected number of bytes are available
@@ -801,6 +807,12 @@ void handleMessage(size_t len, uint8_t buf[]) {
         light.setState(lightState);
 
         // end of FA14
+    }
+    else if (result.substring(0, 2) == "fb") {
+        if (result != lastRaw7) {
+            lastRaw7 = result;
+            rawData7.setValue(lastRaw7.c_str());
+        }
     } else if (result.substring(0, 4) == "ae0d") {
         // Serial.println("AE 0D");
         // telnetSend(result);
