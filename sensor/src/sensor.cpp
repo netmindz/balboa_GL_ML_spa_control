@@ -339,6 +339,9 @@ void setup() {
                   TX_PIN);  // added here to see if line about was where the hang was
     tub.updateBaudRate(115200);
 #endif
+    // enable interrupt for pin5 falling level change so we can clear the rx buffer
+    // everytime our panel is selected
+    attachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()), clearRXBuffer, FALLING);
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
@@ -479,7 +482,9 @@ void loop() {
 
         mqtt.loop();
         
+        detachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()));
         webota.handle();
+        attachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()), clearRXBuffer, FALLING);
 
         telnetLoop();
 
