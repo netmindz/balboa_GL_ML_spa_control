@@ -115,6 +115,7 @@ HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
+HASensorNumber commandQueueSize("commandQueueSize");
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -159,7 +160,7 @@ void clearRXbuffer(void) {
 
 // Triggered when pin5 falling - ie our panel is selected
 // clears serial receive buffer
-void IRAM_ATTR panelSelect() {
+void IRAM_ATTR panelSelected() {
     clearRXbuffer();
 }
 
@@ -232,12 +233,12 @@ void onButtonPress(HAButton* sender) {
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     float temperatureFloat = temperature.toFloat();
 
-    Serial.print("Target temperature: ");
+    Serial.print("Set target temperature: ");
     Serial.println(temperatureFloat);
 
     if (tubTargetTemp < 0) {
-        Serial.print("ERROR: can't adjust target as current value not known");
-        sendCommand(
+        Serial.println("ERROR: can't adjust target as current value not known");
+        sendBuffer.enqueue(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
         return;
     }
@@ -355,7 +356,7 @@ void setup() {
 #endif
     // enable interrupt for pin5 falling level change so we can clear the rx buffer
     // everytime our panel is selected
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelect, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
@@ -373,7 +374,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.2");
+    device.setSoftwareVersion("0.2.3");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
@@ -422,6 +423,7 @@ void setup() {
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
     fbData.setName("FB");
+    commandQueueSize.setName("Command Queue");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -542,6 +544,7 @@ void loop() {
             setPixel(STATUS_WAITING_PANEL);
         }
     }
+    commandQueueSize.setValue(sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
@@ -554,8 +557,11 @@ void loop() {
         }
 
         mqtt.loop();
-        webota.handle();
 
+        detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+        webota.handle();
+        attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
+    
         telnetLoop();
 
         if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
