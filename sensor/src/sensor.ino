@@ -115,6 +115,7 @@ HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
+HASensorNumber commandQueueSize("commandQueueSize");
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -375,7 +376,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.2");
+    device.setSoftwareVersion("0.2.3");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
@@ -424,6 +425,7 @@ void setup() {
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
     fbData.setName("FB");
+    commandQueueSize.setName("Command Queue");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -544,6 +546,7 @@ void loop() {
             setPixel(STATUS_WAITING_PANEL);
         }
     }
+    commandQueueSize.setValue(sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
