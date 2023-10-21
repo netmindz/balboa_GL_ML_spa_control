@@ -107,7 +107,7 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-HASensor rawData7("raw7");
+HASensor fbData("fb");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
@@ -423,7 +423,7 @@ void setup() {
     rawData.setName("Raw data");
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
-    rawData7.setName("FB");
+    fbData.setName("FB");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -477,7 +477,7 @@ String lastRaw3 = "";
 String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
-String lastRaw7 = "";
+String lastFB = "";
 String lastJSON = "";
 uint32_t lastUptime = 0;
 String timeString = "";
@@ -498,17 +498,20 @@ int waitforGLBytes() {
     setPixel(STATUS_OK);
     // define message length from starting Byte
     switch (tub.peek()) {
-    case 0xFA:
-        msgLength = 23;
-        break;
-    case 0xAE:
-        msgLength = 16;
-        break;
-    default:
-        Serial.print("Unknown message start Byte: ");
-        int peekedByte = tub.read();
-        Serial.println(peekedByte, HEX);
-        return 0;
+        case 0xFA:
+            msgLength = 23;
+            break;
+        case 0xAE:
+            msgLength = 16;
+            break;
+        case 0xFB:
+            msgLength = 9;
+            break;
+        default:
+            Serial.print("Unknown message start Byte: ");
+            int unknownByte = tub.read();
+            Serial.println(unknownByte, HEX);
+            return 0;
     }
     // we'll wait here for up to 2.5ms until the expected number of bytes are available
     unsigned long startTime = micros();
@@ -789,9 +792,9 @@ void handleMessage(size_t len, uint8_t buf[]) {
 
         if (result.length() >= 64) {  // "Long" messages only
             String tail = result.substring(46, 64);
-            if (tail != lastRaw7) {
-                lastRaw7 = tail;
-                rawData7.setValue(lastRaw7.c_str());
+            if (tail != lastFB) {
+                lastFB = tail;
+                fbData.setValue(lastFB.c_str());
             }
         }
 
@@ -801,6 +804,11 @@ void handleMessage(size_t len, uint8_t buf[]) {
         light.setState(lightState);
 
         // end of FA14
+    } else if (result.substring(0, 2) == "fb") {
+        if (result != lastFB) {
+            lastFB = result;
+            fbData.setValue(lastFB.c_str());
+        }
     } else if (result.substring(0, 4) == "ae0d") {
         // Serial.println("AE 0D");
         // telnetSend(result);
@@ -840,9 +848,6 @@ void sendCommand() {
         // Serial.println("Sending " + sendBuffer);
         byte byteArray[9] = {0};
         hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
-        // if(digitalRead(PIN_5_PIN) != LOW) {
-        //   Serial.println("ERROR: Pin5 went high before command before write");
-        // }
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
@@ -856,7 +861,9 @@ void sendCommand() {
             Serial.printf("message sent : %u\n", delayTime);
             // delayTime += 10;
         }
-        //delay(10);
+        else {
+          Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+        }
         digitalWrite(RTS_PIN, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
