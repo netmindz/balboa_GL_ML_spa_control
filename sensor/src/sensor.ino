@@ -164,10 +164,13 @@ void IRAM_ATTR panelSelected() {
     clearRXbuffer();
 }
 
-void sendCommand(String command, int count) {
+void sendCommand(String command, int count = 1) {
     Serial.printf("Sending %s - %u times\n", command.c_str(), count);
     for (int i = 0; i < count; i++) {
         sendBuffer.enqueue(command.c_str());
+    }
+    for (int i = 0; i < 3; i++) {
+        sendBuffer.enqueue(COMMAND_EMPTY);
     }
 }
 
@@ -184,7 +187,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
     if (state != lightState) {
         Serial.println("Toggle");
-        sendBuffer.enqueue(COMMAND_LIGHT);
+        sendCommand(COMMAND_LIGHT);
     } else {
         Serial.println("No change needed");
     }
@@ -206,22 +209,22 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("Mode Switch changed - %u\n", index);
     int currentIndex = sender->getCurrentState();
     int options = 3;
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
     setOption(currentIndex, index, options);
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
 }
 
 void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        sendBuffer.enqueue(COMMAND_UP);
+        sendCommand(COMMAND_UP);
     } else if (name == "Down") {
-        sendBuffer.enqueue(COMMAND_DOWN);
+        sendCommand(COMMAND_DOWN);
     } else if (name == "Mode") {
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        sendCommand(COMMAND_CHANGE_MODE);
     } else if (name == "Time") {
-        sendBuffer.enqueue(COMMAND_TIME);
+        sendCommand(COMMAND_TIME);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -242,21 +245,16 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 
     int target = temperatureFloat * 2;  // 0.5 inc so double
     int current = tubTargetTemp * 2;
-    sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
-    sendBuffer.enqueue(COMMAND_EMPTY);
+    sendCommand(COMMAND_UP);  // Enter set temp mode
 
     if (temperatureFloat > tubTargetTemp) {
-        for (int i = 0; i < (target - current); i++) {
-            Serial.println("Raise the temp");
-            sendBuffer.enqueue(COMMAND_UP);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
-        }
+        int count = (target - current);
+        Serial.printf("Raise the temp x %u\n", count);
+        sendCommand(COMMAND_UP, count);
     } else {
-        for (int i = 0; i < (current - target); i++) {
-            Serial.println("Lower the temp");
-            sendBuffer.enqueue(COMMAND_DOWN);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
-        }
+        int count = (current - target);
+        Serial.printf("Lower the temp x %u\n", count);
+        sendCommand(COMMAND_DOWN, count);
     }
 
     // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel - better to see what
@@ -745,11 +743,6 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 } else {
                     telnetSend("CMD: " + cmd);
                 }
-                if (!lastRaw3.equals(cmd)) {
-                    // Controller responded to command
-                    sendBuffer.dequeue();
-                    Serial.printf("YAY: command response : %u\n", delayTime);
-                }
 
                 if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
                     lastRaw3 = cmd;
@@ -863,7 +856,7 @@ void sendCommand() {
         // wait for tx to finish and flush the rx buffer
         tub.flush(false);
         if (digitalRead(PIN_5_PIN) == LOW) {
-            // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+            sendBuffer.dequeue();
             Serial.printf("message sent : %u\n", delayTime);
             // delayTime += 10;
         }
