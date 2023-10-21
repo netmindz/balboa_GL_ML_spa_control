@@ -230,11 +230,11 @@ void onButtonPress(HAButton* sender) {
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     float temperatureFloat = temperature.toFloat();
 
-    Serial.print("Target temperature: ");
+    Serial.print("Set target temperature: ");
     Serial.println(temperatureFloat);
 
     if (tubTargetTemp < 0) {
-        Serial.print("ERROR: can't adjust target as current value not known");
+        Serial.println("ERROR: can't adjust target as current value not known");
         sendBuffer.enqueue(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
         return;
