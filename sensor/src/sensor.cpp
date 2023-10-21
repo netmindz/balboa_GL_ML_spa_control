@@ -44,7 +44,17 @@ const char passphrase[] = SECRET_PSK;
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
 
 
-#ifdef ESP32
+#ifdef RSC3
+#define tub Serial1
+#define RX_PIN 3
+#define TX_PIN 10
+#define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 6
+
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+
+#elif ESP32
 #define tub Serial2
 #define RX_PIN 19
 #define TX_PIN 23
@@ -84,7 +94,7 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-HASensor rawData7("raw7");
+HASensor fbData("fb");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
@@ -92,6 +102,7 @@ HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
+HASensorNumber commandQueueSize("commandQueueSize");
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -220,7 +231,7 @@ void updateHAStatus() {
     currentState.setValue(status.state.c_str());
     lcd.setValue(status.lcd);
     rawData2.setValue(status.rawData2.c_str());
-    rawData7.setValue(status.rawData7.c_str());
+    fbData.setValue(status.rawData7.c_str());
     // rawData4.setValue(lastRaw4.c_str());
     // rawData5.setValue(lastRaw5.c_str());
     // rawData6.setValue(lastRaw6.c_str());
@@ -239,12 +250,42 @@ void updateHAStatus() {
 
 }
 
+void setPixel(uint8_t color) {
+#ifdef RSC3
+    switch(color) {
+        case 0:
+            pixels.setPixelColor(0, pixels.Color(255,0,0));
+            break;
+        case 1:
+            pixels.setPixelColor(0, pixels.Color(0,255,0));
+            break;
+        case 2:
+            pixels.setPixelColor(0, pixels.Color(0,0,255));
+            break;
+        case 3:
+            pixels.setPixelColor(0, pixels.Color(255,255,0));
+            break;
+        case 4:
+            pixels.setPixelColor(0, pixels.Color(255,0,255));
+            break;
+    }     
+    pixels.show();
+#endif
+}
+
+
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
+#ifdef RSC3
+    pixels.begin();
+    pixels.setBrightness(255);
+    setPixel(STATUS_BOOT);
+#else    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
+#endif
 
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
@@ -271,6 +312,7 @@ void setup() {
             Serial.print(".");
         }
     }
+    setPixel(STATUS_WIFI);
 
     if (WiFi.status() != WL_CONNECTED) {
 #ifdef AP_FALLBACK
@@ -367,7 +409,8 @@ void setup() {
     rawData.setName("Raw data");
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
-    rawData7.setName("FB");
+    fbData.setName("FB");
+    commandQueueSize.setName("Command Queue");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");

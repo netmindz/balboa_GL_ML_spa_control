@@ -24,6 +24,9 @@ void telnetLoop() {
 }
 
 void telnetSend(String message) {
+  if (!server.hasClient()) {
+    return;
+  }
   for (int i = 0; i < MAX_SRV_CLIENTS; i++) {
     if (serverClients[i]) { // equivalent to serverClients[i].connected()
 //      if (serverClients[i].availableForWrite() >= message.length()) {
