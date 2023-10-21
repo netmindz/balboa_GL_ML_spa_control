@@ -160,7 +160,7 @@ void clearRXbuffer(void) {
 
 // Triggered when pin5 falling - ie our panel is selected
 // clears serial receive buffer
-void IRAM_ATTR panelSelect() {
+void IRAM_ATTR panelSelected() {
     clearRXbuffer();
 }
 
@@ -358,7 +358,7 @@ void setup() {
 #endif
     // enable interrupt for pin5 falling level change so we can clear the rx buffer
     // everytime our panel is selected
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelect, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
@@ -559,8 +559,11 @@ void loop() {
         }
 
         mqtt.loop();
-        webota.handle();
 
+        detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+        webota.handle();
+        attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
+    
         telnetLoop();
 
         if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
