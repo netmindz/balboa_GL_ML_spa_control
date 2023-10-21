@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <esp_task_wdt.h>
+#include <driver/uart.h>
 #else
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -12,10 +13,10 @@
 #include <SoftwareSerial.h>  // - https://github.com/plerup/espsoftwareserial
 #endif
 #include <ArduinoHA.h>
-#include <ArduinoOTA.h>
 #include <ArduinoQueue.h>
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
+#include <WebOTA.h>
 
 // ************************************************************************************************
 // Start of config
@@ -54,10 +55,24 @@ const float POWER_PUMP2_HIGH = 0.6;
 // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
 const int MINUTES_PER_DEGC = 45;
 
-int delayTime = 40;
+#define DELAY_TIME_DEFAULT 20
+int delayTime = DELAY_TIME_DEFAULT;
 
-#ifdef ESP32
+
+#ifdef RSC3
+#define tub Serial1
+#define tubUART UART_NUM_1
+#define RX_PIN 3
+#define TX_PIN 10
+#define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN 6
+
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+
+#elif ESP32
 #define tub Serial2
+#define tubUART UART_NUM_2
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
@@ -93,7 +108,7 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-HASensor rawData7("raw7");
+HASensor fbData("fb");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
@@ -102,6 +117,7 @@ HASelect aux("aux");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
+HASensorNumber commandQueueSize("commandQueueSize");
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -132,6 +148,31 @@ double tubTargetTemp = -1;
 String state = "unknown";
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+
+void clearRXbuffer(void) {
+        // clear the rx buffer
+    #if defined(ESP32) || defined(RSC3)
+    uart_flush(tubUART);
+    #else
+    // not tested but according to the code flush clears the buffer
+    // https://github.com/plerup/espsoftwareserial/blob/main/src/SoftwareSerial.cpp#L434
+    tub.flush();
+    #endif
+}
+
+// Triggered when pin5 falling - ie our panel is selected
+// clears serial receive buffer
+void IRAM_ATTR panelSelected() {
+    clearRXbuffer();
+}
+
+/**
+ * @brief enable interrupt for pin5 falling level change so we can clear the rx buffer
+ *  every time our panel is selected
+ */
+void attachPanelInterrupt() {
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
+}
 
 void sendCommand(String command, int count) {
     Serial.printf("Sending %s - %u times\n", command.c_str(), count);
@@ -203,11 +244,11 @@ void onButtonPress(HAButton* sender) {
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     float temperatureFloat = temperature.toFloat();
 
-    Serial.print("Target temperature: ");
+    Serial.print("Set target temperature: ");
     Serial.println(temperatureFloat);
 
     if (tubTargetTemp < 0) {
-        Serial.print("ERROR: can't adjust target as current value not known");
+        Serial.println("ERROR: can't adjust target as current value not known");
         sendBuffer.enqueue(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
         return;
@@ -236,13 +277,42 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     // the control unit reports that assume our commands worked
 }
 
+void setPixel(uint8_t color) {
+#ifdef RSC3
+    switch(color) {
+        case 0:
+            pixels.setPixelColor(0, pixels.Color(255,0,0));
+            break;
+        case 1:
+            pixels.setPixelColor(0, pixels.Color(0,255,0));
+            break;
+        case 2:
+            pixels.setPixelColor(0, pixels.Color(0,0,255));
+            break;
+        case 3:
+            pixels.setPixelColor(0, pixels.Color(255,255,0));
+            break;
+        case 4:
+            pixels.setPixelColor(0, pixels.Color(255,0,255));
+            break;
+    }     
+    pixels.show();
+#endif
+}
+
 boolean isConnected = false;
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
+#ifdef RSC3
+    pixels.begin();
+    pixels.setBrightness(255);
+    setPixel(STATUS_BOOT);
+#else    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
+#endif
 
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
@@ -269,6 +339,7 @@ void setup() {
             Serial.print(".");
         }
     }
+    setPixel(STATUS_WIFI);
 
     if (WiFi.status() != WL_CONNECTED) {
 #ifdef AP_FALLBACK
@@ -300,9 +371,32 @@ void setup() {
     tub.updateBaudRate(115200);
 #endif
 
-    ArduinoOTA.setHostname("hottub-sensor");
+    attachPanelInterrupt();
 
-    ArduinoOTA.begin();
+    webota
+        .onStart([]() {
+            Serial.println("Start updating");
+            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+        })
+        .onEnd([]() {
+            Serial.println("\nOTA End");
+            attachPanelInterrupt();
+        })
+            .onProgress([](unsigned int progress, unsigned int total) {
+            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        })
+            .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+            attachPanelInterrupt();
+        });
+
+    init_wifi(ssid, passphrase, "hottub-sensor");
+    webota.init(8080, "/update");
 
     // start telnet server
     server.begin();
@@ -317,7 +411,7 @@ void setup() {
 
     // Home Assistant
     device.setName("Hottub");
-    device.setSoftwareVersion("0.2.1");
+    device.setSoftwareVersion("0.2.3");
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
@@ -331,7 +425,7 @@ void setup() {
     targetTemp.setName("Target Tub temp");
 
     timeToTemp.setName("Time to temp");
-    timeToTemp.setUnitOfMeasurement("minutes");
+    timeToTemp.setUnitOfMeasurement("min");
     timeToTemp.setDeviceClass("duration");
     timeToTemp.setIcon("mdi:clock");
 
@@ -375,7 +469,8 @@ void setup() {
     rawData.setName("Raw data");
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
-    rawData7.setName("FB");
+    fbData.setName("FB");
+    commandQueueSize.setName("Command Queue");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -429,58 +524,92 @@ String lastRaw3 = "";
 String lastRaw4 = "";
 String lastRaw5 = "";
 String lastRaw6 = "";
-String lastRaw7 = "";
+String lastFB = "";
 String lastJSON = "";
-int lastUptime = 0;
+uint32_t lastUptime = 0;
 String timeString = "";
 int msgLength = 0;
+boolean panelDetected = false;
+const unsigned long readBytesTimeout = 2500; // Timeout in microseconds (2.5 ms)
+
+/*
+ * waitforGLBytes checks the first byte in the serial buffer
+ * since we've cleared the serial buffer when pin5 went low
+ * there will only be data meant for our panel in the buffer.
+ * Depending on the message type, wait for the expected number
+ * of bytes to be available with a timeout of 2ms
+ * returns number of bytes to read
+ */
+int waitforGLBytes() {
+    int msgLength = 0;
+    setPixel(STATUS_OK);
+    // define message length from starting Byte
+    switch (tub.peek()) {
+        case 0xFA:
+            msgLength = 23;
+            break;
+        case 0xAE:
+            msgLength = 16;
+            break;
+        case 0xFB:
+            msgLength = 9;
+            break;
+        default:
+            Serial.print("Unknown message start Byte: ");
+            int unknownByte = tub.read();
+            Serial.println(unknownByte, HEX);
+            return 0;
+    }
+    // we'll wait here for up to 2.5ms until the expected number of bytes are available
+    unsigned long startTime = micros();
+    while (tub.available() < msgLength) {
+        if (micros() - startTime >= readBytesTimeout) {
+            Serial.printf("Timeout: %u bytes not available in 2.5ms\n", msgLength);
+            return 0;
+        }
+    }
+    return msgLength;
+}
 
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
-    if (tub.available() > 0) {
-        size_t len = tub.available();
-        //    Serial.printf("bytes avail = %u\n", len);
-        uint8_t buf[len];  // TODO: swap to fixed buffer to help prevent fragmentation of memory
-        tub.read(buf, len);
-        if (panelSelect == LOW) {  // Only read data meant for us
-            for (int i = 0; i < len; i++) {
-                if (buf[i] < 0x10) {
-                    result += '0';
-                }
-                result += String(buf[i], HEX);
-            }
-            if (msgLength == 0 && result.length() == 2) {
-                String messageType = result.substring(0, 2);
-                if (messageType == "fa") {
-                    msgLength = 46;
-                } else if (messageType == "ae") {
-                    msgLength = 32;
-                } else {
-                    Serial.print("Unknown message length for ");
-                    Serial.println(messageType);
-                }
-            } else if (result.length() == msgLength) {
-                if (result.length() == 46) {
-                    sendCommand();  // send reply *before* we parse the FA string as we don't want to delay the reply by
-                                    // say sending MQTT updates
-                }
-                handleMessage();
-            }
-        } else {
-            // Serial.print("H");
-            result = "";
-            msgLength = 0;
+    // is data available and we are selected
+    if ((tub.available() > 0) && (panelSelect == LOW)) {
+        int msgLength = waitforGLBytes();
+        // only do something if we've got a message
+        if (msgLength > 0) {
+            uint8_t buf[msgLength];
+            tub.read(buf, msgLength);
+            handleMessage(msgLength, buf);
         }
     }
+    else {
+        if(panelDetected) {
+            setPixel(STATUS_WAITING_DATA);
+        }
+        else {
+            setPixel(STATUS_WAITING_PANEL);
+        }
+    }
+    commandQueueSize.setValue(sendBuffer.itemCount());
 
-    if (panelSelect == HIGH) {  // Controller talking to other topside panels - we are in effect idle
+    if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
+
+        if(panelSelect == HIGH) {
+            panelDetected = true;
+        }
+        else {
+            state = "Panel select (pin5) not detected";
+            currentState.setValue(state.c_str());
+        }
 
         mqtt.loop();
-        ArduinoOTA.handle();
 
+        webota.handle();
+    
         telnetLoop();
 
-        if (sendBuffer.isEmpty()) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+        if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
                                      // can both block for a long time
 
             webserver.handleClient();
@@ -506,10 +635,20 @@ void loop() {
 #endif
 }
 
-void handleMessage() {
+void handleMessage(size_t len, uint8_t buf[]) {
     //      Serial.print("message = ");
     //      Serial.println(result);
-
+    // check if we need to send command first
+    if (buf[0] == 0xFA) {
+        sendCommand();
+    }
+    result = "";
+    for (int i = 0; i < len; i++) {
+        if (buf[i] < 0x10) {
+            result += '0';
+        }
+        result += String(buf[i], HEX);
+    }
     if (result.substring(0, 4) == "fa14") {
         // Serial.println("FA 14");
         // telnetSend(result);
@@ -681,7 +820,7 @@ void handleMessage() {
                             float timeToTempValue = (tempDiff * MINUTES_PER_DEGC);
                             timeToTemp.setValue(timeToTempValue);
                         } else {
-                            timeToTemp.setValue(0);
+                            timeToTemp.setValue((float) 0);
                         }
                     }
                 } else if (result.substring(10, 12) == "2d") {  // "-"
@@ -702,9 +841,9 @@ void handleMessage() {
 
         if (result.length() >= 64) {  // "Long" messages only
             String tail = result.substring(46, 64);
-            if (tail != lastRaw7) {
-                lastRaw7 = tail;
-                rawData7.setValue(lastRaw7.c_str());
+            if (tail != lastFB) {
+                lastFB = tail;
+                fbData.setValue(lastFB.c_str());
             }
         }
 
@@ -714,6 +853,11 @@ void handleMessage() {
         light.setState(lightState);
 
         // end of FA14
+    } else if (result.substring(0, 2) == "fb") {
+        if (result != lastFB) {
+            lastFB = result;
+            fbData.setValue(lastFB.c_str());
+        }
     } else if (result.substring(0, 4) == "ae0d") {
         // Serial.println("AE 0D");
         // telnetSend(result);
@@ -751,26 +895,24 @@ void sendCommand() {
 
         delayMicroseconds(delayTime);
         // Serial.println("Sending " + sendBuffer);
-        byte byteArray[18] = {0};
+        byte byteArray[9] = {0};
         hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
-        // if(digitalRead(PIN_5_PIN) != LOW) {
-        //   Serial.println("ERROR: Pin5 went high before command before write");
-        // }
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
-            delayTime = 0;
+            delayTime = DELAY_TIME_DEFAULT;
             sendBuffer.dequeue();
         }
-        // tub.flush(true);
+        // wait for tx to finish and flush the rx buffer
+        tub.flush(false);
         if (digitalRead(PIN_5_PIN) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
             Serial.printf("message sent : %u\n", delayTime);
             // delayTime += 10;
         }
-        // else {
-        //   Serial.println("ERROR: Pin5 went high before command could be sent after flush");
-        // }
+        else {
+          Serial.println("ERROR: Pin5 went high before command could be sent after flush");
+        }
         digitalWrite(RTS_PIN, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
