@@ -31,7 +31,7 @@ CONFIG_SCHEMA = text_sensor.TEXT_SENSOR_SCHEMA.extend(
     # cv.Optional(CONF_LCD): text_sensor.TEXT_SENSOR_SCHEMA.extend({
     #     cv.GenerateID(): cv.declare_id(LCDInfo),
     # }),
-})
+}).extend(cv.COMPONENT_SCHEMA)
 
 @coroutine
 def setup_conf(config, key):
