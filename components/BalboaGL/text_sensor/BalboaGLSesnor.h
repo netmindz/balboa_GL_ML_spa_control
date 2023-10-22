@@ -7,12 +7,12 @@
 
 using namespace esphome;
 
-class BalboaGLStateSensor : public PollingComponent, public text_sensor::TextSensor {
+class BalboaGLStateSensor : public Component, public text_sensor::TextSensor {
     public:
     // void setSpa(balboaGL* spa) {
     //     this->spa = spa;
     // }
-    void update() override {
+    void loop() override {
         publish_state(status.state.c_str());
     }
     // private:
