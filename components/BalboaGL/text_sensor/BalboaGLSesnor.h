@@ -7,7 +7,7 @@
 namespace esphome {
     namespace balboa_sensor {
 
-    class BalboaGLStateSensor : public Component, public TextSensor {
+    class BalboaGLStateSensor : public Component, public text_sensor::TextSensor {
             public:
             void setSpa(balboaGL* spa) {
                 this->spa = spa;
