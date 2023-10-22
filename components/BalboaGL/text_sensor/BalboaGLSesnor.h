@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esphome.h"
-#include "esphome/components/text_sesnor/text_sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 
 #include "balboaGL.h"
 
