@@ -15,8 +15,7 @@ CONF_RAW = "raw"
 CONF_LCD = "lcd"
 
 
-balboa_sensor_ns = cg.esphome_ns.namespace('balboa_sensor')
-StateInfo = balboa_sensor_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
+StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
 # RawInfo = balboa_sensor_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
 # LCDInfo = balboa_sensor_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
 
