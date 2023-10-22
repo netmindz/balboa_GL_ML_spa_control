@@ -1,6 +1,6 @@
 #pragma once
 
-#include "esphom.h"
+#include "esphome.h"
 
 #include "balboaGL.h"
 
