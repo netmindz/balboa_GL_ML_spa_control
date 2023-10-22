@@ -30,11 +30,16 @@ void BalboaGLClimate::update() {
                 break;
         }
 
-        if(status.heater) {
-            this->mode = climate::CLIMATE_MODE_HEAT;
+        if(status.mode == MODE_IDX_STD) {
+            if(status.heater) {
+                this->mode = climate::CLIMATE_MODE_HEAT;
+            }
+            else {
+                this->mode = climate::CLIMATE_MODE_AUTO;
+            }
         }
         else {
-            this->mode = climate::CLIMATE_MODE_AUTO;
+            this->mode = climate::CLIMATE_MODE_OFF;
         }
 
         lastRaw = status.rawData;        
