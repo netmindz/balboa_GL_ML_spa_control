@@ -273,6 +273,14 @@ void setPixel(uint8_t color) {
 #endif
 }
 
+/**
+ * @brief enable interrupt for pin5 falling level change so we can clear the rx buffer
+ *  every time our panel is selected
+ */
+void attachPanelInterrupt() {
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearRXBuffer, FALLING);
+}
+
 
 void setup() {
     Serial.begin(115200);
@@ -504,9 +512,7 @@ void loop() {
 
         mqtt.loop();
         
-        detachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()));
         webota.handle();
-        attachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()), clearRXBuffer, FALLING);
 
         telnetLoop();
 
