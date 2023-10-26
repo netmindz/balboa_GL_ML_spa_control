@@ -756,6 +756,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     // idle
                 } else if (menu == "4c") {
                     state = "Set Mode";
+                } else if (menu == "46") {
+                    state = "Set Temperature";
                 } else if (menu == "5a") {
                     state = "Standby?";  // WT: not tested to confirm if this is the act of setting Standby or just seen
                                          // when in standby
