@@ -16,6 +16,7 @@
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
 #include <WebOTA.h>
+#include <esp_log.h>
 
 
 // ************************************************************************************************
@@ -79,7 +80,7 @@ SoftwareSerial tub;
 
 #include <balboaGL.h>
 
-balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF);
+balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF, ESP_LOG_DEBUG);
 
 WiFiClient clients[1];
 
