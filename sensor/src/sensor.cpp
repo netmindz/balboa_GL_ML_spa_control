@@ -273,15 +273,6 @@ void setPixel(uint8_t color) {
 #endif
 }
 
-/**
- * @brief enable interrupt for pin5 falling level change so we can clear the rx buffer
- *  every time our panel is selected
- */
-void attachPanelInterrupt() {
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF), clearRXBuffer, FALLING);
-}
-
-
 void setup() {
     Serial.begin(115200);
     delay(1000);
@@ -347,18 +338,15 @@ void setup() {
                   TX_PIN);  // added here to see if line about was where the hang was
     tub.updateBaudRate(115200);
 #endif
-    // enable interrupt for pin5 falling level change so we can clear the rx buffer
-    // everytime our panel is selected
-    attachPanelInterrupt();
 
     webota
         .onStart([]() {
             Serial.println("Start updating");
-            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF));
+            spa.detachPanelInterrupt();
         })
         .onEnd([]() {
             Serial.println("\nOTA End");
-            attachPanelInterrupt();
+            spa.attachPanelInterrupt();
         })
             .onProgress([](unsigned int progress, unsigned int total) {
             Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -370,11 +358,13 @@ void setup() {
             else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
             else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
             else if (error == OTA_END_ERROR) Serial.println("End Failed");
-            attachPanelInterrupt();
+            spa.attachPanelInterrupt();
         });
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
+
+    spa.attachPanelInterrupt();
 
     // start telnet server
     server.begin();
