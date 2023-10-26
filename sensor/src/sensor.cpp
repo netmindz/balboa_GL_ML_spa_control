@@ -134,12 +134,7 @@ int lastUptime = 0;
 
 void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
-    if (state != status.light) {
-        Serial.println("Toggle");
-        sendBuffer.enqueue(COMMAND_LIGHT);
-    } else {
-        Serial.println("No change needed");
-    }
+    spa.setLight(state);
 }
 
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
@@ -171,13 +166,13 @@ void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        sendBuffer.enqueue(COMMAND_UP);
+        spa.queueCommand(COMMAND_UP, 1);
     } else if (name == "Down") {
-        sendBuffer.enqueue(COMMAND_DOWN);
+        spa.queueCommand(COMMAND_DOWN, 1);
     } else if (name == "Mode") {
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        spa.queueCommand(COMMAND_CHANGE_MODE, 1);
     } else if (name == "Time") {
-        sendBuffer.enqueue(COMMAND_TIME);
+        spa.queueCommand(COMMAND_TIME, 1);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -185,38 +180,10 @@ void onButtonPress(HAButton* sender) {
 
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     float temperatureFloat = temperature.toFloat();
-
     Serial.print("Target temperature: ");
     Serial.println(temperatureFloat);
 
-    if (status.targetTemp <= 0) {
-        Serial.print("ERROR: can't adjust target as current value not known");
-        sendBuffer.enqueue(
-            COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
-        return;
-    }
-
-    int target = temperatureFloat * 2;  // 0.5 inc so double
-    int current = status.targetTemp * 2;
-    sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
-    sendBuffer.enqueue(COMMAND_EMPTY);
-
-    if (temperatureFloat > status.targetTemp) {
-        for (int i = 0; i < (target - current); i++) {
-            Serial.println("Raise the temp");
-            sendBuffer.enqueue(COMMAND_UP);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
-        }
-    } else {
-        for (int i = 0; i < (current - target); i++) {
-            Serial.println("Lower the temp");
-            sendBuffer.enqueue(COMMAND_DOWN);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
-        }
-    }
-
-    // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel - better to see what
-    // the control unit reports that assume our commands worked
+    spa.setTemp(temperatureFloat);
 }
 
 void updateHAStatus() {
