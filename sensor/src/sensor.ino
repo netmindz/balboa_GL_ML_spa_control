@@ -146,6 +146,7 @@ float tubpowerCalc = 0;
 double tubTemp = -1;
 double tubTargetTemp = -1;
 String state = "unknown";
+bool commandPending;
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
 
@@ -790,8 +791,11 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 }
                 if (!lastRaw3.equals(cmd)) {
                     // Controller responded to command
-                    sendBuffer.dequeue();
-                    Serial.printf("YAY: command response : %u\n", delayTime);
+                    if(commandPending) {
+                        commandPending = false;
+                        sendBuffer.dequeue();
+                        Serial.printf("YAY: command response : %u\n", delayTime);
+                    }
                 }
 
                 if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
@@ -888,8 +892,14 @@ void handleMessage(size_t len, uint8_t buf[]) {
     }
 }
 
+unsigned long lastCmdTime = 0;
 void sendCommand() {
-    if (!sendBuffer.isEmpty()) {
+    if (sendBuffer.isEmpty()) {
+        return;
+    }
+    if((millis() - lastCmdTime) >= 500) {
+        lastCmdTime = millis();
+        commandPending = true;
         digitalWrite(RTS_PIN, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
 
