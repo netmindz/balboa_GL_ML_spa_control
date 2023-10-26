@@ -71,6 +71,7 @@ SoftwareSerial tub;
 // Uncomment if you have dual-speed pump
 // #define PUMP1_DUAL_SPEED
 // #define PUMP2_DUAL_SPEED
+// #define AUX_DUAL_SPEED
 
 // ************************************************************************************************
 // End of config
@@ -99,6 +100,7 @@ HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
 HASelect pump2("pump2");
+HASelect aux("aux");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
@@ -147,6 +149,10 @@ void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
     if (sender->getName() == "Pump2") {
         command = COMMAND_JET2;
         options = PUMP2_STATE_HIGH + 1;
+    }
+    else if (sender->getName() == "Aux") {
+        command = COMMAND_AUX;
+        options = AUX_STATE_HIGH + 1;
     }
     spa.setOption(currentIndex, index, options, command);
 }
@@ -216,7 +222,7 @@ void updateHAStatus() {
 
     commandQueueSize.setValue(sendBuffer.itemCount());
 
-    static String lastRaw = "";
+    static String lastRaw = "0";
     if(status.rawData == lastRaw) {
         return;
     }
@@ -423,6 +429,16 @@ void setup() {
 #endif
     pump2.setIcon("mdi:chart-bubble");
     pump2.onCommand(onPumpSwitchStateChanged);
+
+    aux.setName("Aux");
+#ifdef AUX_DUAL_SPEED
+    aux.setOptions("Off;Medium;High");
+#else
+    aux.setOptions("Off;High");
+#endif
+    aux.setIcon("mdi:chart-bubble");
+    aux.onCommand(onPumpSwitchStateChanged);
+
 
     heater.setName("Heater");
     heater.setIcon("mdi:radiator");
