@@ -278,7 +278,7 @@ void setPixel(uint8_t color) {
  *  every time our panel is selected
  */
 void attachPanelInterrupt() {
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), clearRXBuffer, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF), clearRXBuffer, FALLING);
 }
 
 
@@ -354,7 +354,7 @@ void setup() {
     webota
         .onStart([]() {
             Serial.println("Start updating");
-            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF));
         })
         .onEnd([]() {
             Serial.println("\nOTA End");
