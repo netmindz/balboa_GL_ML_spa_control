@@ -102,7 +102,7 @@ HASelect pump2("pump2");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
-HASensorNumber commandQueueSize("commandQueueSize");
+HASensorNumber commandQueueSize("commandQueueSize",  HANumber::PrecisionP0);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -213,6 +213,8 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 }
 
 void updateHAStatus() {
+
+    commandQueueSize.setValue(sendBuffer.itemCount());
 
     static String lastRaw = "";
     if(status.rawData == lastRaw) {
