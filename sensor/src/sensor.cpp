@@ -341,7 +341,29 @@ void setup() {
 #endif
     // enable interrupt for pin5 falling level change so we can clear the rx buffer
     // everytime our panel is selected
-    attachInterrupt(digitalPinToInterrupt(spa.getPanelSelectPin()), clearRXBuffer, FALLING);
+    attachPanelInterrupt();
+
+    webota
+        .onStart([]() {
+            Serial.println("Start updating");
+            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+        })
+        .onEnd([]() {
+            Serial.println("\nOTA End");
+            attachPanelInterrupt();
+        })
+            .onProgress([](unsigned int progress, unsigned int total) {
+            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        })
+            .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+            attachPanelInterrupt();
+        });
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
