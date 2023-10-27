@@ -75,4 +75,4 @@ async def to_code(config):
     await climate.register_climate(var, config)
 
     paren = await cg.get_variable(config[CONF_BALBOA_ID])
-    cg.add(var.set_spa(paren->get_spa()))
+    cg.add(var.set_spa(paren+ "->get_spa()"))
