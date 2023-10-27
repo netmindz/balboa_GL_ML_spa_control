@@ -8,8 +8,7 @@
 #include "esphome/core/log.h"
 #include "esp_log.h"
 
-// #include "BalboaGLSelect.h"
-// #include "BalboaGLSwitch.h"
+#define tubUART 1
 #include "ESPBalboaGL.h"
 
 static const char* TAG = "BalboaGL"; // Logging tag
