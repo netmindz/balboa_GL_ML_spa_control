@@ -7,7 +7,7 @@ from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
 DEPENDENCIES = ["BalboaGL"]
 
-LightSwitch = cg.esphome_ns.class_('LightSwitch', switch.Switch, cg.Component)
+LightSwitch = cg.esphome_ns.class_('BalboaGLLightSwitch', switch.Switch, cg.Component)
 
 CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend(
     {
