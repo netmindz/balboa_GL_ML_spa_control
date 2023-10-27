@@ -16,8 +16,8 @@ CONF_LCD = "lcd"
 
 
 StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
-# RawInfo = balboagl_ns.class_('BalboaGLRawSensor', sensor.Sensor, cg.Component)
-# LCDInfo = balboagl_ns.class_('BalboaGLLCDSensor', sensor.Sensor, cg.Component)
+RawInfo = balboagl_ns.class_('BalboaGLRawSensor', text_sensor.Sensor, cg.Component)
+LCDInfo = balboagl_ns.class_('BalboaGLLCDSensor', text_sensor.Sensor, cg.Component)
 
 CONFIG_SCHEMA = (
     text_sensor.text_sensor_schema(StateInfo)
@@ -34,12 +34,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(StateInfo,
         ).extend(cv.polling_component_schema("1s")),
         
-    # cv.Optional(CONF_RAW): text_sensor.TEXT_SENSOR_SCHEMA.extend({
-    #     cv.GenerateID(): cv.declare_id(RawInfo),
-    # }),
-    # cv.Optional(CONF_LCD): text_sensor.TEXT_SENSOR_SCHEMA.extend({
-    #     cv.GenerateID(): cv.declare_id(LCDInfo),
-    # }),
+        cv.Optional(CONF_RAW): text_sensor.text_sensor_schema(RawInfo,
+        ).extend(cv.polling_component_schema("1s")),
+
+        cv.Optional(CONF_LCD): text_sensor.text_sensor_schema(LCDInfo,
+        ).extend(cv.polling_component_schema("1s")),
     }
 )
 
