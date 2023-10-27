@@ -28,12 +28,9 @@ using namespace esphome;
 
 class BalboaGLClimate : public PollingComponent, public climate::Climate {
  public:
-      // void set_balboa_parent(BalboaGL* balboaGL) {
-      //       this->spa = balboaGL->get_spa();
-      // }
-      void setSpa(balboaGL* spa) {
+        void set_spa(balboaGL* spa) {
             this->spa = spa;
-      }
+        }
         // print the current configuration
         void dump_config() override;
 
