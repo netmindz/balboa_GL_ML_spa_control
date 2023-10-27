@@ -64,7 +64,7 @@ def to_code(config):
     serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
-    cg.add_define("tubUART=1") # TODO make dynamic
+    cg.add_define("tubUART 1") # TODO make dynamic
 
     if CONF_RX_PIN in config:
         cg.add(var.set_rx_pin(config[CONF_RX_PIN]))
