@@ -10,7 +10,7 @@ namespace esphome {
 
     class BalboaGLPump1Select : public Component, public select::Select {
             public:
-            void setSpa(balboaGL* spa) {
+            void set_spa(balboaGL* spa) {
                 this->spa = spa;
             }
             private:
@@ -21,7 +21,7 @@ namespace esphome {
 
     class BalboaGLPump2Select : public Component, public select::Select {
             public:
-            void setSpa(balboaGL* spa) {
+            void set_spa(balboaGL* spa) {
                 this->spa = spa;
             }
             private:
