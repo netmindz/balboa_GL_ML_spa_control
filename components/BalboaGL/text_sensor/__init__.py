@@ -29,6 +29,20 @@ CONFIG_SCHEMA = (
     .extend(cv.COMPONENT_SCHEMA)
 )
 
+CONFIG_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(StateInfo,
+        ).extend(cv.polling_component_schema("1s")),
+        
+    # cv.Optional(CONF_RAW): text_sensor.TEXT_SENSOR_SCHEMA.extend({
+    #     cv.GenerateID(): cv.declare_id(RawInfo),
+    # }),
+    # cv.Optional(CONF_LCD): text_sensor.TEXT_SENSOR_SCHEMA.extend({
+    #     cv.GenerateID(): cv.declare_id(LCDInfo),
+    # }),
+    }
+)
+
 async def setup_conf(config, key):
     if key in config:
         conf = config[key]
