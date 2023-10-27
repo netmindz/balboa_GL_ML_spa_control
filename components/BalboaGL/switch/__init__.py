@@ -9,15 +9,12 @@ DEPENDENCIES = ["BalboaGL"]
 
 LightSwitch = cg.esphome_ns.class_('LightSwitch', switch.Switch, cg.Component)
 
-CONFIG_SCHEMA = (
-    switch.switch_schema(LightSwitch)
-    .extend(
-        {
-            cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
-        }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
-)
+CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend(
+    {
+        cv.GenerateID(): cv.declare_id(LightSwitch),
+        cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
+    }
+).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
     var = await switch.new_switch(config)
