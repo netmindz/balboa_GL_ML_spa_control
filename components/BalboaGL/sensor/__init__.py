@@ -6,13 +6,13 @@ from esphome.core import coroutine
 
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
-AUTO_LOAD = ["text_sensor"]
+AUTO_LOAD = ["sensor"]
 
 DEPENDENCIES = ["BalboaGL"]
 
 CONF_QUEUE = "commandQueue"
 
-CommandQueueInfo = balboagl_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
+CommandQueueInfo = cg.esphome_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
 
 CONFIG_SCHEMA = (
     sensor.sensor_schema(CommandQueueInfo)
