@@ -65,6 +65,8 @@ class BalboaGL : public PollingComponent {
 
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
+        void pause();
+
         balboaGL* get_spa() {
             return spa;
         }

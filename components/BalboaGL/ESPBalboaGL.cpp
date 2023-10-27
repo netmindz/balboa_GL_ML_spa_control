@@ -274,7 +274,8 @@ void BalboaGL::setup() {
 
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
-    this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin); 
+    this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin);
+    this->spa-attachPanelInterrupt(); 
     // this->current_temperature = NAN;
     // this->target_temperature = NAN;
 
@@ -317,6 +318,11 @@ void BalboaGL::setup() {
 
     ESP_LOGCONFIG(TAG, "End of seutp");
     this->dump_config();
+}
+
+void BalboaGL::pause() {
+    ESP_LOGI(TAG, "pause");
+    this->spa-detachPanelInterrupt();
 }
 
 // /**
