@@ -7,7 +7,7 @@
 
 using namespace esphome;
 
-class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::TextSensor {
+class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::Sensor {
     public:
     // void setSpa(balboaGL* spa) {
     //     this->spa = spa;
