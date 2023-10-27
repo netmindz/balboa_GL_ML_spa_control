@@ -7,10 +7,58 @@ external_components:
       refresh: 0s
 
 BalboaGL:
-  name: Temp
+  # name: Temp
   hardware_uart: UART1
   rx_pin: 3
   tx_pin: 10
   enable_pin: 5
   panel_select_pin: 6
-  update_interval: 220ms         
+  update_interval: 220ms
+    
+climate:
+  - platform: BalboaGL
+    name: Temp
+    update_interval: 220ms
+          
+#   # Text sensors with general information.
+text_sensor:
+    # Expose ESPHome version as sensor.
+    - platform: version
+      name: ESPHome Version
+    # Expose WiFi information as sensors.
+    - platform: wifi_info
+      ip_address:
+        name: IP
+      ssid:
+        name: SSID
+      bssid:
+        name: BSSID
+
+    - platform: BalboaGL
+      state:
+        name: State
+      raw:
+        name: Raw Data
+      lcd:
+        name: LCD Display
+
+# Sensors with general information.
+sensor:
+  # Uptime sensor.
+  - platform: uptime
+    name: Uptime
+
+  - platform: BalboaGL
+    commandQueue:
+      name: Command Queue
+
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+
+switch:
+  - platform: BalboaGL
+    name: Light
+
+
