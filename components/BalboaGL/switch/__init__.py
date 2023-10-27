@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import switch
 from esphome.const import CONF_ID
 
-from .. import balboa_ns, CONF_BALBOA_ID, BalboaGL
+from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
 DEPENDENCIES = ["BalboaGL"]
 
