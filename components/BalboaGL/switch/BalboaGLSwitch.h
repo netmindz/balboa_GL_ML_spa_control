@@ -9,7 +9,7 @@ using namespace esphome;
 
     class BalboaGLLightSwitch : public Component, public switch_::Switch {
             public:
-            void setSpa(balboaGL* spa) {
+            void set_spa(balboaGL* spa) {
                 this->spa = spa;
             }
             void write_state(bool state) override {
