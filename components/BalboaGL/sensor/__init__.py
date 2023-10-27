@@ -12,9 +12,17 @@ DEPENDENCIES = ["BalboaGL"]
 
 CONF_QUEUE = "commandQueue"
 
-info_ns = cg.esphome_ns.namespace("balboa_info")
+CommandQueueInfo = balboagl_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
 
-CommandQueueInfo = info_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
+CONFIG_SCHEMA = (
+    sensor.sensor_schema(CommandQueueInfo)
+    .extend(
+        {
+            cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+)
 
 CONFIG_SCHEMA = cv.Schema(
     {
