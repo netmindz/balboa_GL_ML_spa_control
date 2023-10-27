@@ -5,8 +5,7 @@
 
 #include "balboaGL.h"
 
-namespace esphome {
-    namespace balboa_switch {
+using namespace esphome;
 
     class BalboaGLLightSwitch : public Component, public switch_::Switch {
             public:
@@ -24,6 +23,3 @@ namespace esphome {
             private:
             balboaGL* spa;
         };
-
-    }
-}
