@@ -20,3 +20,29 @@ class BalboaGLStateSensor : public PollingComponent, public text_sensor::TextSen
         
 };
 
+class BalboaGLRawSensor : public PollingComponent, public text_sensor::TextSensor {
+    public:
+    // void setSpa(balboaGL* spa) {
+    //     this->spa = spa;
+    // }
+    void update() override {
+        publish_state(status.rawData.c_str());
+    }
+    // private:
+    // balboaGL* spa;
+        
+};
+
+class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSensor {
+    public:
+    // void setSpa(balboaGL* spa) {
+    //     this->spa = spa;
+    // }
+    void update() override {
+        publish_state(status.lcd);
+    }
+    // private:
+    // balboaGL* spa;
+        
+};
+
