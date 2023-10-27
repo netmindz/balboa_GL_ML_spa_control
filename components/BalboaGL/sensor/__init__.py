@@ -10,20 +10,25 @@ AUTO_LOAD = ["text_sensor"]
 
 DEPENDENCIES = ["BalboaGL"]
 
+CONF_QUEUE = "commandQueue"
 CONF_STATE = "state"
 CONF_RAW = "raw"
 CONF_LCD = "lcd"
 
 
+CommandQueueInfo = balboagl_ns.class_(
+    "BalboaGLCommandQueueSensor", sensor.TextSensor, cg.PollingComponent
+)
+
 CommandQueueInfo = cg.esphome_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
 # RawInfo = balboa_sensor_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
 # LCDInfo = balboa_sensor_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
 
-CONFIG_SCHEMA = sensor.SENSOR_SCHEMA.extend(
+CONFIG_SCHEMA = cv.Schema(
     {
-
-    cv.GenerateID(): cv.declare_id(CommandQueueInfo),
-    cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
+        cv.Optional(CONF_QUEUE): sensor.sensor_schema(
+            CommandQueueInfo, 
+        ).extend(cv.polling_component_schema("1s")),
         
     # cv.Optional(CONF_RAW): text_sensor.TEXT_SENSOR_SCHEMA.extend({
     #     cv.GenerateID(): cv.declare_id(RawInfo),
@@ -31,7 +36,8 @@ CONFIG_SCHEMA = sensor.SENSOR_SCHEMA.extend(
     # cv.Optional(CONF_LCD): text_sensor.TEXT_SENSOR_SCHEMA.extend({
     #     cv.GenerateID(): cv.declare_id(LCDInfo),
     # }),
-}).extend(cv.COMPONENT_SCHEMA)
+    }
+)
 
 @coroutine
 def setup_conf(config, key):
