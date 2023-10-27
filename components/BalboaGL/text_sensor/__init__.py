@@ -16,8 +16,8 @@ CONF_LCD = "lcd"
 
 
 StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
-# RawInfo = balboa_sensor_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
-# LCDInfo = balboa_sensor_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
+# RawInfo = balboagl_ns.class_('BalboaGLRawSensor', sensor.Sensor, cg.Component)
+# LCDInfo = balboagl_ns.class_('BalboaGLLCDSensor', sensor.Sensor, cg.Component)
 
 CONFIG_SCHEMA = text_sensor.TEXT_SENSOR_SCHEMA.extend(
     {
