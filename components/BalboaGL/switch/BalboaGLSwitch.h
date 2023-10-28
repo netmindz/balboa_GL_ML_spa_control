@@ -29,6 +29,14 @@ using namespace esphome;
                 // publish_state(state);
                 ESP_LOGD(SWITCH_TAG, "LightSwitch write_state complete");
             }
+            void update() override {
+                if(status.light != this->last_state) {
+                    this->last_state = status.light;
+                    publish_state(this->last_state);
+                }
+            }
+
             private:
             balboaGL* spa;
+            bool last_state;
         };
