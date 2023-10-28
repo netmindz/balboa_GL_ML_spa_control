@@ -48,13 +48,13 @@ class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSenso
     // }
     void update() override {
         if(status.lcd != this->last_value) {
-            this->last_value = status.lcd;
-            publish_state(last_value);
+            this->last_value = String(status.lcd);
+            publish_state(last_value.c_str());
         }
     }
     std::string unique_id() override { return "lcd"; }
     private:
-      char last_value[5];
+      String last_value;
         
 };
 
