@@ -47,7 +47,7 @@ class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSenso
     //     this->spa = spa;
     // }
     void update() override {
-        if(status.lcd != this->last_value) {
+        if(String(status.lcd) != this->last_value) {
             this->last_value = String(status.lcd);
             publish_state(last_value.c_str());
         }
