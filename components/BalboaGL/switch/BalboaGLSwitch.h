@@ -5,7 +5,7 @@
 
 #include "balboaGL.h"
 
-static const char* TAG = "BalboaGL"; // Logging tag
+static const char* SWITCH_TAG = "BalboaGLSwitch"; // Logging tag
 
 using namespace esphome;
 
@@ -16,10 +16,10 @@ using namespace esphome;
             }
             void write_state(bool state) override {
                 if(state) {
-                    ESP_LOGI(TAG, "BalboaGLLightSwitch write_state(true)");
+                    ESP_LOGI(SWITCH_TAG, "BalboaGLLightSwitch write_state(true)");
                 }
                 else {
-                    ESP_LOGI(TAG, "BalboaGLLightSwitch write_state(false)");
+                    ESP_LOGI(SWITCH_TAG, "BalboaGLLightSwitch write_state(false)");
                 }
                 // This will be called every time the user requests a state change.
 
@@ -27,7 +27,7 @@ using namespace esphome;
 
                 // Acknowledge new state by publishing it
                 // publish_state(state);
-                ESP_LOGD(TAG, "BalboaGLLightSwitch write_state complete");
+                ESP_LOGD(SWITCH_TAG, "BalboaGLLightSwitch write_state complete");
             }
             private:
             balboaGL* spa;
