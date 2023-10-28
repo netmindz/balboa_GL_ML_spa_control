@@ -54,7 +54,7 @@ class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSenso
     }
     std::string unique_id() override { return "lcd"; }
     private:
-      String last_value;
+      char[5] last_value;
         
 };
 
