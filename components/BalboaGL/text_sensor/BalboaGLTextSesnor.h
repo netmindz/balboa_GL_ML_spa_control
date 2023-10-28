@@ -14,7 +14,7 @@ class BalboaGLStateSensor : public PollingComponent, public text_sensor::TextSen
     // }
     void update() override {
         if(status.state != last_value) {
-            last_value = status.state
+            last_value = status.state;
             publish_state(last_value.c_str());
         }
     }
@@ -31,7 +31,7 @@ class BalboaGLRawSensor : public PollingComponent, public text_sensor::TextSenso
     // }
     void update() override {
         if(status.rawData != last_value) {
-            last_value = status.rawData
+            last_value = status.rawData;
             publish_state(last_value.c_str());
         }
     }
@@ -48,7 +48,7 @@ class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSenso
     // }
     void update() override {
         if(status.lcd != last_value) {
-            last_value = status.lcd
+            last_value = status.lcd;
             publish_state(last_value.c_str());
         }
     }
