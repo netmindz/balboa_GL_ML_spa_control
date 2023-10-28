@@ -13,11 +13,14 @@ class BalboaGLStateSensor : public PollingComponent, public text_sensor::TextSen
     //     this->spa = spa;
     // }
     void update() override {
-        publish_state(status.state.c_str());
+        if(status.state ! = last_value) {
+            last_value = status.state
+            publish_state(last_value.c_str());
+        }
     }
     std::string unique_id() override { return "state"; }
-    // private:
-    // balboaGL* spa;
+    private:
+      String last_value;
         
 };
 
@@ -27,11 +30,14 @@ class BalboaGLRawSensor : public PollingComponent, public text_sensor::TextSenso
     //     this->spa = spa;
     // }
     void update() override {
-        publish_state(status.rawData.c_str());
+        if(status.rawData ! = last_value) {
+            last_value = status.rawData
+            publish_state(last_value.c_str());
+        }
     }
     std::string unique_id() override { return "raw"; }
-    // private:
-    // balboaGL* spa;
+    private:
+      String last_value;
         
 };
 
@@ -41,11 +47,14 @@ class BalboaGLLCDSensor : public PollingComponent, public text_sensor::TextSenso
     //     this->spa = spa;
     // }
     void update() override {
-        publish_state(status.lcd);
+        if(status.lcd ! = last_value) {
+            last_value = status.lcd
+            publish_state(last_value.c_str());
+        }
     }
     std::string unique_id() override { return "lcd"; }
-    // private:
-    // balboaGL* spa;
+    private:
+      String last_value;
         
 };
 
