@@ -3,6 +3,9 @@ import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.const import CONF_ID
 from esphome.core import coroutine
+from esphome.const import (
+    ENTITY_CATEGORY_DIAGNOSTIC,
+)
 
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
@@ -27,6 +30,8 @@ CONFIG_SCHEMA = (
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_QUEUE): sensor.sensor_schema(CommandQueueInfo,
+                                                                  entity_category=ENTITY_CATEGORY_DIAGNOSTIC                    
+
         ).extend(cv.polling_component_schema("1s")),
         
     # cv.Optional(CONF_RAW): text_sensor.TEXT_SENSOR_SCHEMA.extend({
