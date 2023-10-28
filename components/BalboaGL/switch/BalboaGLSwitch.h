@@ -16,10 +16,10 @@ using namespace esphome;
             }
             void write_state(bool state) override {
                 if(state) {
-                    ESP_LOGI(SWITCH_TAG, "BalboaGLLightSwitch write_state(true)");
+                    ESP_LOGI(SWITCH_TAG, "LightSwitch write_state(true)");
                 }
                 else {
-                    ESP_LOGI(SWITCH_TAG, "BalboaGLLightSwitch write_state(false)");
+                    ESP_LOGI(SWITCH_TAG, "LightSwitch write_state(false)");
                 }
                 // This will be called every time the user requests a state change.
 
@@ -27,7 +27,7 @@ using namespace esphome;
 
                 // Acknowledge new state by publishing it
                 // publish_state(state);
-                ESP_LOGD(SWITCH_TAG, "BalboaGLLightSwitch write_state complete");
+                ESP_LOGD(SWITCH_TAG, "LightSwitch write_state complete");
             }
             private:
             balboaGL* spa;
