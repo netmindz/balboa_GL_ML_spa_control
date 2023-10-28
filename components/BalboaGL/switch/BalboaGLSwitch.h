@@ -5,6 +5,8 @@
 
 #include "balboaGL.h"
 
+static const char* TAG = "BalboaGL"; // Logging tag
+
 using namespace esphome;
 
     class BalboaGLLightSwitch : public Component, public switch_::Switch {
