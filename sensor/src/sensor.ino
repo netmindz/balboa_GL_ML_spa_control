@@ -68,7 +68,7 @@ int delayTime = DELAY_TIME_DEFAULT;
 #define PIN_5_PIN 6
 
 #include <Adafruit_NeoPixel.h>
-Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
 #define tub Serial2
@@ -279,7 +279,7 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 }
 
 void setPixel(uint8_t color) {
-#ifdef RSC3
+#ifdef RSC3X
     switch(color) {
         case 0:
             pixels.setPixelColor(0, pixels.Color(255,0,0));
@@ -306,7 +306,7 @@ void setup() {
     Serial.begin(115200);
     delay(1000);
 
-#ifdef RSC3
+#ifdef RSC3X
     pixels.begin();
     pixels.setBrightness(255);
     setPixel(STATUS_BOOT);
