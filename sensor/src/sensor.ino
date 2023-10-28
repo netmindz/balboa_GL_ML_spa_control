@@ -589,7 +589,7 @@ void loop() {
             setPixel(STATUS_WAITING_PANEL);
         }
     }
-    commandQueueSize.setValue(sendBuffer.itemCount());
+    commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
