@@ -42,50 +42,11 @@ void BalboaGL::loop() {
     // This will be called every "update_interval" milliseconds.
     // ESP_LOGV(TAG, "Loop called.");
     size_t len = this->spa->readSerial();
-    ESP_LOGV(TAG, "Read %u bytes", len);
-    bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
-    if(panelSelect == HIGH) {
-        ESP_LOGV(TAG, "PanelSelect == HIGH");
-        return;
-    }
-    else {
-        ESP_LOGD(TAG, "PanelSelect == LOW");
-    }
-
-    ESP_LOGD(TAG, "Current Temp: %f", status.temp);
-    ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
-    // this->current_temperature = status.temp;
-    // this->target_temperature = status.targetTemp;
-    // switch(status.mode) {
-    //     case MODE_IDX_STD:
-    //         this->custom_preset = std::string("STD");
-    //         break;
-    //     case MODE_IDX_ECO:
-    //         this->custom_preset = std::string("ECO");
-    //         break;
-    //     case MODE_IDX_SLP:
-    //         this->custom_preset = std::string("Sleep");
-    //         break;
-    //     default:
-    //         this->custom_preset = std::string("UNKNOWN");
-    //         break;
-    // }
-
-
+    // ESP_LOGV(TAG, "Read %u bytes", len);
     static String lastRaw = "0";
     if(status.rawData != lastRaw) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         lastRaw = status.rawData;
-
-        // this->pump1->publish_state(pump_mode[status.pump1]);
-        // this->pump2->publish_state(pump_mode[status.pump2]);
-
-        // this->lightSwitch->publish_state(status.light);
-
-        // this->stateSensor->publish_state("testing"); // status.state.c_str());
-        // this->rawSensor->publish_state(status.rawData.c_str());
-        // this->lcdSensor->update();
-        
         // this->publish_state();
     }
 
