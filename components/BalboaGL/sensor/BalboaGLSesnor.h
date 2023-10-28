@@ -13,9 +13,13 @@ class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::Senso
     //     this->spa = spa;
     // }
     void update() override {
-        publish_state(status.commandQueue);
+        if(status.commandQueue != this->last_value) {
+            this->last_value = status.commandQueue
+            publish_state(status.commandQueue);
+        }
     }
-    // private:
+    private:
+        u_int8_t last_value;
     // balboaGL* spa;
         
 };
