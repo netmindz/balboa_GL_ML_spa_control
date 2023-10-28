@@ -14,7 +14,7 @@ class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::Senso
     // }
     void update() override {
         if(status.commandQueue != this->last_value) {
-            this->last_value = status.commandQueue
+            this->last_value = status.commandQueue;
             publish_state(status.commandQueue);
         }
     }
