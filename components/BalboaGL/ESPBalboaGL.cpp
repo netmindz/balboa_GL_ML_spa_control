@@ -5,6 +5,10 @@ using namespace esphome;
 void telnetSend(String msg) {
     ESP_LOGI(TAG, msg.c_str());
 }
+
+void log(const char *format, ...) {
+    ESP_LOGI(TAG, format);
+}
 /**
  * Create a new BalboaGL object
  *
