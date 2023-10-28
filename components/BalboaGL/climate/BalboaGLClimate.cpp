@@ -6,7 +6,7 @@ using namespace esphome;
 
 void BalboaGLClimate::update() {
     // This will be called every "update_interval" milliseconds.
-    ESP_LOGV(TAG, "Update called.");
+    ESP_LOGV(TAG, "BalboaGLClimate Update called.");
 
     static String lastRaw = "0";
     if(status.rawData != lastRaw) {

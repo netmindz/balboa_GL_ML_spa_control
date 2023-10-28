@@ -13,12 +13,19 @@ using namespace esphome;
                 this->spa = spa;
             }
             void write_state(bool state) override {
+                if(state) {
+                    ESP_LOGI(TAG, "BalboaGLLightSwitch write_state(true)");
+                }
+                else {
+                    ESP_LOGI(TAG, "BalboaGLLightSwitch write_state(false)");
+                }
                 // This will be called every time the user requests a state change.
 
                 spa->setLight(state);
 
                 // Acknowledge new state by publishing it
                 // publish_state(state);
+                ESP_LOGD(TAG, "BalboaGLLightSwitch write_state complete");
             }
             private:
             balboaGL* spa;
