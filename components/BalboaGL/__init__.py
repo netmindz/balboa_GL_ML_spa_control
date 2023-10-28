@@ -21,7 +21,7 @@ CONF_PANEL_SELECT_PIN = "panel_select_pin"
 
 balboagl_ns = cg.esphome_ns.namespace("balboagl")
 BalboaGL = cg.global_ns.class_(
-    "BalboaGL", cg.PollingComponent
+    "BalboaGL", cg.Component
 )
 
 
@@ -43,9 +43,9 @@ CONFIG_SCHEMA = (
         cv.Optional(CONF_HARDWARE_UART, default="UART1"): valid_uart,
         # If polling interval is greater than 9 seconds, the HeatPump library
         # reconnects, but doesn't then follow up with our data request.
-       cv.Optional(CONF_UPDATE_INTERVAL, default="100ms"): cv.All(
-           cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
-       ),
+    #    cv.Optional(CONF_UPDATE_INTERVAL, default="100ms"): cv.All(
+    #        cv.update_interval, cv.Range(max=cv.TimePeriod(milliseconds=9000))
+    #    ),
         cv.Required(CONF_RX_PIN): cv.int_range(),
         cv.Required(CONF_TX_PIN): cv.int_range(),
         cv.Required(CONF_PANEL_SELECT_PIN): cv.int_range(),

@@ -30,7 +30,7 @@ const uint32_t POLL_INTERVAL_DEFAULT = 10000;
 
 using namespace esphome;
 
-class BalboaGL : public PollingComponent {
+class BalboaGL : public Component {
  public:
       BalboaGL(
             HardwareSerial* hw_serial
@@ -49,7 +49,7 @@ class BalboaGL : public PollingComponent {
         void setup() override;
 
         // This is called every poll_interval.
-        void update() override;
+        void loop() override;
 
         // Debugging function to print the object's state.
         // void dump_state();

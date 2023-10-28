@@ -38,9 +38,9 @@ void BalboaGL::check_logger_conflict_() {
 #endif
 }
 
-void BalboaGL::update() {
+void BalboaGL::loop() {
     // This will be called every "update_interval" milliseconds.
-    ESP_LOGV(TAG, "Update called.");
+    // ESP_LOGV(TAG, "Loop called.");
     size_t len = this->spa->readSerial();
     ESP_LOGV(TAG, "Read %u bytes", len);
     bool panelSelect = digitalRead(this->spa->getPanelSelectPin());
