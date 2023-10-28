@@ -49,14 +49,14 @@ byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless 
 #define tub Serial1
 #define RX_PIN 3
 #define TX_PIN 10
-#define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 6
+#define RTS_PIN_DEF 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 6
 
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
-#define tub Serial2
+#define tub Serial1
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
@@ -127,7 +127,7 @@ ESP8266WebServer webserver(80);
 #endif
 
 String lastJSON = "";
-int lastUptime = 0;
+u_int32_t lastUptime = 0;
 
 #include "telnet.h"
 #include "webstatus.h"
@@ -188,7 +188,7 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 
 void updateHAStatus() {
 
-    commandQueueSize.setValue(sendBuffer.itemCount());
+    commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
 
     static String lastRaw = "0";
     if(status.rawData == lastRaw) {
