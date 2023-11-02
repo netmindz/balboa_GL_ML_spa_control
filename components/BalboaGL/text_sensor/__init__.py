@@ -1,8 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
-from esphome.const import CONF_ID
-from esphome.core import coroutine
+from esphome.const import (
+    CONF_ID,
+    ENTITY_CATEGORY_DIAGNOSTIC
+)
 
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
@@ -25,6 +27,7 @@ CONFIG_SCHEMA = cv.Schema(
         ).extend(cv.polling_component_schema("1s")),
         
         cv.Optional(CONF_RAW): text_sensor.text_sensor_schema(RawInfo,
+                                                              entity_category=ENTITY_CATEGORY_DIAGNOSTIC                    
         ).extend(cv.polling_component_schema("1s")),
 
         cv.Optional(CONF_LCD): text_sensor.text_sensor_schema(LCDInfo,
