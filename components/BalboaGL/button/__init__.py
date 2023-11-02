@@ -5,13 +5,13 @@ from esphome.const import (
 )
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
-AUTO_LOAD = ["climate"]
+AUTO_LOAD = ["button"]
 
 DEPENDENCIES = ["BalboaGL"]
 
-UpButton = cg.esphome_ns.class_("UpButton", button.Button)
-DownButton = cg.esphome_ns.class_("DownButton", button.Button)
-ModeButton = cg.esphome_ns.class_("ModeButton", button.Button)
+UpButton = cg.esphome_ns.class_("UpButton", button.Button, cg.PollingComponent)
+DownButton = cg.esphome_ns.class_("DownButton", button.Button, cg.PollingComponent)
+ModeButton = cg.esphome_ns.class_("ModeButton", button.Button, cg.PollingComponent)
 
 CONF_UP = "up"
 CONF_DOWN = "down"

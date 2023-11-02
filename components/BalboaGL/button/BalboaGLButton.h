@@ -4,19 +4,19 @@
 
 using namespace esphome;
 
-class UpButton : public button::Button {
+class UpButton : public PollingComponent, public button::Button {
  public:
   void press_action() {}
 
 };
 
-class DownButton : public button::Button {
+class DownButton : public PollingComponent, public button::Button {
  public:
   void press_action() {}
 
 };
 
-class ModeButton : public button::Button {
+class ModeButton : public PollingComponent, public button::Button {
  public:
   void press_action() {}
 
