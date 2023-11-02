@@ -2,6 +2,7 @@ import esphome.codegen as cg
 from esphome.components import button
 import esphome.config_validation as cv
 from esphome.const import (
+    ICON_LIGHTBULB
 )
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
