@@ -27,7 +27,7 @@ void log(const char *format, ...) {
     }
     va_end(arg);
     std::string str = reinterpret_cast<char *>(temp);
-    ESP_LOGI(str.c_str());
+    ESP_LOGI(TAG, str.c_str());
     if(temp != loc_buf){
         free(temp);
     }
