@@ -15,7 +15,7 @@ DEPENDENCIES = ["BalboaGL"]
 
 CONF_QUEUE = "commandQueue"
 
-CommandQueueInfo = cg.esphome_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.Component)
+CommandQueueInfo = cg.esphome_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.PollingComponent)
 
 CONFIG_SCHEMA = (
     sensor.sensor_schema(CommandQueueInfo)
