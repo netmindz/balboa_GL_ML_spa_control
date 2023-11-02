@@ -19,12 +19,14 @@ Pump2Select = select_ns.class_('BalboaGLPump2Select', select.Select, cg.Componen
 CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_PUMP1): select.SELECT_SCHEMA.extend({
         cv.GenerateID(): cv.declare_id(Pump1Select),
+        cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
         cv.Required(CONF_OPTIONS): cv.All(
                 cv.ensure_list(cv.string_strict), cv.Length(min=1)
         ),
     }),
     cv.Optional(CONF_PUMP2): select.SELECT_SCHEMA.extend({
         cv.GenerateID(): cv.declare_id(Pump2Select),
+        cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
         cv.Required(CONF_OPTIONS): cv.All(
                 cv.ensure_list(cv.string_strict), cv.Length(min=1)
         ),
