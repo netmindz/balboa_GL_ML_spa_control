@@ -1,11 +1,10 @@
-
 ota:
   password: "e82fe9bada398051d779151a591a1e2e"
+  # Needed to get round interrupt issue
   on_begin:
     then:
-      - lambda: balboagl->pause
-# OTA pause needed to prevent interrupts blocking OTA
-      
+      - lambda: balboagl->pause();
+
 external_components:
     - source:
         type: git
@@ -15,7 +14,7 @@ external_components:
 
 
 BalboaGL:
-  # Example pins for T-RSC3
+  # Pin values for T-RSC3
   hardware_uart: UART1
   rx_pin: 3
   tx_pin: 10
@@ -46,8 +45,8 @@ text_sensor:
         name: State
       raw:
         name: Raw Data
-      lcd:
-        name: LCD Display
+      # lcd:
+      #   name: LCD Display
 
 # Sensors with general information.
 sensor:
@@ -69,9 +68,22 @@ switch:
     name: Light
 
 
-# select:
-#   - platform: BalboaGL
-#     pump1:
-#       name: Pump1
-#       options: "HIGH"
+select:
+  - platform: BalboaGL
+    pump1:
+      name: Pump1
+      options: 
+        "HIGH"
+    pump2:
+      name: Pump2
+      options: 
+        "HIGH"
 
+button:
+  - platform: BalboaGL
+    up:
+      name: "UP"
+    down:
+      name: "Down"
+    mode:
+      name: "Mode"
