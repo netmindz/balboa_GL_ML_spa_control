@@ -17,25 +17,19 @@ CONF_UP = "up"
 CONF_DOWN = "down"
 CONF_MODE = "mode"
 
-CONFIG_SCHEMA = {
-    cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
-    cv.Optional(CONF_UP): button.button_schema(
-        UpButton,
-        # icon=ICON_RESTART_ALERT,
-    ),
-    cv.Optional(CONF_DOWN): button.button_schema(
-        DownButton,
-        # device_class=DEVICE_CLASS_RESTART,
-        # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        # icon=ICON_RESTART,
-    ),
-    cv.Optional(CONF_MODE): button.button_schema(
-        ModeButton,
-        # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        # icon=ICON_DATABASE,
-    ),
-}
-
+CONFIG_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_UP): button.button_schema(UpButton,
+                                                                  
+        ),
+        cv.Optional(CONF_DOWN): button.button_schema(DownButton,
+                                                                  
+        ),
+        cv.Optional(CONF_MODE): button.button_schema(ModeButton,
+                                                                  
+        ),
+    }
+)
 
 async def setup_conf(config, key):
     if key in config:
