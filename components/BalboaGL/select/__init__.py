@@ -35,9 +35,9 @@ CONFIG_SCHEMA = cv.Schema({
 async def setup_conf(config, key):
     if key in config:
         conf = config[key]
-        var = cg.new_Pvariable(conf[key])
+        options_map = config[CONF_OPTIONS]
+        var = await select.new_select(config, options=list(options_map.values()))
         await cg.register_component(var, conf)
-        await select.register_select(var, config, options=list())
 
         # var = await select.new_select(config, options=list(options_map.values()))
         # await cg.register_component(var, config)
