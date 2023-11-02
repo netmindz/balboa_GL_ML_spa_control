@@ -2,6 +2,7 @@
 
 #include "esphome/components/button/button.h"
 #include "balboaGL.h"
+#include "constants.h"
 
 using namespace esphome;
 
