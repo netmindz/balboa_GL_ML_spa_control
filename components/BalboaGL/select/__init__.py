@@ -40,7 +40,6 @@ async def setup_conf(config, key):
         var = await select.new_select(conf, options=["off","high"])
         await cg.register_component(var, conf)
         paren = await cg.get_variable(config[CONF_BALBOA_ID])
-        spa = cg.add_global(cg.RawExpression("balboaGL* spa"))
         cg.add(cg.RawStatement("balboaglclimate->set_spa({paren}->get_spa())"))
 
 async def to_code(config):
