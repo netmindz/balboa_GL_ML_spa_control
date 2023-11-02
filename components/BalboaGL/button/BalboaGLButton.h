@@ -2,7 +2,6 @@
 
 #include "esphome/components/button/button.h"
 #include "balboaGL.h"
-#include "constants.h"
 
 using namespace esphome;
 
@@ -12,7 +11,7 @@ class UpButton : public PollingComponent, public button::Button {
       this->spa = spa;
   }
   void press_action() {
-    this->spa->queueCommand(COMMAND_UP, 1);
+    this->spa->buttonPressUp();
   }
   void update() {}
   private:
@@ -26,7 +25,7 @@ class DownButton : public PollingComponent, public button::Button {
       this->spa = spa;
   }
   void press_action() {
-    this->spa->queueCommand(COMMAND_DOWN, 1);
+    this->spa->buttonPressDown();
   }
   void update() {}
   private:
@@ -40,7 +39,7 @@ class ModeButton : public PollingComponent, public button::Button {
       this->spa = spa;
   }
   void press_action() {
-    this->spa->queueCommand(COMMAND_MODE, 1);
+    this->spa->buttonPressMode();
   }
   void update() {}
   private:
