@@ -22,13 +22,6 @@ BalboaGL::BalboaGL(
     hw_serial_{hw_serial}
 {
     
-    // this->rawSensor = new text_sensor::TextSensor();
-    // this->stateSensor = new text_sensor::TextSensor();
-
-    // this->lightSwitch = new balboa_switch::BalboaGLLightSwitch();
-
-    // this->pump1 = new balboa_select::BalboaGLPump1Select();
-    // this->pump2 = new balboa_select::BalboaGLPump12elect();
 }
 
 void BalboaGL::check_logger_conflict_() {
@@ -241,13 +234,6 @@ void BalboaGL::setup() {
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin, ESP_LOG_VERBOSE);
     this->spa->attachPanelInterrupt(); 
-    // this->current_temperature = NAN;
-    // this->target_temperature = NAN;
-
-    // this->lightSwitch->setSpa(spa);
-
-    // this->pump1->setSpa(spa);
-    // this->pump2->setSpa(spa);
 
 //     ESP_LOGCONFIG(
 //             TAG,
