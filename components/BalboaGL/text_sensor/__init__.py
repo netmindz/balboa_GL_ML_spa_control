@@ -16,8 +16,8 @@ CONF_LCD = "lcd"
 
 
 StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
-RawInfo = balboagl_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
-LCDInfo = balboagl_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
+RawInfo =  cg.esphome_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
+LCDInfo =  cg.esphome_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
 
 CONFIG_SCHEMA = (
     text_sensor.text_sensor_schema(StateInfo)
@@ -50,3 +50,5 @@ async def setup_conf(config, key):
 
 async def to_code(config):
     await setup_conf(config, CONF_STATE)
+    await setup_conf(config, CONF_RAW)
+    await setup_conf(config, CONF_LCD)
