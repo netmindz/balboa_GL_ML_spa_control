@@ -39,6 +39,6 @@ async def setup_conf(config, key):
         await cg.register_component(var, conf)
 
 async def to_code(config):
-    await setup_conf(config, CONF_STATE)
+    # await setup_conf(config, CONF_STATE)
     await setup_conf(config, CONF_RAW)
-    await setup_conf(config, CONF_LCD)
+    # await setup_conf(config, CONF_LCD)
