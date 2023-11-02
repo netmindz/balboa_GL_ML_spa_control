@@ -7,7 +7,8 @@ void telnetSend(String msg) {
 }
 
 void log(const char *format, ...) {
-    ESP_LOGI(TAG, format);
+    // ESP_LOGI(TAG, format);
+    // TODO: fix this logger call
 }
 /**
  * Create a new BalboaGL object
