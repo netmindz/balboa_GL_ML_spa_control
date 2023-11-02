@@ -20,6 +20,8 @@ CONF_MODE = "mode"
 
 CONFIG_SCHEMA = cv.Schema(
     {
+        cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
+
         cv.Optional(CONF_UP): button.button_schema(UpButton,
                                                                   
         ),
