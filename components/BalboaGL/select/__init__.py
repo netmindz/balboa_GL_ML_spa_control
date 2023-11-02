@@ -30,14 +30,14 @@ CONFIG_SCHEMA = cv.Schema({
   
 })
 
-def setup_conf(config, key):
+async def setup_conf(config, key):
     if key in config:
         conf = config[key]
         var = cg.new_Pvariable(conf[CONF_ID])
         await cg.register_component(var, conf)
         await select.register_select(var, config, options=list())
 
-def to_code(config):
+async def to_code(config):
     await setup_conf(config, CONF_PUMP1)
     await setup_conf(config, CONF_PUMP2)
         # cg.add(cg.RawExpression("balboaglclimate->set_spa(balboagl->get_spa())"))
