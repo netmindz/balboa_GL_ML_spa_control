@@ -19,16 +19,6 @@ StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, 
 RawInfo =  cg.esphome_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
 LCDInfo =  cg.esphome_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
 
-CONFIG_SCHEMA = (
-    text_sensor.text_sensor_schema(StateInfo)
-    .extend(
-        {
-            cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
-        }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
-)
-
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(StateInfo,

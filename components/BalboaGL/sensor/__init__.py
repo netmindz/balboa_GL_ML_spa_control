@@ -17,16 +17,6 @@ CONF_QUEUE = "commandQueue"
 
 CommandQueueInfo = cg.esphome_ns.class_('BalboaGLCommandQueueSensor', sensor.Sensor, cg.PollingComponent)
 
-CONFIG_SCHEMA = (
-    sensor.sensor_schema(CommandQueueInfo)
-    .extend(
-        {
-            cv.GenerateID(CONF_BALBOA_ID): cv.use_id(BalboaGL),
-        }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
-)
-
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_QUEUE): sensor.sensor_schema(CommandQueueInfo,
