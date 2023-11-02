@@ -15,9 +15,9 @@ CONF_RAW = "raw"
 CONF_LCD = "lcd"
 
 
-StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.Component)
-RawInfo =  cg.esphome_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.Component)
-LCDInfo =  cg.esphome_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.Component)
+StateInfo = cg.esphome_ns.class_('BalboaGLStateSensor', text_sensor.TextSensor, cg.PollingComponent)
+RawInfo =  cg.esphome_ns.class_('BalboaGLRawSensor', text_sensor.TextSensor, cg.PollingComponent)
+LCDInfo =  cg.esphome_ns.class_('BalboaGLLCDSensor', text_sensor.TextSensor, cg.PollingComponent)
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -39,6 +39,6 @@ async def setup_conf(config, key):
         await cg.register_component(var, conf)
 
 async def to_code(config):
-    # await setup_conf(config, CONF_STATE)
+    await setup_conf(config, CONF_STATE)
     await setup_conf(config, CONF_RAW)
-    # await setup_conf(config, CONF_LCD)
+    await setup_conf(config, CONF_LCD)
