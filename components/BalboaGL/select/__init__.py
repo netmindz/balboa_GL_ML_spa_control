@@ -38,9 +38,9 @@ async def setup_conf(config, key):
         options_map = conf[CONF_OPTIONS]
         var = await select.new_select(conf, options=["off","high"])
         await cg.register_component(var, conf)
-
-        # var = await select.new_select(config, options=list(options_map.values()))
-        # await cg.register_component(var, config)
+        paren = await cg.get_variable(config[CONF_BALBOA_ID])
+        spa = cg.add_global(cg.RawExpression("balboaGL* spa"))
+        cg.add(cg.RawStatement("balboaglclimate->set_spa({paren}->get_spa())"))
 
 async def to_code(config):
     await setup_conf(config, CONF_PUMP1)
