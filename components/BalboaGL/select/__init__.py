@@ -5,6 +5,8 @@ from esphome.const import (
     CONF_ID,
     CONF_OPTIONS,
 )
+from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
+
 
 
 CONF_PUMP1 = "pump1"
@@ -33,12 +35,24 @@ CONFIG_SCHEMA = cv.Schema({
 async def setup_conf(config, key):
     if key in config:
         conf = config[key]
-        var = cg.new_Pvariable(conf[CONF_ID])
+        var = cg.new_Pvariable(conf[key])
         await cg.register_component(var, conf)
         await select.register_select(var, config, options=list())
+
+        # var = await select.new_select(config, options=list(options_map.values()))
+        # await cg.register_component(var, config)
 
 async def to_code(config):
     await setup_conf(config, CONF_PUMP1)
     await setup_conf(config, CONF_PUMP2)
         # cg.add(cg.RawExpression("balboaglclimate->set_spa(balboagl->get_spa())"))
 
+# async def to_code(config):
+#     options_map = config[CONF_OPTIONS]
+#     var = await select.new_select(config, options=list(options_map.values()))
+#     await cg.register_component(var, config)
+#     cg.add(var.set_select_mappings(list(options_map.keys())))
+#     parent = await cg.get_variable(config[CONF_TUYA_ID])
+#     cg.add(var.set_tuya_parent(parent))
+#     cg.add(var.set_select_id(config[CONF_ENUM_DATAPOINT]))
+#     cg.add(var.set_optimistic(config[CONF_OPTIMISTIC]))
