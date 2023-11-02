@@ -13,6 +13,9 @@ namespace esphome {
             void set_spa(balboaGL* spa) {
                 this->spa = spa;
             }
+            void control(const std::string &value) override {
+
+            }
             private:
             balboaGL* spa;
 
@@ -23,6 +26,9 @@ namespace esphome {
             public:
             void set_spa(balboaGL* spa) {
                 this->spa = spa;
+            }
+            void control(const std::string &value) override {
+                
             }
             private:
             balboaGL* spa;
