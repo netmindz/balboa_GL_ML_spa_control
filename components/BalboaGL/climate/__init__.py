@@ -75,5 +75,4 @@ async def to_code(config):
     await climate.register_climate(var, config)
 
     paren = await cg.get_variable(config[CONF_BALBOA_ID])
-    spa = cg.add_global(cg.RawExpression("balboaGL* spa"))
-    cg.add(cg.RawExpression("balboaglclimate->set_spa(balboagl->get_spa())"))
+    cg.add(cg.RawStatement(f"{var}->set_spa({paren}->get_spa());"))

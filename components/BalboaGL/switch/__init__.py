@@ -21,6 +21,4 @@ async def to_code(config):
     await cg.register_component(var, config)
 
     paren = await cg.get_variable(config[CONF_BALBOA_ID])
-#    cg.add(var.set_balboa_parent(paren))
-    cg.add(cg.RawExpression("balboagllightswitch->set_spa(balboagl->get_spa())"))
-
+    cg.add(cg.RawStatement(f"{var}->set_spa({paren}->get_spa());"))
