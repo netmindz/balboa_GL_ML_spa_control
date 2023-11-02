@@ -7,8 +7,31 @@ void telnetSend(String msg) {
 }
 
 void log(const char *format, ...) {
-    // ESP_LOGI(TAG, format);
-    // TODO: fix this logger call
+    char loc_buf[64];
+    char * temp = loc_buf;
+    va_list arg;
+    va_list copy;
+    va_start(arg, format);
+    va_copy(copy, arg);
+    int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
+    va_end(copy);
+    if(len < 0) {
+        va_end(arg);
+    };
+    if(len >= sizeof(loc_buf)){
+        temp = (char*) malloc(len+1);
+        if(temp == NULL) {
+            va_end(arg);
+        }
+        len = vsnprintf(temp, len+1, format, arg);
+    }
+    va_end(arg);
+    std::string str = reinterpret_cast<char *>(temp);
+    Serial.print(str.c_str());
+    if(temp != loc_buf){
+        free(temp);
+    }
+
 }
 /**
  * Create a new BalboaGL object
