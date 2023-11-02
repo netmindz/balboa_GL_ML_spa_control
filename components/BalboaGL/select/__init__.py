@@ -36,7 +36,7 @@ async def setup_conf(config, key):
     if key in config:
         conf = config[key]
         options_map = conf[CONF_OPTIONS]
-        var = await select.new_select(conf, options=list(options_map.values()))
+        var = await select.new_select(conf, options=["off","high"])
         await cg.register_component(var, conf)
 
         # var = await select.new_select(config, options=list(options_map.values()))
