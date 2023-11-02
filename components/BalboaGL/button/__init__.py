@@ -2,7 +2,7 @@ import esphome.codegen as cg
 from esphome.components import button
 import esphome.config_validation as cv
 from esphome.const import (
-    ICON_LIGHTBULB
+    ICON_LIGHTBULB,
 )
 from .. import balboagl_ns, CONF_BALBOA_ID, BalboaGL
 
@@ -37,6 +37,8 @@ async def setup_conf(config, key):
         conf = config[key]
         var = await button.new_button(conf)
         await cg.register_component(var, conf)
+        paren = await cg.get_variable(config[CONF_BALBOA_ID])
+        cg.add(cg.RawStatement(f"{var}->set_spa({paren}->get_spa());"))
 
 async def to_code(config):
     await setup_conf(config, CONF_UP)
