@@ -90,6 +90,8 @@ class BalboaGL : public Component {
 
         HighFrequencyLoopRequester high_freq_;
 
+        int delay_time = -1;
+
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 

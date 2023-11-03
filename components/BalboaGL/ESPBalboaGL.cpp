@@ -94,6 +94,7 @@ void BalboaGL::setup() {
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin, ESP_LOG_VERBOSE);
     this->spa->attachPanelInterrupt();
+    if(delay_time > -1) this->spa->set_delay_time(delay_time);
 
     this->high_freq_.start(); // no wait on main loop
 
@@ -190,5 +191,5 @@ void BalboaGL::set_panel_select_pin(int pin) {
 }
 
 void BalboaGL::set_delay_time(int delay) {
-    this->spa->set_delay_time(delay);
+    this->delay_time;
 }
