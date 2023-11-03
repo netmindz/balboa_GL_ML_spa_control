@@ -19,6 +19,8 @@ CONF_SUPPORTS = "supports"
 CONF_ENABLE_PIN = "enable_pin"
 CONF_PANEL_SELECT_PIN = "panel_select_pin"
 
+CONF_DELAY_TIME = "delay_time"
+
 balboagl_ns = cg.esphome_ns.namespace("balboagl")
 BalboaGL = cg.global_ns.class_(
     "BalboaGL", cg.Component
@@ -50,6 +52,7 @@ CONFIG_SCHEMA = (
         cv.Required(CONF_TX_PIN): cv.int_range(),
         cv.Required(CONF_PANEL_SELECT_PIN): cv.int_range(),
         cv.Optional(CONF_ENABLE_PIN): cv.int_range(),
+        cv.Optional(CONF_DELAY_TIME): cv.int_range(),
         # Optionally override the supported ClimateTraits.
         cv.Optional(CONF_SUPPORTS, default={}): cv.Schema(
             {
@@ -77,6 +80,9 @@ def to_code(config):
 
     if CONF_PANEL_SELECT_PIN in config:
         cg.add(var.set_panel_select_pin(config[CONF_PANEL_SELECT_PIN]))
+
+    if CONF_DELAY_TIME in config:
+        cg.add(var.set_delay_time(config[CONF_DELAY_TIME]))
 
 
     yield cg.register_component(var, config)

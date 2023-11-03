@@ -62,6 +62,8 @@ class BalboaGL : public Component {
 
         void set_panel_select_pin(int pin);
 
+        void set_delay_time(int delay);
+
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
         void pause();

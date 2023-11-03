@@ -188,3 +188,7 @@ void BalboaGL::set_rts_pin(int pin) {
 void BalboaGL::set_panel_select_pin(int pin) {
     this->panel_select_pin = pin;
 }
+
+void BalboaGL::set_delay_time(int delay) {
+    this->spa->set_delay_time(delay);
+}
