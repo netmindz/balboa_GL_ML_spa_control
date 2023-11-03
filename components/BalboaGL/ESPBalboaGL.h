@@ -86,6 +86,8 @@ class BalboaGL : public Component {
         int rts_pin = -1;
         int panel_select_pin = -1;
 
+        HighFrequencyLoopRequester high_freq_;
+
   private:
         // Retrieve the HardwareSerial pointer from friend and subclasses.
         HardwareSerial *hw_serial_; 

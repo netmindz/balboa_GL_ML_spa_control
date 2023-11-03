@@ -93,7 +93,9 @@ void BalboaGL::setup() {
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin, ESP_LOG_VERBOSE);
-    this->spa->attachPanelInterrupt(); 
+    this->spa->attachPanelInterrupt();
+
+    this->high_freq_.start(); // no wait on main loop
 
 //     ESP_LOGCONFIG(
 //             TAG,
