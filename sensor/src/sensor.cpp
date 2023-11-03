@@ -316,6 +316,7 @@ void setup() {
 #endif
 
     spa.attachPanelInterrupt();
+    spa.set_delay_time(40);
 
     webota
         .onStart([]() {
