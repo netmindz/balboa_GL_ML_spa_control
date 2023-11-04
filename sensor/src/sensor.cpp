@@ -139,40 +139,32 @@ void onSwitchStateChanged(bool state, HASwitch* sender) {
 
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("onPumpSwitchStateChanged %s %u\n", sender->getName(), index);
-    int currentIndex = sender->getCurrentState();
-    String command = COMMAND_JET1;
-    int options = PUMP1_STATE_HIGH + 1;
+    u_int8_t pump = 1;
     if (sender->getName() == "Pump2") {
-        command = COMMAND_JET2;
-        options = PUMP2_STATE_HIGH + 1;
+        pump = 2;
     }
     else if (sender->getName() == "Aux") {
-        command = COMMAND_AUX;
-        options = AUX_STATE_HIGH + 1;
+        pump = 3;
     }
-    spa.setOption(currentIndex, index, options, command);
+    spa.setPumpState(pump, index);
 }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("Mode Switch changed - %u\n", index);
-    int currentIndex = sender->getCurrentState();
-    int options = 3;
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-    spa.setOption(currentIndex, index, options, COMMAND_DOWN);
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    spa.setMode(index);
 }
 
 void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        spa.queueCommand(COMMAND_UP, 1);
+        spa.buttonPressUp();
     } else if (name == "Down") {
-        spa.queueCommand(COMMAND_DOWN, 1);
+        spa.buttonPressDown();
     } else if (name == "Mode") {
-        spa.queueCommand(COMMAND_CHANGE_MODE, 1);
+        spa.buttonPressMode();
     } else if (name == "Time") {
-        spa.queueCommand(COMMAND_TIME, 1);
+        spa.buttonPressTime();
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -316,7 +308,7 @@ void setup() {
 #endif
 
     spa.attachPanelInterrupt();
-    spa.set_delay_time(40);
+    spa.set_delay_time(20);
 
     webota
         .onStart([]() {
