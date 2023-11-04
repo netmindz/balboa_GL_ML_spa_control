@@ -117,7 +117,7 @@ HASelect aux("aux");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
-HASensorNumber commandQueueSize("commandQueueSize");
+HASensorNumber commandQueueSize("commandQueueSize",  HANumber::PrecisionP0);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -497,7 +497,7 @@ void setup() {
 
     hvac.onTargetTemperatureCommand(onTargetTemperatureCommand);
     hvac.setModes(HAHVAC::AutoMode);
-    hvac.setMode(HAHVAC::AutoMode);
+    hvac.setMode(HAHVAC::AutoMode, true);
     hvac.setName("Target Temp");
     hvac.setMinTemp(26);
     hvac.setMaxTemp(40);
