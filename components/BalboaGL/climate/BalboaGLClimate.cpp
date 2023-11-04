@@ -341,6 +341,12 @@ void BalboaGLClimate::setup() {
     this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
     this->traits_.set_supports_action(false);
+    set_supports_current_temperature(true);
+    this->traits_.add_supported_custom_preset(std::string("STD"));
+    this->traits_.add_supported_custom_preset(std::string("ECO"));
+    this->traits_.add_supported_custom_preset(std::string("Sleep"));
+    this->traits_.add_supported_custom_preset(std::string("UNKNOWN"));
+
     this->visual_min_temperature_override_ = 26;
     this->visual_max_temperature_override_ = 40;
     this->visual_target_temperature_step_override_ = 0.5;
