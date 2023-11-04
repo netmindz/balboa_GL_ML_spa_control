@@ -9,7 +9,7 @@ void BalboaGLClimate::update() {
     // ESP_LOGV(TAG, "BalboaGLClimate Update called.");
 
     static String lastRaw = "0";
-    if(status.rawData != lastRaw || status.temp ! = this->current_temperature) {
+    if((status.rawData != lastRaw) || (status.temp != this->current_temperature)) {
         ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
         ESP_LOGD(TAG, "Current Temp: %f", status.temp);
         ESP_LOGD(TAG, "Target Temp: %f", status.targetTemp);
