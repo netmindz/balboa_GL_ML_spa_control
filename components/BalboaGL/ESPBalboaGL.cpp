@@ -62,14 +62,17 @@ void BalboaGL::check_logger_conflict_() {
 void BalboaGL::loop() {
     // This will be called every "update_interval" milliseconds.
     // ESP_LOGV(TAG, "Loop called.");
-    size_t len = this->spa->readSerial();
-    // ESP_LOGV(TAG, "Read %u bytes", len);
-    static String lastRaw = "0";
-    if(status.rawData != lastRaw) {
-        ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
-        lastRaw = status.rawData;
-        // this->publish_state();
+    do {
+        size_t len = this->spa->readSerial();
+        // ESP_LOGV(TAG, "Read %u bytes", len);
+        static String lastRaw = "0";
+        if(status.rawData != lastRaw) {
+            ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
+            lastRaw = status.rawData;
+            // this->publish_state();
+        }
     }
+    while(status.commandQueue > 0)
 
 }
 
