@@ -340,7 +340,7 @@ void BalboaGLClimate::setup() {
     this->target_temperature = NAN;
     this->fan_mode = climate::CLIMATE_FAN_OFF;
     this->swing_mode = climate::CLIMATE_SWING_OFF;
-    this->action = climate::CLIMATE_ACTION_FAN;
+    this->traits_.set_supports_action(false);
     this->visual_min_temperature_override_ = 26;
     this->visual_max_temperature_override_ = 40;
     this->visual_target_temperature_step_override_ = 0.5;
