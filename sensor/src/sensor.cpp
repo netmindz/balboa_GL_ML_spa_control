@@ -529,7 +529,7 @@ void log(const char *format, ...) {
     }
     va_end(arg);
     std::string str = reinterpret_cast<char *>(temp);
-    Serial.print(str.c_str());
+    Serial.println(str.c_str());
     if(temp != loc_buf){
         free(temp);
     }
