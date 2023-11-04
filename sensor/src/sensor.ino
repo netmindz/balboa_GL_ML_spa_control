@@ -64,8 +64,8 @@ int delayTime = DELAY_TIME_DEFAULT;
 #define tubUART UART_NUM_1
 #define RX_PIN 3
 #define TX_PIN 10
-#define RTS_PIN 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 6
+#define RTS_PIN_DEF 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 6
 
 #include <Adafruit_NeoPixel.h>
 //Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
@@ -75,8 +75,8 @@ int delayTime = DELAY_TIME_DEFAULT;
 #define tubUART UART_NUM_2
 #define RX_PIN 19
 #define TX_PIN 23
-#define RTS_PIN 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN 18
+#define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 18
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -175,7 +175,7 @@ void IRAM_ATTR panelSelected() {
  *  every time our panel is selected
  */
 void attachPanelInterrupt() {
-    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN), panelSelected, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF), panelSelected, FALLING);
 }
 
 void sendCommand(String command, int count) {
@@ -359,10 +359,10 @@ void setup() {
 #endif
     }
 
-    pinMode(RTS_PIN, OUTPUT);
-    Serial.printf("Setting pin %u LOW\n", RTS_PIN);
-    digitalWrite(RTS_PIN, LOW);
-    pinMode(PIN_5_PIN, INPUT);
+    pinMode(RTS_PIN_DEF, OUTPUT);
+    Serial.printf("Setting pin %u LOW\n", RTS_PIN_DEF);
+    digitalWrite(RTS_PIN_DEF, LOW);
+    pinMode(PIN_5_PIN_DEF, INPUT);
 #ifdef ESP32
     Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
     tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -380,7 +380,7 @@ void setup() {
     webota
         .onStart([]() {
             Serial.println("Start updating");
-            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN));
+            detachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF));
         })
         .onEnd([]() {
             Serial.println("\nOTA End");
@@ -571,9 +571,7 @@ int waitforGLBytes() {
     }
     return msgLength;
 }
-
-void loop() {
-    bool panelSelect = digitalRead(PIN_5_PIN);  // LOW when we are meant to read data
+void readSerial(bool panelSelect) {
     // is data available and we are selected
     if ((tub.available() > 0) && (panelSelect == LOW)) {
         int msgLength = waitforGLBytes();
@@ -592,6 +590,10 @@ void loop() {
             setPixel(STATUS_WAITING_PANEL);
         }
     }
+}
+void loop() {
+    bool panelSelect = digitalRead(PIN_5_PIN_DEF);  // LOW when we are meant to read data
+    readSerial(panelSelect);
     commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
@@ -902,7 +904,7 @@ void sendCommand() {
     if((millis() - lastCmdTime) >= 500) {
         lastCmdTime = millis();
         commandPending = true;
-        digitalWrite(RTS_PIN, HIGH);
+        digitalWrite(RTS_PIN_DEF, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
 
         timeSinceMsgStart = micros() - msgStartTime;
@@ -911,14 +913,14 @@ void sendCommand() {
         byte byteArray[9] = {0};
         hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
         tub.write(byteArray, sizeof(byteArray));
-        if (digitalRead(PIN_5_PIN) != LOW) {
+        if (digitalRead(PIN_5_PIN_DEF) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
             delayTime = DELAY_TIME_DEFAULT;
             sendBuffer.dequeue();
         }
         // wait for tx to finish and flush the rx buffer
         tub.flush(false);
-        if (digitalRead(PIN_5_PIN) == LOW) {
+        if (digitalRead(PIN_5_PIN_DEF) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
             Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
             // delayTime += 10;
@@ -926,7 +928,7 @@ void sendCommand() {
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         }
-        digitalWrite(RTS_PIN, LOW);
+        digitalWrite(RTS_PIN_DEF, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
 }
