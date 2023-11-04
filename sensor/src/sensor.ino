@@ -149,6 +149,8 @@ String state = "unknown";
 bool commandPending;
 
 ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+unsigned long msgStartTime;
+unsigned long timeSinceMsgStart;
 
 void clearRXbuffer(void) {
         // clear the rx buffer
@@ -164,6 +166,7 @@ void clearRXbuffer(void) {
 // Triggered when pin5 falling - ie our panel is selected
 // clears serial receive buffer
 void IRAM_ATTR panelSelected() {
+    msgStartTime = micros();
     clearRXbuffer();
 }
 
@@ -793,7 +796,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     if(commandPending) {
                         commandPending = false;
                         sendBuffer.dequeue();
-                        Serial.printf("YAY: command response : %u\n", delayTime);
+                        Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                     }
                 }
 
@@ -902,6 +905,7 @@ void sendCommand() {
         digitalWrite(RTS_PIN, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
 
+        timeSinceMsgStart = micros() - msgStartTime;
         delayMicroseconds(delayTime);
         // Serial.println("Sending " + sendBuffer);
         byte byteArray[9] = {0};
@@ -916,7 +920,7 @@ void sendCommand() {
         tub.flush(false);
         if (digitalRead(PIN_5_PIN) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
-            Serial.printf("message sent : %u\n", delayTime);
+            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
             // delayTime += 10;
         }
         else {
