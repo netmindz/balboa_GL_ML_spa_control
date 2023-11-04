@@ -72,7 +72,7 @@ void BalboaGL::loop() {
             // this->publish_state();
         }
     }
-    while(status.commandQueue > 0)
+    while(status.commandQueue > 0);
 
 }
 
