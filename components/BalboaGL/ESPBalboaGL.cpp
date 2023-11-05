@@ -60,7 +60,6 @@ void BalboaGL::check_logger_conflict_() {
 }
 
 void BalboaGL::loop() {
-    // This will be called every "update_interval" milliseconds.
     // ESP_LOGV(TAG, "Loop called.");
     int sanity = 0;
     do {
@@ -75,7 +74,7 @@ void BalboaGL::loop() {
         sanity++;
     }
     while((status.commandQueue > 0) && (sanity < 10));
-
+    ESP_LOGD(TAG, "q:%u s:%u", status.commandQueue, sanity);
 }
 
 void BalboaGL::setup() {
