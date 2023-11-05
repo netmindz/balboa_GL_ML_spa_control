@@ -96,7 +96,8 @@ void BalboaGL::setup() {
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
 
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
-    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
+    bool invert = true;
+    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin, invert);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin, ESP_LOG_VERBOSE);
     this->spa->attachPanelInterrupt();
     if(delay_time > -1) this->spa->set_delay_time(delay_time);
