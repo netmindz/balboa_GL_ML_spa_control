@@ -176,12 +176,6 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     Serial.println(temperatureFloat);
 
     spa.setTemp(temperatureFloat);
-<<<<<<< HEAD
-
-    // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel - better to see what
-    // the control unit reports that assume our commands worked
-=======
->>>>>>> library
 }
 
 void updateHAStatus() {
