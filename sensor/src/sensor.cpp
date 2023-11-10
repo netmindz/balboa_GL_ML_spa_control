@@ -16,6 +16,7 @@
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
 #include <WebOTA.h>
+#include <esp_log.h>
 
 
 // ************************************************************************************************
@@ -44,8 +45,18 @@ const char passphrase[] = SECRET_PSK;
 byte mac[] = {0x00, 0x10, 0xFA, 0x6E, 0x38, 0x4A};  // Leave this value, unless you own multiple hot tubs
 
 
-#ifdef ESP32
-#define tub Serial2
+#ifdef RSC3
+#define tub Serial1
+#define RX_PIN 3
+#define TX_PIN 10
+#define RTS_PIN_DEF 5  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 6
+
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+
+#elif ESP32
+#define tub Serial1
 #define RX_PIN 19
 #define TX_PIN 23
 #define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
@@ -61,6 +72,7 @@ SoftwareSerial tub;
 // Uncomment if you have dual-speed pump
 // #define PUMP1_DUAL_SPEED
 // #define PUMP2_DUAL_SPEED
+// #define AUX_DUAL_SPEED
 
 // ************************************************************************************************
 // End of config
@@ -68,7 +80,7 @@ SoftwareSerial tub;
 
 #include <balboaGL.h>
 
-balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF);
+balboaGL spa(&tub, RTS_PIN_DEF, PIN_5_PIN_DEF, ESP_LOG_DEBUG);
 
 WiFiClient clients[1];
 
@@ -84,14 +96,16 @@ HASensor haTime("time");
 HASensor rawData("raw");
 HASensor rawData2("raw2");
 HASensor rawData3("raw3");
-HASensor rawData7("raw7");
+HASensor fbData("fb");
 HASelect tubMode("mode");
 HASensorNumber uptime("uptime");
 HASelect pump1("pump1");
 HASelect pump2("pump2");
+HASelect aux("aux");
 HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
+HASensorNumber commandQueueSize("commandQueueSize",  HANumber::PrecisionP0);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -113,7 +127,7 @@ ESP8266WebServer webserver(80);
 #endif
 
 String lastJSON = "";
-int lastUptime = 0;
+u_int32_t lastUptime = 0;
 
 #include "telnet.h"
 #include "webstatus.h"
@@ -125,36 +139,32 @@ void onSwitchStateChanged(bool state, HASwitch* sender) {
 
 void onPumpSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("onPumpSwitchStateChanged %s %u\n", sender->getName(), index);
-    int currentIndex = sender->getCurrentState();
-    String command = COMMAND_JET1;
-    int options = PUMP1_STATE_HIGH + 1;
+    u_int8_t pump = 1;
     if (sender->getName() == "Pump2") {
-        command = COMMAND_JET2;
-        options = PUMP2_STATE_HIGH + 1;
+        pump = 2;
     }
-    spa.setOption(currentIndex, index, options, command);
+    else if (sender->getName() == "Aux") {
+        pump = 3;
+    }
+    spa.setPumpState(pump, index);
 }
 
 void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("Mode Switch changed - %u\n", index);
-    int currentIndex = sender->getCurrentState();
-    int options = 3;
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
-    spa.setOption(currentIndex, index, options, COMMAND_DOWN);
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    spa.setMode(index);
 }
 
 void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        sendBuffer.enqueue(COMMAND_UP);
+        spa.buttonPressUp();
     } else if (name == "Down") {
-        sendBuffer.enqueue(COMMAND_DOWN);
+        spa.buttonPressDown();
     } else if (name == "Mode") {
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        spa.buttonPressMode();
     } else if (name == "Time") {
-        sendBuffer.enqueue(COMMAND_TIME);
+        spa.buttonPressTime();
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -162,19 +172,23 @@ void onButtonPress(HAButton* sender) {
 
 void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     float temperatureFloat = temperature.toFloat();
-
     Serial.print("Target temperature: ");
     Serial.println(temperatureFloat);
 
     spa.setTemp(temperatureFloat);
+<<<<<<< HEAD
 
     // sender->setTargetTemperature(temperature); // report target temperature back to the HA panel - better to see what
     // the control unit reports that assume our commands worked
+=======
+>>>>>>> library
 }
 
 void updateHAStatus() {
 
-    static String lastRaw = "";
+    commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
+
+    static String lastRaw = "0";
     if(status.rawData == lastRaw) {
         return;
     }
@@ -191,7 +205,7 @@ void updateHAStatus() {
     currentState.setValue(status.state.c_str());
     lcd.setValue(status.lcd);
     rawData2.setValue(status.rawData2.c_str());
-    rawData7.setValue(status.rawData7.c_str());
+    fbData.setValue(status.rawData7.c_str());
     // rawData4.setValue(lastRaw4.c_str());
     // rawData5.setValue(lastRaw5.c_str());
     // rawData6.setValue(lastRaw6.c_str());
@@ -210,12 +224,41 @@ void updateHAStatus() {
 
 }
 
+void setPixel(uint8_t color) {
+#ifdef RSC3
+    switch(color) {
+        case 0:
+            pixels.setPixelColor(0, pixels.Color(255,0,0));
+            break;
+        case 1:
+            pixels.setPixelColor(0, pixels.Color(0,255,0));
+            break;
+        case 2:
+            pixels.setPixelColor(0, pixels.Color(0,0,255));
+            break;
+        case 3:
+            pixels.setPixelColor(0, pixels.Color(255,255,0));
+            break;
+        case 4:
+            pixels.setPixelColor(0, pixels.Color(255,0,255));
+            break;
+    }     
+    pixels.show();
+#endif
+}
+
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
+#ifdef RSC3
+    pixels.begin();
+    pixels.setBrightness(255);
+    setPixel(STATUS_BOOT);
+#else    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
+#endif
 
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
@@ -242,6 +285,7 @@ void setup() {
             Serial.print(".");
         }
     }
+    setPixel(STATUS_WIFI);
 
     if (WiFi.status() != WL_CONNECTED) {
 #ifdef AP_FALLBACK
@@ -268,6 +312,28 @@ void setup() {
                   TX_PIN);  // added here to see if line about was where the hang was
     tub.updateBaudRate(115200);
 #endif
+
+    spa.attachPanelInterrupt();
+    spa.set_delay_time(20);
+
+    webota
+        .onStart([]() {
+            Serial.println("Start updating");
+            spa.detachPanelInterrupt();
+        })
+        .onEnd([]() {
+            Serial.println("\nOTA End");
+            spa.attachPanelInterrupt();
+        })
+        .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+            spa.attachPanelInterrupt();
+        });
 
     init_wifi(ssid, passphrase, "hottub-sensor");
     webota.init(8080, "/update");
@@ -328,6 +394,16 @@ void setup() {
     pump2.setIcon("mdi:chart-bubble");
     pump2.onCommand(onPumpSwitchStateChanged);
 
+    aux.setName("Aux");
+#ifdef AUX_DUAL_SPEED
+    aux.setOptions("Off;Medium;High");
+#else
+    aux.setOptions("Off;High");
+#endif
+    aux.setIcon("mdi:chart-bubble");
+    aux.onCommand(onPumpSwitchStateChanged);
+
+
     heater.setName("Heater");
     heater.setIcon("mdi:radiator");
     light.setName("Light");
@@ -338,7 +414,8 @@ void setup() {
     rawData.setName("Raw data");
     rawData2.setName("CMD");
     rawData3.setName("post temp: ");
-    rawData7.setName("FB");
+    fbData.setName("FB");
+    commandQueueSize.setName("Command Queue");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -437,4 +514,30 @@ void loop() {
 #endif
 }
 
+void log(const char *format, ...) {
+    char loc_buf[64];
+    char * temp = loc_buf;
+    va_list arg;
+    va_list copy;
+    va_start(arg, format);
+    va_copy(copy, arg);
+    int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
+    va_end(copy);
+    if(len < 0) {
+        va_end(arg);
+    };
+    if(len >= sizeof(loc_buf)){
+        temp = (char*) malloc(len+1);
+        if(temp == NULL) {
+            va_end(arg);
+        }
+        len = vsnprintf(temp, len+1, format, arg);
+    }
+    va_end(arg);
+    std::string str = reinterpret_cast<char *>(temp);
+    Serial.println(str.c_str());
+    if(temp != loc_buf){
+        free(temp);
+    }
 
+}
