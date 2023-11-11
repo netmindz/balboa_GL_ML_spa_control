@@ -74,7 +74,7 @@ void BalboaGL::loop() {
         sanity++;
     }
     while((status.commandQueue > 0) && (sanity < 10));
-    if(status.commandQueue > 0) ESP_LOGV(TAG, "q:%u s:%u", status.commandQueue, sanity);
+//    if(status.commandQueue > 0) ESP_LOGV(TAG, "q:%u s:%u", status.commandQueue, sanity);
 }
 
 void BalboaGL::setup() {
