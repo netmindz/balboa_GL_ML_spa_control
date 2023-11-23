@@ -261,19 +261,16 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
     int target = temperatureFloat * 2;  // 0.5 inc so double
     int current = tubTargetTemp * 2;
     sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
-    sendBuffer.enqueue(COMMAND_EMPTY);
 
     if (temperatureFloat > tubTargetTemp) {
         for (int i = 0; i < (target - current); i++) {
             Serial.println("Raise the temp");
             sendBuffer.enqueue(COMMAND_UP);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
         }
     } else {
         for (int i = 0; i < (current - target); i++) {
             Serial.println("Lower the temp");
             sendBuffer.enqueue(COMMAND_DOWN);
-            // sendBuffer.enqueue(COMMAND_EMPTY);
         }
     }
 
