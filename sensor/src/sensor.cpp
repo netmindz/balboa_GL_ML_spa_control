@@ -461,9 +461,7 @@ void setup() {
 boolean panelSelectDetected = false;
 void loop() {
     
-    spa.readSerial();
-
-    bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
+    bool panelSelect = spa.readSerial();  // LOW when we are meant to read data
 
     if (panelSelect == HIGH || !panelSelectDetected) {  // Controller talking to other topside panels - we are in effect idle
 
