@@ -72,6 +72,13 @@ void BalboaGL::loop() {
         sanity++;
     }
     while((status.commandQueue > 0) && (sanity < 10));
+    if(status.commandQueue > 0) {
+        this->high_freq_.start(); // no wait on main loop
+    }
+    else {
+        this->high_freq_.stop();
+    }
+
 //    if(status.commandQueue > 0) ESP_LOGV(TAG, "q:%u s:%u", status.commandQueue, sanity);
 }
 
@@ -98,8 +105,6 @@ void BalboaGL::setup() {
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin);
     this->spa->attachPanelInterrupt();
     if(delay_time > -1) this->spa->set_delay_time(delay_time);
-
-    this->high_freq_.start(); // no wait on main loop
 
 //     ESP_LOGCONFIG(
 //             TAG,
