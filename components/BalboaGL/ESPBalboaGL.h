@@ -97,5 +97,6 @@ class BalboaGL : public Component {
         HardwareSerial *hw_serial_; 
 
         balboaGL* spa;
+        String lastRaw = "0";
 };
 #endif

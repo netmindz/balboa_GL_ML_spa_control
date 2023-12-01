@@ -63,14 +63,12 @@ void BalboaGL::loop() {
     // ESP_LOGV(TAG, "Loop called.");
     int sanity = 0;
     do {
-        size_t len = this->spa->readSerial();
-        // ESP_LOGV(TAG, "Read %u bytes", len);
-        static String lastRaw = "0";
-        if(status.rawData != lastRaw) {
-            ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
-            lastRaw = status.rawData;
-            // this->publish_state();
-        }
+        this->spa->readSerial();
+        // if(status.rawData != lastRaw) {
+        //     ESP_LOGD(TAG, "Raw: %s", status.rawData.c_str());
+        //     lastRaw = status.rawData;
+        //     // this->publish_state();
+        // }
         sanity++;
     }
     while((status.commandQueue > 0) && (sanity < 10));
