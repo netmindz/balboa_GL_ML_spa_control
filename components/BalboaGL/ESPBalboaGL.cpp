@@ -128,16 +128,6 @@ void BalboaGL::setup() {
 //         this->mark_failed();
 //     }
 
-//     // create various setpoint persistence:
-//     cool_storage = global_preferences->make_preference<uint8_t>(this->get_object_id_hash() + 1);
-//     heat_storage = global_preferences->make_preference<uint8_t>(this->get_object_id_hash() + 2);
-//     auto_storage = global_preferences->make_preference<uint8_t>(this->get_object_id_hash() + 3);
-
-//     // load values from storage:
-//     cool_setpoint = load(cool_storage);
-//     heat_setpoint = load(heat_storage);
-//     auto_setpoint = load(auto_storage);
-
     ESP_LOGCONFIG(TAG, "End of seutp");
     this->dump_config();
 }
@@ -146,24 +136,6 @@ void BalboaGL::pause() {
     ESP_LOGI(TAG, "pause");
     this->spa->detachPanelInterrupt();
 }
-
-// /**
-//  * The ESP only has a few bytes of rtc storage, so instead
-//  * of storing floats directly, we'll store the number of
-//  * TEMPERATURE_STEPs from MIN_TEMPERATURE.
-//  **/
-// void BalboaGL::save(float value, ESPPreferenceObject& storage) {
-//     uint8_t steps = (value - ESPMHP_MIN_TEMPERATURE) / ESPMHP_TEMPERATURE_STEP;
-//     storage.save(&steps);
-// }
-
-// optional<float> BalboaGL::load(ESPPreferenceObject& storage) {
-//     uint8_t steps = 0;
-//     if (!storage.load(&steps)) {
-//         return {};
-//     }
-//     return ESPMHP_MIN_TEMPERATURE + (steps * ESPMHP_TEMPERATURE_STEP);
-// }
 
 void BalboaGL::dump_config() {
     // this->banner();
