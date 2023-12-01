@@ -9,9 +9,6 @@ using namespace esphome;
 
 class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::Sensor {
     public:
-    // void setSpa(balboaGL* spa) {
-    //     this->spa = spa;
-    // }
     void update() override {
         if(status.commandQueue != this->last_value) {
             this->last_value = status.commandQueue;
@@ -19,8 +16,6 @@ class BalboaGLCommandQueueSensor : public PollingComponent, public sensor::Senso
         }
     }
     private:
-        u_int8_t last_value;
-    // balboaGL* spa;
-        
+        u_int8_t last_value;        
 };
 

@@ -8,20 +8,6 @@
 #include "esp_log.h"
 #include "../ESPBalboaGL.h"
 
-
-// // Perform measurements or read nameplate values on your tub to define the power [kW]
-// // for each device in order to calculate tub power usage
-// const float POWER_HEATER = 2.8;
-// const float POWER_PUMP_CIRCULATION = 0.3;
-// const float POWER_PUMP1_LOW = 0.31;
-// const float POWER_PUMP1_HIGH = 1.3;
-// const float POWER_PUMP2_LOW = 0.3;
-// const float POWER_PUMP2_HIGH = 0.6;
-
-// // Tweak for your tub - would be nice to auto-learn in the future to allow for outside temp etc
-// const int MINUTES_PER_DEGC = 45;
-
-
 #include "balboaGL.h"
 
 using namespace esphome;
@@ -33,12 +19,6 @@ class BalboaGLClimate : public PollingComponent, public climate::Climate {
         }
         // print the current configuration
         void dump_config() override;
-
-        // // handle a change in settings as detected by the HeatPump library.
-        // void hpSettingsChanged();
-
-        // // Handle a change in status as detected by the HeatPump library.
-        // void hpStatusChanged(heatpumpStatus currentStatus);
 
         // Set up the component, initializing the balboaGL object.
         void setup() override;

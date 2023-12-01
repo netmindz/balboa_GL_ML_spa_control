@@ -36,7 +36,7 @@ using namespace esphome;
                 }
             }
 
-            private:
+        private:
             balboaGL* spa;
             bool last_state;
         };

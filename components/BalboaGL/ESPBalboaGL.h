@@ -39,12 +39,6 @@ class BalboaGL : public Component {
         // print the current configuration
         void dump_config() override;
 
-        // // handle a change in settings as detected by the HeatPump library.
-        // void hpSettingsChanged();
-
-        // // Handle a change in status as detected by the HeatPump library.
-        // void hpStatusChanged(heatpumpStatus currentStatus);
-
         // Set up the component, initializing the balboaGL object.
         void setup() override;
 
@@ -64,7 +58,7 @@ class BalboaGL : public Component {
 
         void set_delay_time(int delay);
 
-        float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
+        float get_setup_priority() const override { return esphome::setup_priority::HARDWARE; }
 
         void pause();
 
