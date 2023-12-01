@@ -57,10 +57,10 @@ Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
 #define tub Serial1
-#define RX_PIN 19
-#define TX_PIN 23
+#define RX_PIN 17
+#define TX_PIN 16
 #define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN_DEF 18
+#define PIN_5_PIN_DEF 21
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -461,9 +461,7 @@ void setup() {
 boolean panelSelectDetected = false;
 void loop() {
     
-    spa.readSerial();
-
-    bool panelSelect = digitalRead(spa.getPanelSelectPin());  // LOW when we are meant to read data
+    bool panelSelect = spa.readSerial();  // LOW when we are meant to read data
 
     if (panelSelect == HIGH || !panelSelectDetected) {  // Controller talking to other topside panels - we are in effect idle
 
