@@ -154,6 +154,13 @@ ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large 
 unsigned long msgStartTime;
 unsigned long timeSinceMsgStart;
 
+byte nibble(char c);
+void hexCharacterStringToBytes(byte* byteArray, const char* hexString);
+void handleMessage(size_t len, uint8_t buf[]);
+String HexString2TimeString(String hexstring);
+String HexString2ASCIIString(String hexstring);
+void sendCommand();
+
 void clearRXbuffer(void) {
         // clear the rx buffer
     #if defined(ESP32) || defined(RSC3)
@@ -1002,10 +1009,7 @@ void hexCharacterStringToBytes(byte* byteArray, const char* hexString) {
 
 byte nibble(char c) {
     if (c >= '0' && c <= '9') return c - '0';
-
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-
     return 0;  // Not a valid hexadecimal character
 }
