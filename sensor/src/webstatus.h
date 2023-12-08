@@ -15,6 +15,10 @@ void handleSend() {
     sendBuffer.enqueue(message);
 }
 
+String getStatusJSON() {
+  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + ", \"mode\": \""+tubMode.getCurrentState()+"\", \"uptime\": " + lastUptime + ", \"state\": \"" + state + "\" } }";
+}
+
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
 
   switch (type) {
@@ -44,6 +48,3 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 
 }
 
-String getStatusJSON() {
-  return "{\"type\": \"status\", \"data\" : { \"temp\": \"" + String(tubTemp,1) + "\", \"heater\": " + (heaterState ? "true" : "false") + ", \"light\": " + (lightState ? "true" : "false") + ", \"mode\": \""+tubMode.getCurrentState()+"\", \"uptime\": " + lastUptime + ", \"state\": \"" + state + "\" } }";
-}
