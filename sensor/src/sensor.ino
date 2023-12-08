@@ -656,7 +656,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
         // fa1433343043 = header + 340C = 34.0C
 
         // If messages is temp or ---- for temp, it is status message
-        if (result.substring(10, 12) == "43" || result.substring(10, 12) == "2d") {
+        if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46" || result.substring(10, 12) == "2d") {
             tubpowerCalc = 0;
             String pump = result.substring(13, 14);
 
@@ -804,7 +804,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     rawData3.setValue(lastRaw3.c_str());
                 }
 
-                if (result.substring(10, 12) == "43") {  // "C"
+                if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46") {  // "C" or "F"
                     double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
                     if (menu == "46") {
                         tubTargetTemp = tmp;
