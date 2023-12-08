@@ -733,7 +733,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     state = "Sleep";
                     tubMode.setState(MODE_IDX_SLP);
                 } else if (s == "9") {
-                    state = "Circulation ?";
+                    state = "Circulation";
                     tubMode.setState(MODE_IDX_STD);  // TODO: confirm
                 } else if (s == "1") {
                     state = "Standard";
@@ -744,7 +744,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 } else if (s == "a") {
                     state = "Cleaning";  // TODO: can't tell our actual mode here - could be any of the 3 I think
                 } else if (s == "c") {
-                    state = "Circulation in sleep?";
+                    state = "Circulation in sleep";
                     tubMode.setState(MODE_IDX_SLP);
                 } else if (s == "b" || s == "3") {
                     state = "Std in Eco";  // Was in eco, Swap to STD for 1 hour only
