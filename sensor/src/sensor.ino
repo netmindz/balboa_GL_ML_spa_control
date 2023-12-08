@@ -90,6 +90,8 @@ SoftwareSerial tub;
 // #define PUMP2_DUAL_SPEED
 // #define AUX_DUAL_SPEED
 
+// #define USE_FAHRENHEIT
+
 // ************************************************************************************************
 // End of config
 // ************************************************************************************************
@@ -413,14 +415,19 @@ void setup() {
     device.setManufacturer("Balboa");
     device.setModel("GL2000");
 
-    // configure sensor (optional)
-    temp.setUnitOfMeasurement("°C");
     temp.setDeviceClass("temperature");
     temp.setName("Tub temperature");
 
-    targetTemp.setUnitOfMeasurement("°C");
     targetTemp.setDeviceClass("temperature");
     targetTemp.setName("Target Tub temp");
+
+#ifndef USE_FAHRENHEIT
+    temp.setUnitOfMeasurement("°C");
+    targetTemp.setUnitOfMeasurement("°C");
+#else
+    temp.setUnitOfMeasurement("°F");
+    targetTemp.setUnitOfMeasurement("°F");
+#endif
 
     timeToTemp.setName("Time to temp");
     timeToTemp.setUnitOfMeasurement("min");
