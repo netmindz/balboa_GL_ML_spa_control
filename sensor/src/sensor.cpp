@@ -609,7 +609,7 @@ void readSerial(bool panelSelect) {
     }
 }
 void loop() {
-    bool panelSelect = digitalRead(PIN_5_PIN_DEF);  // LOW when we are meant to read data
+    bool panelSelect = (GPIO.in >> PIN_5_PIN_DEF) & 0x1;  // LOW when we are meant to read data
     readSerial(panelSelect);
     commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
 
