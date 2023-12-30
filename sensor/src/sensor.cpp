@@ -120,6 +120,7 @@ HABinarySensor heater("heater");
 HASwitch light("light");
 HASensorNumber tubpower("tubpower", HANumber::PrecisionP1);
 HASensorNumber commandQueueSize("commandQueueSize",  HANumber::PrecisionP0);
+HASensorNumber timeSinceMsgStartSensor("timeSinceMsgStart",  HANumber::PrecisionP0);
 
 HAButton btnUp("up");
 HAButton btnDown("down");
@@ -501,6 +502,7 @@ void setup() {
     rawData3.setName("post temp: ");
     fbData.setName("FB");
     commandQueueSize.setName("Command Queue");
+    timeSinceMsgStartSensor.setName("Command Time");
 
     tubMode.setName("Mode");
     tubMode.setOptions("Standard;Economy;Sleep");
@@ -588,7 +590,7 @@ int waitforGLBytes() {
 }
 void readSerial(bool panelSelect) {
     // is data available and we are selected
-    if ((tub.available() > 0) && (panelSelect == LOW)) {
+    if ((panelSelect == LOW) && (tub.available() > 0)) {
         int msgLength = waitforGLBytes();
         // only do something if we've got a message
         if (msgLength > 0) {
@@ -814,6 +816,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                         commandPending = false;
                         sendBuffer.dequeue();
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
+                        timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
                 }
 
