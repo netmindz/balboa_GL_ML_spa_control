@@ -540,6 +540,10 @@ void setup() {
     mqtt.begin(BROKER_ADDR);
 #endif
 
+    if(ARDUINO_RUNNING_CORE == 1) {
+        xTaskCreatePinnedToCore(backgroundTask, "backgroundTask", 2048, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
+    }
+
 #ifdef ESP32
     Serial.println("Configuring WDT...");
     esp_task_wdt_init(WDT_TIMEOUT, true);  // enable panic so ESP32 restarts
@@ -608,6 +612,38 @@ void readSerial(bool panelSelect) {
         }
     }
 }
+
+void backgroundLoop() {
+
+    mqtt.loop();
+
+    webota.handle();
+
+    telnetLoop();
+
+    if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
+
+        // can both block for a long time
+        webserver.handleClient();
+        webSocket.loop();
+
+        if (webSocket.connectedClients(false) > 0) {
+            String json = getStatusJSON();
+            if (json != lastJSON) {
+                webSocket.broadcastTXT(json);
+                lastJSON = json;
+            }
+        }
+    }
+}
+
+void backgroundTask(void *pvParameters) {
+    while(true) {
+        backgroundLoop();
+        // vTaskDelay(pdMS_TO_TICKS(200)); // Delay for 200 milliseconds
+    }
+}
+
 void loop() {
     bool panelSelect = digitalRead(PIN_5_PIN_DEF);  // LOW when we are meant to read data
     readSerial(panelSelect);
@@ -623,25 +659,9 @@ void loop() {
             currentState.setValue(state.c_str());
         }
 
-        mqtt.loop();
-
-        webota.handle();
-    
-        telnetLoop();
-
-        if (sendBuffer.isEmpty() || !panelDetected) {  // Only handle status is we aren't trying to send commands, webserver and websocket
-                                     // can both block for a long time
-
-            webserver.handleClient();
-            webSocket.loop();
-
-            if (webSocket.connectedClients(false) > 0) {
-                String json = getStatusJSON();
-                if (json != lastJSON) {
-                    webSocket.broadcastTXT(json);
-                    lastJSON = json;
-                }
-            }
+        if(ARDUINO_RUNNING_CORE == 0) {
+            // Single core CPU, so need to run on main thread
+            backgroundLoop();
         }
     }
 
