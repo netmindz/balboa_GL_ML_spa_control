@@ -329,6 +329,15 @@ void setPixel(uint8_t color) {
 #endif
 }
 
+void backgroundLoop();
+
+void backgroundTask(void *pvParameters) {
+    while(true) {
+        backgroundLoop();
+        // vTaskDelay(pdMS_TO_TICKS(200)); // Delay for 200 milliseconds
+    }
+}
+
 boolean isConnected = false;
 void setup() {
     Serial.begin(115200);
@@ -634,13 +643,6 @@ void backgroundLoop() {
                 lastJSON = json;
             }
         }
-    }
-}
-
-void backgroundTask(void *pvParameters) {
-    while(true) {
-        backgroundLoop();
-        // vTaskDelay(pdMS_TO_TICKS(200)); // Delay for 200 milliseconds
     }
 }
 
