@@ -550,7 +550,7 @@ void setup() {
 #endif
 
     if(ARDUINO_RUNNING_CORE == 1) {
-        xTaskCreatePinnedToCore(backgroundTask, "backgroundTask", 2048, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
+        xTaskCreatePinnedToCore(backgroundTask, "backgroundTask", 4048, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
     }
 
 #ifdef ESP32
