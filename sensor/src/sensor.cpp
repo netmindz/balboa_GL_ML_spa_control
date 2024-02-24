@@ -857,6 +857,16 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     telnetSend("non-temp " + result);
                 }
 
+                if(heaterState) {
+                    hvac.setMode(HAHVAC::HeatMode);
+                }
+                else if(tubMode.getCurrentState() == MODE_IDX_STD) {
+                    hvac.setMode(HAHVAC::AutoMode);                    
+                }
+                else  {
+                    hvac.setMode(HAHVAC::OffMode);
+                }
+
                 currentState.setValue(state.c_str());
             }
         } else {
