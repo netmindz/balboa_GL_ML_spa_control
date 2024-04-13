@@ -929,7 +929,7 @@ void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
-    if((millis() - lastCmdTime) >= 500) {
+    if((millis() - lastCmdTime) >= 400) {
         lastCmdTime = millis();
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
