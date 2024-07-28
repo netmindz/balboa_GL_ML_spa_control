@@ -71,12 +71,12 @@ int delayTime = DELAY_TIME_DEFAULT;
 //Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
-#define tub Serial2
-#define tubUART UART_NUM_2
-#define RX_PIN 19
-#define TX_PIN 23
+#define tub Serial1
+#define tubUART UART_NUM_1
+#define RX_PIN 17
+#define TX_PIN 16
 #define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN_DEF 18
+#define PIN_5_PIN_DEF 21
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -929,7 +929,7 @@ void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
-    if((millis() - lastCmdTime) >= 400) {
+    if((millis() - lastCmdTime) >= 500) {
         lastCmdTime = millis();
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
