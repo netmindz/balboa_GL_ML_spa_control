@@ -29,4 +29,4 @@ jobs:
         with:
           name: firmware.bin
           path: |
-            .pio/build/*/firmware.bin
+            sensor/.pio/build/*/firmware.bin
