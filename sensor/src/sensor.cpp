@@ -559,7 +559,7 @@ void setup() {
  * returns number of bytes to read
  */
 int waitforGLBytes() {
-    int msgLength = 0;
+    static int msgLength = 0;
     setPixel(STATUS_OK);
     // define message length from starting Byte
     switch (tub.peek()) {
@@ -573,9 +573,13 @@ int waitforGLBytes() {
             msgLength = 9;
             break;
         default:
-            Serial.print("Unknown message start Byte: ");
-            int unknownByte = tub.read();
-            Serial.println(unknownByte, HEX);
+            Serial.printf("Unknown message start(%u) after last message length %u Byte: ", tub.available(), msgLength);
+            telnetSend("Unknown start after " + msgLength);
+            while(tub.available() > 0) {
+                int unknownByte = tub.read();
+                Serial.print(unknownByte, HEX);
+            }
+            Serial.println("");
             return 0;
     }
     // we'll wait here for up to 2.5ms until the expected number of bytes are available
@@ -588,14 +592,14 @@ int waitforGLBytes() {
     }
     return msgLength;
 }
+uint8_t buf[25]; // TODO: not sure about size, but move here so allocated once
 void readSerial(bool panelSelect) {
     // is data available and we are selected
     if ((panelSelect == LOW) && (tub.available() > 0)) {
         int msgLength = waitforGLBytes();
         // only do something if we've got a message
         if (msgLength > 0) {
-            uint8_t buf[msgLength];
-            tub.read(buf, msgLength);
+            tub.readBytes(buf, msgLength);
             handleMessage(msgLength, buf);
         }
     }
@@ -611,7 +615,7 @@ void readSerial(bool panelSelect) {
 void loop() {
     bool panelSelect = (GPIO.in >> PIN_5_PIN_DEF) & 0x1;  // LOW when we are meant to read data
     readSerial(panelSelect);
-    commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
+    commandQueueSize.setValue((uint8_t) sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
@@ -656,8 +660,8 @@ void loop() {
 }
 
 void handleMessage(size_t len, uint8_t buf[]) {
-    //      Serial.print("message = ");
-    //      Serial.println(result);
+        //  Serial.print("message = ");
+        //  Serial.println(result);
     // check if we need to send command first
     if (buf[0] == 0xFA) {
         sendCommand();
@@ -892,7 +896,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
     } else if (result.substring(0, 2) == "fb") {
         if (result != lastFB) {
             lastFB = result;
-            fbData.setValue(lastFB.c_str());
+            if(result != "fb0603450e0000ff74") fbData.setValue(lastFB.c_str());
         }
     } else if (result.substring(0, 4) == "ae0d") {
         // Serial.println("AE 0D");
@@ -925,6 +929,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
 }
 
 unsigned long lastCmdTime = 0;
+byte byteArray[9] = {0};
 void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
@@ -938,13 +943,12 @@ void sendCommand() {
         timeSinceMsgStart = micros() - msgStartTime;
         delayMicroseconds(delayTime);
         // Serial.println("Sending " + sendBuffer);
-        byte byteArray[9] = {0};
         hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN_DEF) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
             delayTime = DELAY_TIME_DEFAULT;
-            sendBuffer.dequeue();
+            sendBuffer.dequeue(); // message not actually sent, but clear here so we don't just retry forever
         }
         // wait for tx to finish and flush the rx buffer
         tub.flush(false);
@@ -956,6 +960,8 @@ void sendCommand() {
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         }
+        delay(10);
+        clearRXbuffer();
         digitalWrite(RTS_PIN_DEF, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
