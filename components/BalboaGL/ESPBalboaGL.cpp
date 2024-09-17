@@ -99,8 +99,8 @@ void BalboaGL::setup() {
 
     ESP_LOGCONFIG(TAG, "Initialize new balboaGL object.");
 
-    ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
-    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
+    ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u and invert=true", this->rx_pin, this->tx_pin);
+    hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin, true);
     hw_serial_->setHwFlowCtrlMode(HW_FLOWCTRL_DISABLE);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin);
     this->spa->attachPanelInterrupt();
