@@ -57,6 +57,7 @@ const int MINUTES_PER_DEGC = 45;
 
 #define DELAY_TIME_DEFAULT 20
 int delayTime = DELAY_TIME_DEFAULT;
+unsigned long lastCmdTime = 0;
 
 
 #ifdef RSC3
@@ -819,6 +820,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     if(commandPending) {
                         commandPending = false;
                         sendBuffer.dequeue();
+                        lastCmdTime = millis();
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                         timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
@@ -928,14 +930,12 @@ void handleMessage(size_t len, uint8_t buf[]) {
     }
 }
 
-unsigned long lastCmdTime = 0;
 byte byteArray[9] = {0};
 void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
     if((millis() - lastCmdTime) >= 500) {
-        lastCmdTime = millis();
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
@@ -954,7 +954,7 @@ void sendCommand() {
         tub.flush(false);
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
-            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
+            Serial.printf("Sent %s with delay of %u interval:%u\n", sendBuffer.getHead().c_str(), delayTime, timeSinceMsgStart);
             // delayTime += 10;
         }
         else {
