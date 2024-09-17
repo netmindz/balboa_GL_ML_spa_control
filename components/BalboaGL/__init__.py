@@ -7,6 +7,7 @@ from esphome.const import (
     CONF_UPDATE_INTERVAL,
     CONF_RX_PIN,
     CONF_TX_PIN,
+    PLATFORM_ESP32,
 )
 from esphome.core import CORE, coroutine
 
