@@ -64,7 +64,7 @@ CONFIG_SCHEMA = (
 
 @coroutine
 def to_code(config):
-    serial = HARDWARE_UART_TO_SERIAL[config[CONF_HARDWARE_UART]]
+    serial = HARDWARE_UART_TO_SERIAL[PLATFORM_ESP32][config[CONF_HARDWARE_UART]]
     var = cg.new_Pvariable(config[CONF_ID], cg.RawExpression(f"&{serial}"))
 
     cg.add_define("tubUART 1") # TODO make dynamic
