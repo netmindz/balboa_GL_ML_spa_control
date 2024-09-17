@@ -25,3 +25,8 @@ jobs:
           FILE_BASE64: "I2RlZmluZSBTRUNSRVRfU1NJRCAidGVzdCIKI2RlZmluZSBTRUNSRVRfUFNLICJ0ZXN0Igo="
       - name: Build PlatformIO Project
         run: cd sensor; pio run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: firmware.bin
+          path: |
+            sensor/.pio/build/*/firmware.bin
