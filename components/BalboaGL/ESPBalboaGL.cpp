@@ -101,9 +101,9 @@ void BalboaGL::setup() {
 
     ESP_LOGI(TAG, "Serial begin rx,tx = %u,%u", this->rx_pin, this->tx_pin);
     hw_serial_->begin(115200, SERIAL_8N1, rx_pin, tx_pin);
-    hw_serial_->setHwFlowCtrlMode(HW_FLOWCTRL_DISABLE);
+    hw_serial_->setHwFlowCtrlMode(UART_HW_FLOWCTRL_RTS);
     hw_serial_->setPins(this->rx_pin, this->tx_pin, -1, this->rts_pin);
-    hw_serial_->setMode(SerialMode.UART_MODE_RS485_HALF_DUPLEX);
+    // hw_serial_->setMode(UART_MODE_RS485_HALF_DUPLEX);
     this->spa = new balboaGL(hw_serial_, rts_pin, panel_select_pin);
     this->spa->attachPanelInterrupt();
     if(delay_time > -1) this->spa->set_delay_time(delay_time);
