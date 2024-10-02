@@ -498,8 +498,8 @@ void setup() {
     haTime.setName("Time");
 
     rawData.setName("Raw data");
-    rawData2.setName("CMD");
-    rawData3.setName("post temp: ");
+    rawData2.setName("Non-Temp");
+    rawData3.setName("CMD");
     fbData.setName("FB");
     commandQueueSize.setName("Command Queue");
     timeSinceMsgStartSensor.setName("Command Time");
@@ -811,19 +811,19 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     telnetSend("CMD: " + cmd);
                 }
                 if (!lastRaw3.equals(cmd)) {
-                    // Controller responded to command
+                    // Controller accepted command
                     if(commandPending) {
                         commandPending = false;
                         sendBuffer.dequeue();
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                         timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
+                    lastRaw3 = cmd;
+                    if(cmd != "0000000000") {  // ignore idle command
+                        rawData3.setValue(lastRaw3.c_str());
+                    }
                 }
 
-                if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
-                    lastRaw3 = cmd;
-                    rawData3.setValue(lastRaw3.c_str());
-                }
 
                 if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46") {  // "C" or "F"
                     double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
