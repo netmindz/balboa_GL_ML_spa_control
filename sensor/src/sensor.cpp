@@ -808,12 +808,12 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 String cmd = result.substring(34, 44);
                 if (cmd == "0000000000") {
                     // none
-                } else if (cmd.substring(0, 4) == "01") {
+                } else if (cmd.substring(0, 2) == "01") {
                     state = "Temp Up";
-                } else if (cmd.substring(0, 4) == "02") {
+                } else if (cmd.substring(0, 2) == "02") {
                     state = "Temp Down";
                 } else {
-                    telnetSend("CMD: " + cmd);
+                    telnetSend("Unknown CMD: " + cmd);
                 }
                 if (!lastRaw3.equals(cmd)) {
                     // Controller responded to command
@@ -826,9 +826,11 @@ void handleMessage(size_t len, uint8_t buf[]) {
                     }
                 }
 
-                if (!lastRaw3.equals(cmd) && cmd != "0000000000") {  // ignore idle command
+                if (!lastRaw3.equals(cmd)) {
                     lastRaw3 = cmd;
                     rawData3.setValue(lastRaw3.c_str());
+                    // telnetSend("CMD state: " + state);
+                    // telnetSend("CMD: " + cmd);
                 }
 
                 if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46") {  // "C" or "F"
