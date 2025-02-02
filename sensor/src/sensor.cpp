@@ -151,7 +151,7 @@ double tubTargetTemp = -1;
 String state = "unknown";
 bool commandPending;
 
-ArduinoQueue<String> sendBuffer(10);  // TODO: might be better bigger for large temp changes. Would need testing
+ArduinoQueue<String> sendBuffer(30);  // TODO: might be better bigger for large temp changes. Would need testing
 unsigned long msgStartTime;
 unsigned long timeSinceMsgStart;
 
@@ -329,7 +329,16 @@ void setPixel(uint8_t color) {
 #endif
 }
 
+void MQTTUpdate(void *pvParameters) {
+    for (;;) {
+        mqtt.loop();
+        delay(100);
+    }
+}
+
+
 boolean isConnected = false;
+TaskHandle_t MQTTUpdateTask;
 void setup() {
     Serial.begin(115200);
     delay(1000);
@@ -539,6 +548,7 @@ void setup() {
 #else
     mqtt.begin(BROKER_ADDR);
 #endif
+  xTaskCreatePinnedToCore(MQTTUpdate, "MQTTUpdate", 10000, NULL, 1, &MQTTUpdateTask, 1);
 
 #ifdef ESP32
     Serial.println("Configuring WDT...");
@@ -622,8 +632,6 @@ void loop() {
             state = "Panel select (pin5) not detected";
             currentState.setValue(state.c_str());
         }
-
-        mqtt.loop();
 
         webota.handle();
     
