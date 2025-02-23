@@ -207,10 +207,11 @@ void attachPanelInterrupt() {
     attachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF), panelSelected, FALLING);
 }
 
-void sendCommand(String command, int count) {
-    Serial.printf("Sending %s - %u times\n", command.c_str(), count);
+void sendCommand(String command, int count = 1) {
+    // Serial.printf("Sending %s - %u times\n", command.c_str(), count);
     for (int i = 0; i < count; i++) {
         sendBuffer.enqueue(command.c_str());
+        // sendBuffer.enqueue(COMMAND_EMPTY);
     }
 }
 
@@ -227,7 +228,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
     if (state != lightState) {
         Serial.println("Toggle");
-        sendBuffer.enqueue(COMMAND_LIGHT);
+        sendCommand(COMMAND_LIGHT);
     } else {
         Serial.println("No change needed");
     }
@@ -253,22 +254,22 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("Mode Switch changed - %u\n", index);
     int currentIndex = sender->getCurrentState();
     int options = 3;
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
     setOption(currentIndex, index, options);
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
 }
 
 void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        sendBuffer.enqueue(COMMAND_UP);
+        sendCommand(COMMAND_UP);
     } else if (name == "Down") {
-        sendBuffer.enqueue(COMMAND_DOWN);
+        sendCommand(COMMAND_DOWN);
     } else if (name == "Mode") {
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        sendCommand(COMMAND_CHANGE_MODE);
     } else if (name == "Time") {
-        sendBuffer.enqueue(COMMAND_TIME);
+        sendCommand(COMMAND_TIME);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -282,24 +283,24 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 
     if (tubTargetTemp < 0) {
         Serial.println("ERROR: can't adjust target as current value not known");
-        sendBuffer.enqueue(
+        sendCommand(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
         return;
     }
 
     int target = temperatureFloat * 2;  // 0.5 inc so double
     int current = tubTargetTemp * 2;
-    sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
+    sendCommand(COMMAND_UP);  // Enter set temp mode
 
     if (temperatureFloat > tubTargetTemp) {
         for (int i = 0; i < (target - current); i++) {
             Serial.println("Raise the temp");
-            sendBuffer.enqueue(COMMAND_UP);
+            sendCommand(COMMAND_UP);
         }
     } else {
         for (int i = 0; i < (current - target); i++) {
             Serial.println("Lower the temp");
-            sendBuffer.enqueue(COMMAND_DOWN);
+            sendCommand(COMMAND_DOWN);
         }
     }
 
@@ -508,8 +509,8 @@ void setup() {
     haTime.setName("Time");
 
     rawData.setName("Raw data");
-    rawData2.setName("CMD");
-    rawData3.setName("post temp: ");
+    rawData2.setName("Non-Temp FA");
+    rawData3.setName("CMD");
     fbData.setName("FB");
     commandQueueSize.setName("Command Queue");
     timeSinceMsgStartSensor.setName("Command Time");
@@ -825,6 +826,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 }
                 if (!lastRaw3.equals(cmd)) {
                     // Controller responded to command
+                    lastRaw3 = cmd;
+                    // rawData3.setValue(lastRaw3.c_str());
                     if(commandPending) {
                         commandPending = false;
                         sendBuffer.dequeue();
@@ -832,13 +835,6 @@ void handleMessage(size_t len, uint8_t buf[]) {
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                         timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
-                }
-
-                if (!lastRaw3.equals(cmd)) {
-                    lastRaw3 = cmd;
-                    rawData3.setValue(lastRaw3.c_str());
-                    // telnetSend("CMD state: " + state);
-                    // telnetSend("CMD: " + cmd);
                 }
 
                 if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46") {  // "C" or "F"
