@@ -957,7 +957,7 @@ void sendCommand() {
             sendBuffer.dequeue(); // message not actually sent, but clear here so we don't just retry forever
         }
         // wait for tx to finish and flush the rx buffer
-        tub.flush(false);
+        tub.flush(true);
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
             Serial.printf("Sent %s with delay of %u interval:%u\n", sendBuffer.getHead().c_str(), delayTime, timeSinceMsgStart);
@@ -966,8 +966,8 @@ void sendCommand() {
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         }
-        delay(10);
-        clearRXbuffer();
+        delay(1);
+        // clearRXbuffer();
         digitalWrite(RTS_PIN_DEF, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
