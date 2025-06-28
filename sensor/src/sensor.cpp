@@ -153,6 +153,7 @@ String state = "unknown";
 bool commandPending;
 
 ArduinoQueue<String> sendBuffer(30);  // TODO: might be better bigger for large temp changes. Would need testing
+ArduinoQueue<String> sendBuffer(30);  // TODO: might be better bigger for large temp changes. Would need testing
 unsigned long msgStartTime;
 unsigned long timeSinceMsgStart;
 
@@ -334,7 +335,7 @@ void setPixel(uint8_t color) {
 void MQTTUpdate(void *pvParameters) {
     for (;;) {
         mqtt.loop();
-        delay(200);
+        delay(100);
     }
 }
 
@@ -835,7 +836,12 @@ void handleMessage(size_t len, uint8_t buf[]) {
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                         timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
+                    lastRaw3 = cmd;
+                    if(cmd != "0000000000") {  // ignore idle command
+                        rawData3.setValue(lastRaw3.c_str());
+                    }
                 }
+
 
                 if (result.substring(10, 12) == "43" || result.substring(10, 12) == "46") {  // "C" or "F"
                     double tmp = (HexString2ASCIIString(result.substring(4, 10)).toDouble() / 10);
@@ -967,7 +973,6 @@ void sendCommand() {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
         }
         delay(1);
-        // clearRXbuffer();
         digitalWrite(RTS_PIN_DEF, LOW);
         digitalWrite(LED_BUILTIN, LOW);
     }
