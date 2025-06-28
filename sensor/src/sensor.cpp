@@ -153,7 +153,6 @@ String state = "unknown";
 bool commandPending;
 
 ArduinoQueue<String> sendBuffer(30);  // TODO: might be better bigger for large temp changes. Would need testing
-ArduinoQueue<String> sendBuffer(30);  // TODO: might be better bigger for large temp changes. Would need testing
 unsigned long msgStartTime;
 unsigned long timeSinceMsgStart;
 
