@@ -334,7 +334,7 @@ void setPixel(uint8_t color) {
 void MQTTUpdate(void *pvParameters) {
     for (;;) {
         mqtt.loop();
-        delay(100);
+        delay(200);
     }
 }
 
@@ -941,7 +941,7 @@ void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
-    if((millis() - lastCmdTime) >= 500) {
+    if((millis() - lastCmdTime) >= 300) {
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
