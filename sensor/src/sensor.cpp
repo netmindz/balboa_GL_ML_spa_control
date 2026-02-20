@@ -205,7 +205,6 @@ void clearRXbuffer(void) {
 // clears serial receive buffer
 void IRAM_ATTR panelSelected() {
     msgStartTime = micros();
-//    Serial.print("Set panel: ");
     clearRXbuffer();
 }
 
