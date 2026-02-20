@@ -68,6 +68,11 @@ Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 #define PIN_5_PIN_DEF 5
 #define tub Serial2
 #define tubUART UART_NUM_2
+#define EN_RS485_PIN 17
+#define BOOST_RS485_PIN 16
+#define SE_RS485_PIN 19
+
+
 
 #elif RSC3
 #define tub Serial1
@@ -352,12 +357,12 @@ TaskHandle_t MQTTUpdateTask;
 void setup() {
     Serial.begin(115200);
 #if defined TCAN485
-    pinMode(17, OUTPUT); // ENABLE MAX13487EESA+
-    digitalWrite(17, HIGH);
-    pinMode(16, OUTPUT); // ENABLE MAX13487EESA+
-    digitalWrite(16, HIGH);
-    pinMode(19, OUTPUT); // AUTODIRECTION MAX13487EESA+
-    digitalWrite(19, HIGH);
+    pinMode(EN_RS485_PIN, OUTPUT); // ENABLE MAX13487EESA+
+    digitalWrite(EN_RS485_PIN, HIGH);
+    pinMode(BOOST_RS485_PIN, OUTPUT); // ENABLE RS485 BOOST MAX13487EESA+
+    digitalWrite(BOOST_RS485_PIN, HIGH);
+    pinMode(SE_RS485_PIN, OUTPUT); // ENABLE AUTODIRECTION MAX13487EESA+
+    digitalWrite(SE_RS485_PIN, HIGH);
 #endif
     delay(1000);
 #if defined RSC3X || defined TCAN485
@@ -378,8 +383,12 @@ void setup() {
     sprintf(hostName, "HOTHUB%x%x%x", mac[3], mac[4], mac[5]);
     WiFi.setHostname(hostName);
     //FORCE POWER & WIFI PROTOCOL ( BEST RANGE )
-    WiFi.setTxPower(WIFI_POWER_19_5dBm); 
-    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B);
+#if defined TCAN485
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);
+#endif
+#if defined FORCE_WIFI_PROTOCOL_11B || !defined AP_FALLBACK
+    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B);    
+#endif
     Serial.println("");
     Serial.print(F("Connecting to "));
     Serial.print(ssid);
@@ -965,11 +974,7 @@ void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
-#ifdef ML700
-    if((millis() - lastCmdTime) >= 600) {
-#else
     if((millis() - lastCmdTime) >= 400) {
-#endif
         lastCmdTime = millis();
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
@@ -991,12 +996,9 @@ void sendCommand() {
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
 #ifdef ML700
             sendBuffer.dequeue(); // TODO: trying to resend now till we see response
-            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
-            delayTime += 10;
-#else
-            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
 #endif
-
+            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
+            //delayTime += 10;
         }
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
