@@ -17,6 +17,7 @@
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
 #include <WebOTA.h>
+#include<esp_wifi.h>
 
 // ************************************************************************************************
 // Start of config
@@ -36,8 +37,8 @@
 
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
-
-#define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server
+// move to wifi_secrets
+// #define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server 
 // #define BROKER_USERNAME "my-username"
 // #define BROKER_PASSWORD "my-password"
 
@@ -58,8 +59,17 @@ const int MINUTES_PER_DEGC = 45;
 #define DELAY_TIME_DEFAULT 20
 int delayTime = DELAY_TIME_DEFAULT;
 
+#ifdef TCAN485
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+#define RX_PIN 21
+#define TX_PIN 22
+#define RTS_PIN_DEF 33  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 5
+#define tub Serial2
+#define tubUART UART_NUM_2
 
-#ifdef RSC3
+#elif RSC3
 #define tub Serial1
 #define tubUART UART_NUM_1
 #define RX_PIN 3
@@ -307,7 +317,7 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 }
 
 void setPixel(uint8_t color) {
-#ifdef RSC3X
+#if defined RSC3X || defined TCAN485
     switch(color) {
         case 0:
             pixels.setPixelColor(0, pixels.Color(255,0,0));
@@ -342,8 +352,14 @@ TaskHandle_t MQTTUpdateTask;
 void setup() {
     Serial.begin(115200);
     delay(1000);
+#if defined TCAN485
+    pinMode(17, OUTPUT); // ENABLE MAX13487EESA+
+    digitalWrite(17, HIGH);
+    pinMode(19, OUTPUT); // AUTODIRECTION MAX13487EESA+
+    digitalWrite(19, HIGH);
+#endif
 
-#ifdef RSC3X
+#if defined RSC3X || defined TCAN485
     pixels.begin();
     pixels.setBrightness(255);
     setPixel(STATUS_BOOT);
@@ -354,7 +370,15 @@ void setup() {
 
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
-
+    //GENERATE HOSTNAME
+    uint8_t mac[6];
+    char hostName[12];
+    WiFi.macAddress(mac);
+    sprintf(hostName, "HOTHUB%x%x%x", mac[3], mac[4], mac[5]);
+    WiFi.setHostname(hostName);
+    //FORCE POWER & WIFI PROTOCOL ( BEST RANGE )
+    WiFi.setTxPower(WIFI_POWER_19_5dBm); 
+    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B);
     Serial.println("");
     Serial.print(F("Connecting to "));
     Serial.print(ssid);
