@@ -205,6 +205,7 @@ void clearRXbuffer(void) {
 // clears serial receive buffer
 void IRAM_ATTR panelSelected() {
     msgStartTime = micros();
+//    Serial.print("Set panel: ");
     clearRXbuffer();
 }
 
@@ -351,14 +352,15 @@ boolean isConnected = false;
 TaskHandle_t MQTTUpdateTask;
 void setup() {
     Serial.begin(115200);
-    delay(1000);
 #if defined TCAN485
     pinMode(17, OUTPUT); // ENABLE MAX13487EESA+
     digitalWrite(17, HIGH);
+    pinMode(16, OUTPUT); // ENABLE MAX13487EESA+
+    digitalWrite(16, HIGH);
     pinMode(19, OUTPUT); // AUTODIRECTION MAX13487EESA+
     digitalWrite(19, HIGH);
 #endif
-
+    delay(1000);
 #if defined RSC3X || defined TCAN485
     pixels.begin();
     pixels.setBrightness(255);
@@ -420,7 +422,7 @@ void setup() {
     pinMode(RTS_PIN_DEF, OUTPUT);
     Serial.printf("Setting pin %u LOW\n", RTS_PIN_DEF);
     digitalWrite(RTS_PIN_DEF, LOW);
-    pinMode(PIN_5_PIN_DEF, INPUT);
+    pinMode(PIN_5_PIN_DEF, INPUT_PULLDOWN);
 #ifdef ESP32
     Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
     tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -701,6 +703,9 @@ void handleMessage(size_t len, uint8_t buf[]) {
         }
         result += String(buf[i], HEX);
     }
+          //Serial.print("message = ");
+          //Serial.println(result);
+
     if (result.substring(0, 4) == "fa14") {
         // Serial.println("FA 14");
         // telnetSend(result);
@@ -961,7 +966,11 @@ void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
+#ifdef ML700
+    if((millis() - lastCmdTime) >= 600) {
+#else
     if((millis() - lastCmdTime) >= 400) {
+#endif
         lastCmdTime = millis();
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
@@ -981,9 +990,14 @@ void sendCommand() {
         // wait for tx to finish and flush the rx buffer
         tub.flush(true);
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
-            // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+#ifdef ML700
+            sendBuffer.dequeue(); // TODO: trying to resend now till we see response
             Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
-            // delayTime += 10;
+            delayTime += 10;
+#else
+            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
+#endif
+
         }
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
