@@ -118,6 +118,7 @@ WiFiClient clients[1];
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 30);
 HASensorNumber temp("temp", HANumber::PrecisionP1);
+HASensorNumber cputemp("cputemp", HANumber::PrecisionP1);
 HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
 HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
@@ -374,6 +375,12 @@ void setup() {
     digitalWrite(LED_BUILTIN, HIGH);
 #endif
 
+#ifdef ESP32
+    Serial.println("Configuring WDT...");
+    esp_task_wdt_init(WDT_TIMEOUT, true);  // enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL);                // add current thread to WDT watch
+#endif
+
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
     //GENERATE HOSTNAME
@@ -382,13 +389,6 @@ void setup() {
     WiFi.macAddress(mac);
     sprintf(hostName, "HOTHUB%x%x%x", mac[3], mac[4], mac[5]);
     WiFi.setHostname(hostName);
-    //FORCE POWER & WIFI PROTOCOL ( BEST RANGE )
-#if defined TCAN485
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);
-#endif
-#if defined FORCE_WIFI_PROTOCOL_11B || !defined AP_FALLBACK
-    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B);    
-#endif
     Serial.println("");
     Serial.print(F("Connecting to "));
     Serial.print(ssid);
@@ -407,6 +407,9 @@ void setup() {
             Serial.println(WiFi.localIP());
             break;
         } else {
+            setPixel(STATUS_OK);
+            delay(500);
+            setPixel(STATUS_WIFI);
             delay(500);
             Serial.print(".");
         }
@@ -421,9 +424,13 @@ void setup() {
         Serial.print("AP IP address: ");
         Serial.println(myIP);
 #else
+        setPixel(STATUS_ERROR);
         Serial.print("\n\nWifi failed, reboot\n");
-        delay(1000);
-        ESP.restart();
+    #if defined TCAN485
+            delay(35000);//delay 350000 -> watchdog reset
+    #else    
+            ESP.restart();
+    #endif
 #endif
     }
 
@@ -486,6 +493,8 @@ void setup() {
 
     temp.setDeviceClass("temperature");
     temp.setName("Tub temperature");
+    cputemp.setDeviceClass("temperature");
+    cputemp.setName("CPU temperature");
 
     targetTemp.setDeviceClass("temperature");
     targetTemp.setName("Target Tub temp");
@@ -583,12 +592,6 @@ void setup() {
     mqtt.begin(BROKER_ADDR);
 #endif
   xTaskCreatePinnedToCore(MQTTUpdate, "MQTTUpdate", 10000, NULL, 1, &MQTTUpdateTask, 1);
-
-#ifdef ESP32
-    Serial.println("Configuring WDT...");
-    esp_task_wdt_init(WDT_TIMEOUT, true);  // enable panic so ESP32 restarts
-    esp_task_wdt_add(NULL);                // add current thread to WDT watch
-#endif
     Serial.println("End of setup");
     digitalWrite(LED_BUILTIN, LOW);
 }
@@ -653,6 +656,17 @@ void readSerial(bool panelSelect) {
     }
 }
 void loop() {
+//        if (millis()>43200000) {delay(35000);} // force reset all 12h delay 350000 -> watchdog reset 
+
+    if (WiFi.status() != WL_CONNECTED) { // check if wifi OK
+            setPixel(STATUS_ERROR);
+            Serial.print("\n\nWifi failed, reboot\n");
+    #if defined TCAN485
+            delay(35000);//delay 350000 -> watchdog reset
+    #else    
+            ESP.restart();
+    #endif
+        }
     bool panelSelect = (GPIO.in >> PIN_5_PIN_DEF) & 0x1;  // LOW when we are meant to read data
     readSerial(panelSelect);
     commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
@@ -690,6 +704,7 @@ void loop() {
     if (((millis() / 1000) - lastUptime) >= 15) {
         lastUptime = millis() / 1000;
         uptime.setValue(lastUptime);
+        cputemp.setValue(temperatureRead());
     }
 
 #ifdef ESP32
@@ -707,16 +722,16 @@ void handleMessage(size_t len, uint8_t buf[]) {
     result = "";
     for (int i = 0; i < len; i++) {
         if (buf[i] < 0x10) {
-            result += '0';
+           result += '0';
         }
         result += String(buf[i], HEX);
     }
           //Serial.print("message = ");
-          //Serial.println(result);
+          //Serial.println(result);        
+//    telnetSend(result);
 
     if (result.substring(0, 4) == "fa14") {
         // Serial.println("FA 14");
-        // telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
 
@@ -790,6 +805,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
             // perhaps it is
             String newRaw = result.substring(17, 44);
             if (lastRaw != newRaw) {
+                telnetSend("newRaw: " + result);
+
                 lastRaw = newRaw;
                 rawData.setValue(lastRaw.c_str());
 
@@ -819,6 +836,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 }
 
                 String menu = result.substring(18, 20);
+                telnetSend("menu: " + menu);
+
                 if (menu == "00") {
                     // idle
                 } else if (menu == "4c") {
@@ -846,6 +865,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 // temp down - ff0200000000?? - end varies
 
                 String cmd = result.substring(34, 44);
+                telnetSend("CMD: " + cmd);
                 if (cmd == "0000000000") {
                     // none
                 } else if (cmd.substring(0, 4) == "01") {
