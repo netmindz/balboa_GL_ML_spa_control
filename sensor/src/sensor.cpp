@@ -57,6 +57,7 @@ const int MINUTES_PER_DEGC = 45;
 
 #define DELAY_TIME_DEFAULT 20
 int delayTime = DELAY_TIME_DEFAULT;
+unsigned long lastCmdTime = 0;
 
 
 #ifdef RSC3
@@ -71,12 +72,12 @@ int delayTime = DELAY_TIME_DEFAULT;
 //Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 
 #elif ESP32
-#define tub Serial2
-#define tubUART UART_NUM_2
-#define RX_PIN 19
-#define TX_PIN 23
+#define tub Serial1
+#define tubUART UART_NUM_1
+#define RX_PIN 17
+#define TX_PIN 16
 #define RTS_PIN_DEF 22  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
-#define PIN_5_PIN_DEF 18
+#define PIN_5_PIN_DEF 21
 #else
 SoftwareSerial tub;
 #define RX_PIN D6
@@ -206,10 +207,11 @@ void attachPanelInterrupt() {
     attachInterrupt(digitalPinToInterrupt(PIN_5_PIN_DEF), panelSelected, FALLING);
 }
 
-void sendCommand(String command, int count) {
-    Serial.printf("Sending %s - %u times\n", command.c_str(), count);
+void sendCommand(String command, int count = 1) {
+    // Serial.printf("Sending %s - %u times\n", command.c_str(), count);
     for (int i = 0; i < count; i++) {
         sendBuffer.enqueue(command.c_str());
+        // sendBuffer.enqueue(COMMAND_EMPTY);
     }
 }
 
@@ -226,7 +228,7 @@ void onSwitchStateChanged(bool state, HASwitch* sender) {
     Serial.printf("Switch %s changed - ", sender->getName());
     if (state != lightState) {
         Serial.println("Toggle");
-        sendBuffer.enqueue(COMMAND_LIGHT);
+        sendCommand(COMMAND_LIGHT);
     } else {
         Serial.println("No change needed");
     }
@@ -252,22 +254,22 @@ void onModeSwitchStateChanged(int8_t index, HASelect* sender) {
     Serial.printf("Mode Switch changed - %u\n", index);
     int currentIndex = sender->getCurrentState();
     int options = 3;
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
     setOption(currentIndex, index, options);
-    sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+    sendCommand(COMMAND_CHANGE_MODE);
 }
 
 void onButtonPress(HAButton* sender) {
     String name = sender->getName();
     Serial.printf("Button press - %s\n", name);
     if (name == "Up") {
-        sendBuffer.enqueue(COMMAND_UP);
+        sendCommand(COMMAND_UP);
     } else if (name == "Down") {
-        sendBuffer.enqueue(COMMAND_DOWN);
+        sendCommand(COMMAND_DOWN);
     } else if (name == "Mode") {
-        sendBuffer.enqueue(COMMAND_CHANGE_MODE);
+        sendCommand(COMMAND_CHANGE_MODE);
     } else if (name == "Time") {
-        sendBuffer.enqueue(COMMAND_TIME);
+        sendCommand(COMMAND_TIME);
     } else {
         Serial.printf("Unknown button %s\n", name);
     }
@@ -281,24 +283,24 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 
     if (tubTargetTemp < 0) {
         Serial.println("ERROR: can't adjust target as current value not known");
-        sendBuffer.enqueue(
+        sendCommand(
             COMMAND_UP);  // Enter set temp mode - won't change, but should allow us to capture the set target value
         return;
     }
 
     int target = temperatureFloat * 2;  // 0.5 inc so double
     int current = tubTargetTemp * 2;
-    sendBuffer.enqueue(COMMAND_UP);  // Enter set temp mode
+    sendCommand(COMMAND_UP);  // Enter set temp mode
 
     if (temperatureFloat > tubTargetTemp) {
         for (int i = 0; i < (target - current); i++) {
             Serial.println("Raise the temp");
-            sendBuffer.enqueue(COMMAND_UP);
+            sendCommand(COMMAND_UP);
         }
     } else {
         for (int i = 0; i < (current - target); i++) {
             Serial.println("Lower the temp");
-            sendBuffer.enqueue(COMMAND_DOWN);
+            sendCommand(COMMAND_DOWN);
         }
     }
 
@@ -507,7 +509,7 @@ void setup() {
     haTime.setName("Time");
 
     rawData.setName("Raw data");
-    rawData2.setName("Non-Temp");
+    rawData2.setName("Non-Temp FA");
     rawData3.setName("CMD");
     fbData.setName("FB");
     commandQueueSize.setName("Command Queue");
@@ -569,7 +571,7 @@ void setup() {
  * returns number of bytes to read
  */
 int waitforGLBytes() {
-    int msgLength = 0;
+    static int msgLength = 0;
     setPixel(STATUS_OK);
     // define message length from starting Byte
     switch (tub.peek()) {
@@ -583,9 +585,13 @@ int waitforGLBytes() {
             msgLength = 9;
             break;
         default:
-            Serial.print("Unknown message start Byte: ");
-            int unknownByte = tub.read();
-            Serial.println(unknownByte, HEX);
+            Serial.printf("Unknown message start(%u) after last message length %u Byte: ", tub.available(), msgLength);
+            telnetSend("Unknown start after " + msgLength);
+            while(tub.available() > 0) {
+                int unknownByte = tub.read();
+                Serial.print(unknownByte, HEX);
+            }
+            Serial.println("");
             return 0;
     }
     // we'll wait here for up to 2.5ms until the expected number of bytes are available
@@ -598,14 +604,14 @@ int waitforGLBytes() {
     }
     return msgLength;
 }
+uint8_t buf[25]; // TODO: not sure about size, but move here so allocated once
 void readSerial(bool panelSelect) {
     // is data available and we are selected
     if ((panelSelect == LOW) && (tub.available() > 0)) {
         int msgLength = waitforGLBytes();
         // only do something if we've got a message
         if (msgLength > 0) {
-            uint8_t buf[msgLength];
-            tub.read(buf, msgLength);
+            tub.readBytes(buf, msgLength);
             handleMessage(msgLength, buf);
         }
     }
@@ -621,7 +627,7 @@ void readSerial(bool panelSelect) {
 void loop() {
     bool panelSelect = (GPIO.in >> PIN_5_PIN_DEF) & 0x1;  // LOW when we are meant to read data
     readSerial(panelSelect);
-    commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
+    commandQueueSize.setValue((uint8_t) sendBuffer.itemCount());
 
     if (panelSelect == HIGH || !panelDetected) {  // Controller talking to other topside panels - we are in effect idle
 
@@ -664,8 +670,8 @@ void loop() {
 }
 
 void handleMessage(size_t len, uint8_t buf[]) {
-    //      Serial.print("message = ");
-    //      Serial.println(result);
+        //  Serial.print("message = ");
+        //  Serial.println(result);
     // check if we need to send command first
     if (buf[0] == 0xFA) {
         sendCommand();
@@ -811,18 +817,21 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 String cmd = result.substring(34, 44);
                 if (cmd == "0000000000") {
                     // none
-                } else if (cmd.substring(0, 4) == "01") {
+                } else if (cmd.substring(0, 2) == "01") {
                     state = "Temp Up";
-                } else if (cmd.substring(0, 4) == "02") {
+                } else if (cmd.substring(0, 2) == "02") {
                     state = "Temp Down";
                 } else {
-                    telnetSend("CMD: " + cmd);
+                    telnetSend("Unknown CMD: " + cmd);
                 }
                 if (!lastRaw3.equals(cmd)) {
-                    // Controller accepted command
+                    // Controller responded to command
+                    lastRaw3 = cmd;
+                    // rawData3.setValue(lastRaw3.c_str());
                     if(commandPending) {
                         commandPending = false;
                         sendBuffer.dequeue();
+                        lastCmdTime = millis();
                         Serial.printf("YAY: command response : %u\n", timeSinceMsgStart);
                         timeSinceMsgStartSensor.setValue((int) timeSinceMsgStart);
                     }
@@ -900,7 +909,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
     } else if (result.substring(0, 2) == "fb") {
         if (result != lastFB) {
             lastFB = result;
-            fbData.setValue(lastFB.c_str());
+            if(result != "fb0603450e0000ff74") fbData.setValue(lastFB.c_str());
         }
     } else if (result.substring(0, 4) == "ae0d") {
         // Serial.println("AE 0D");
@@ -932,13 +941,12 @@ void handleMessage(size_t len, uint8_t buf[]) {
     }
 }
 
-unsigned long lastCmdTime = 0;
+byte byteArray[9] = {0};
 void sendCommand() {
     if (sendBuffer.isEmpty()) {
         return;
     }
-    if((millis() - lastCmdTime) >= 400) {
-        lastCmdTime = millis();
+    if((millis() - lastCmdTime) >= 300) {
         commandPending = true;
         digitalWrite(RTS_PIN_DEF, HIGH);
         digitalWrite(LED_BUILTIN, HIGH);
@@ -946,19 +954,18 @@ void sendCommand() {
         timeSinceMsgStart = micros() - msgStartTime;
         delayMicroseconds(delayTime);
         // Serial.println("Sending " + sendBuffer);
-        byte byteArray[9] = {0};
         hexCharacterStringToBytes(byteArray, sendBuffer.getHead().c_str());
         tub.write(byteArray, sizeof(byteArray));
         if (digitalRead(PIN_5_PIN_DEF) != LOW) {
             Serial.printf("ERROR: Pin5 went high before command before flush : %u\n", delayTime);
             delayTime = DELAY_TIME_DEFAULT;
-            sendBuffer.dequeue();
+            sendBuffer.dequeue(); // message not actually sent, but clear here so we don't just retry forever
         }
         // wait for tx to finish and flush the rx buffer
         tub.flush(true);
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
             // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
-            Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
+            Serial.printf("Sent %s with delay of %u interval:%u\n", sendBuffer.getHead().c_str(), delayTime, timeSinceMsgStart);
             // delayTime += 10;
         }
         else {
