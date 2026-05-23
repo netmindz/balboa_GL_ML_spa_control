@@ -17,6 +17,7 @@
 #include <WebSocketsServer.h>
 #include <WiFiUdp.h>
 #include <WebOTA.h>
+#include<esp_wifi.h>
 
 // ************************************************************************************************
 // Start of config
@@ -36,8 +37,8 @@
 
 const char ssid[] = SECRET_SSID;
 const char passphrase[] = SECRET_PSK;
-
-#define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server
+// move to wifi_secrets
+// #define BROKER_ADDR IPAddress(192, 168, 178, 42)  // Set the IP of your MQTT server 
 // #define BROKER_USERNAME "my-username"
 // #define BROKER_PASSWORD "my-password"
 
@@ -58,8 +59,22 @@ const int MINUTES_PER_DEGC = 45;
 #define DELAY_TIME_DEFAULT 20
 int delayTime = DELAY_TIME_DEFAULT;
 
+#ifdef TCAN485
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+#define RX_PIN 21
+#define TX_PIN 22
+#define RTS_PIN_DEF 33  // RS485 direction control, RequestToSend TX or RX, required for MAX485 board.
+#define PIN_5_PIN_DEF 5
+#define tub Serial2
+#define tubUART UART_NUM_2
+#define EN_RS485_PIN 17
+#define BOOST_RS485_PIN 16
+#define SE_RS485_PIN 19
 
-#ifdef RSC3
+
+
+#elif RSC3
 #define tub Serial1
 #define tubUART UART_NUM_1
 #define RX_PIN 3
@@ -103,6 +118,7 @@ WiFiClient clients[1];
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(clients[0], device, 30);
 HASensorNumber temp("temp", HANumber::PrecisionP1);
+HASensorNumber cputemp("cputemp", HANumber::PrecisionP1);
 HASensorNumber targetTemp("targetTemp", HANumber::PrecisionP1);
 HASensorNumber timeToTemp("timeToTemp");
 HASensor currentState("status");
@@ -307,7 +323,7 @@ void onTargetTemperatureCommand(HANumeric temperature, HAHVAC* sender) {
 }
 
 void setPixel(uint8_t color) {
-#ifdef RSC3X
+#if defined RSC3X || defined TCAN485
     switch(color) {
         case 0:
             pixels.setPixelColor(0, pixels.Color(255,0,0));
@@ -341,9 +357,16 @@ boolean isConnected = false;
 TaskHandle_t MQTTUpdateTask;
 void setup() {
     Serial.begin(115200);
+#if defined TCAN485
+    pinMode(EN_RS485_PIN, OUTPUT); // ENABLE MAX13487EESA+
+    digitalWrite(EN_RS485_PIN, HIGH);
+    pinMode(BOOST_RS485_PIN, OUTPUT); // ENABLE RS485 BOOST MAX13487EESA+
+    digitalWrite(BOOST_RS485_PIN, HIGH);
+    pinMode(SE_RS485_PIN, OUTPUT); // ENABLE AUTODIRECTION MAX13487EESA+
+    digitalWrite(SE_RS485_PIN, HIGH);
+#endif
     delay(1000);
-
-#ifdef RSC3X
+#if defined RSC3X || defined TCAN485
     pixels.begin();
     pixels.setBrightness(255);
     setPixel(STATUS_BOOT);
@@ -352,9 +375,20 @@ void setup() {
     digitalWrite(LED_BUILTIN, HIGH);
 #endif
 
+#ifdef ESP32
+    Serial.println("Configuring WDT...");
+    esp_task_wdt_init(WDT_TIMEOUT, true);  // enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL);                // add current thread to WDT watch
+#endif
+
     // Make sure you're in station mode
     WiFi.mode(WIFI_STA);
-
+    //GENERATE HOSTNAME
+    uint8_t mac[6];
+    char hostName[12];
+    WiFi.macAddress(mac);
+    sprintf(hostName, "HOTHUB%x%x%x", mac[3], mac[4], mac[5]);
+    WiFi.setHostname(hostName);
     Serial.println("");
     Serial.print(F("Connecting to "));
     Serial.print(ssid);
@@ -373,6 +407,9 @@ void setup() {
             Serial.println(WiFi.localIP());
             break;
         } else {
+            setPixel(STATUS_OK);
+            delay(500);
+            setPixel(STATUS_WIFI);
             delay(500);
             Serial.print(".");
         }
@@ -387,16 +424,20 @@ void setup() {
         Serial.print("AP IP address: ");
         Serial.println(myIP);
 #else
+        setPixel(STATUS_ERROR);
         Serial.print("\n\nWifi failed, reboot\n");
-        delay(1000);
-        ESP.restart();
+    #if defined TCAN485
+            delay(35000);//delay 350000 -> watchdog reset
+    #else    
+            ESP.restart();
+    #endif
 #endif
     }
 
     pinMode(RTS_PIN_DEF, OUTPUT);
     Serial.printf("Setting pin %u LOW\n", RTS_PIN_DEF);
     digitalWrite(RTS_PIN_DEF, LOW);
-    pinMode(PIN_5_PIN_DEF, INPUT);
+    pinMode(PIN_5_PIN_DEF, INPUT_PULLDOWN);
 #ifdef ESP32
     Serial.printf("Setting serial port as pins %u, %u\n", RX_PIN, TX_PIN);
     tub.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -452,6 +493,8 @@ void setup() {
 
     temp.setDeviceClass("temperature");
     temp.setName("Tub temperature");
+    cputemp.setDeviceClass("temperature");
+    cputemp.setName("CPU temperature");
 
     targetTemp.setDeviceClass("temperature");
     targetTemp.setName("Target Tub temp");
@@ -549,12 +592,6 @@ void setup() {
     mqtt.begin(BROKER_ADDR);
 #endif
   xTaskCreatePinnedToCore(MQTTUpdate, "MQTTUpdate", 10000, NULL, 1, &MQTTUpdateTask, 1);
-
-#ifdef ESP32
-    Serial.println("Configuring WDT...");
-    esp_task_wdt_init(WDT_TIMEOUT, true);  // enable panic so ESP32 restarts
-    esp_task_wdt_add(NULL);                // add current thread to WDT watch
-#endif
     Serial.println("End of setup");
     digitalWrite(LED_BUILTIN, LOW);
 }
@@ -619,6 +656,17 @@ void readSerial(bool panelSelect) {
     }
 }
 void loop() {
+//        if (millis()>43200000) {delay(35000);} // force reset all 12h delay 350000 -> watchdog reset 
+
+    if (WiFi.status() != WL_CONNECTED) { // check if wifi OK
+            setPixel(STATUS_ERROR);
+            Serial.print("\n\nWifi failed, reboot\n");
+    #if defined TCAN485
+            delay(35000);//delay 350000 -> watchdog reset
+    #else    
+            ESP.restart();
+    #endif
+        }
     bool panelSelect = (GPIO.in >> PIN_5_PIN_DEF) & 0x1;  // LOW when we are meant to read data
     readSerial(panelSelect);
     commandQueueSize.setValue((u_int8_t) sendBuffer.itemCount());
@@ -656,6 +704,7 @@ void loop() {
     if (((millis() / 1000) - lastUptime) >= 15) {
         lastUptime = millis() / 1000;
         uptime.setValue(lastUptime);
+        cputemp.setValue(temperatureRead());
     }
 
 #ifdef ESP32
@@ -673,13 +722,16 @@ void handleMessage(size_t len, uint8_t buf[]) {
     result = "";
     for (int i = 0; i < len; i++) {
         if (buf[i] < 0x10) {
-            result += '0';
+           result += '0';
         }
         result += String(buf[i], HEX);
     }
+          //Serial.print("message = ");
+          //Serial.println(result);        
+//    telnetSend(result);
+
     if (result.substring(0, 4) == "fa14") {
         // Serial.println("FA 14");
-        // telnetSend(result);
 
         // fa1433343043 = header + 340C = 34.0C
 
@@ -753,6 +805,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
             // perhaps it is
             String newRaw = result.substring(17, 44);
             if (lastRaw != newRaw) {
+                telnetSend("newRaw: " + result);
+
                 lastRaw = newRaw;
                 rawData.setValue(lastRaw.c_str());
 
@@ -782,6 +836,8 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 }
 
                 String menu = result.substring(18, 20);
+                telnetSend("menu: " + menu);
+
                 if (menu == "00") {
                     // idle
                 } else if (menu == "4c") {
@@ -809,6 +865,7 @@ void handleMessage(size_t len, uint8_t buf[]) {
                 // temp down - ff0200000000?? - end varies
 
                 String cmd = result.substring(34, 44);
+                telnetSend("CMD: " + cmd);
                 if (cmd == "0000000000") {
                     // none
                 } else if (cmd.substring(0, 4) == "01") {
@@ -957,9 +1014,11 @@ void sendCommand() {
         // wait for tx to finish and flush the rx buffer
         tub.flush(true);
         if (digitalRead(PIN_5_PIN_DEF) == LOW) {
-            // sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+#ifdef ML700
+            sendBuffer.dequeue(); // TODO: trying to resend now till we see response
+#endif
             Serial.printf("Sent with delay of %u interval:%u\n", delayTime, timeSinceMsgStart);
-            // delayTime += 10;
+            //delayTime += 10;
         }
         else {
           Serial.println("ERROR: Pin5 went high before command could be sent after flush");
